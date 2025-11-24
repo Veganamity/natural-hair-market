@@ -2,13 +2,17 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck } from 'lucide-react';
+import { Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-export function ProfileView() {
+interface ProfileViewProps {
+  onNavigate?: (view: string) => void;
+}
+
+export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
@@ -541,6 +545,49 @@ export function ProfileView() {
           </div>
         )}
       </div>
+
+      {!profile.is_certified_salon && (
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Certification Salon Professionnel</h2>
+                <p className="text-sm text-gray-600">Obtenez le badge "Salon certifié" sur vos annonces</p>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate?.('salon-certifie')}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <Shield className="w-5 h-5" />
+              Demander le badge Salon certifié
+            </button>
+          </div>
+          <div className="mt-4 text-sm text-gray-600">
+            <p>Renforcez la confiance des acheteurs en certifiant votre salon avec votre SIRET. Le badge apparaîtra sur votre profil et vos annonces.</p>
+          </div>
+        </div>
+      )}
+
+      {profile.is_certified_salon && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl shadow-md p-6 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                Salon Certifié
+                <Shield className="w-6 h-6 text-green-600" />
+              </h2>
+              <p className="text-sm text-gray-600">Votre salon est certifié. Le badge apparaît sur votre profil et vos annonces.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {profile.email === 'stephaniebuisson1115@gmail.com' && (
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl shadow-md p-6 mb-6">
