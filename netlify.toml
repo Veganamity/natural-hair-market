@@ -3,8 +3,8 @@
   publish = "dist"
 
 [build.environment]
-  VITE_SUPABASE_URL = "https://tkymetexwvmqkahostaz.supabase.co"
-  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreW1ldGV4d3ZtcWthaG9zdGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxODYxODQsImV4cCI6MjA3ODc2MjE4NH0.q_mc7ziwzdTveg11cQvbTRrlbyxTKaJMb9k-1XitC1Q"
+  VITE_SUPABASE_URL = "https://tergjlwermtignqmsnys.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlcmdqbHdlcm10aWducW1zbnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwNzg4MzcsImV4cCI6MjA3ODY1NDgzN30.kUfEjoM6K3kZxxUjTkzubG5BmcAThOaohIX9VsMgaDk"
   VITE_STRIPE_PUBLIC_KEY = "pk_test_51STHi8EeISQOoW2jKgBeaGnHZs4M7gfFB6BP5Ght3sFc7J2Xl07LNnxiCfw4zKcseIuLroaG8X1ovyLwVzcof7ee00JrFi3w4l"
   GOOGLE_CLIENT_ID = "890673217806-mfcgufbors58bib4pdrudh45hrsavkk9.apps.googleusercontent.com"
 
