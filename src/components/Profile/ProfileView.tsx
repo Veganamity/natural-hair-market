@@ -542,6 +542,29 @@ export function ProfileView() {
         )}
       </div>
 
+      {profile.email === 'stephaniebuisson1115@gmail.com' && (
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Administration</h2>
+                <p className="text-sm text-gray-600">Gérer les certifications des salons</p>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate?.('admin-salons')}
+              className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
+              <Shield className="w-5 h-5" />
+              Page Admin Salons
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
