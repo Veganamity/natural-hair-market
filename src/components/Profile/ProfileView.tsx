@@ -86,44 +86,9 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       }
 
       if (!data) {
-        const newProfile = {
-          id: user.id,
-          email: user.email || '',
-          full_name: '',
-          phone: '',
-          location: '',
-          bio: '',
-          address_line1: '',
-          address_line2: '',
-          postal_code: '',
-          city: '',
-          country: 'FR',
-        };
-
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert(newProfile);
-
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-          setError(`Erreur lors de la création du profil: ${insertError.message}`);
-          setLoading(false);
-          return;
-        }
-
-        setProfile(newProfile as Profile);
-        setFormData({
-          full_name: '',
-          phone: '',
-          location: '',
-          bio: '',
-          address_line1: '',
-          address_line2: '',
-          postal_code: '',
-          city: '',
-          country: 'FR',
-          siret: '',
-        });
+        setError('Votre profil est en cours de création. Veuillez rafraîchir la page dans quelques instants.');
+        setLoading(false);
+        return;
       } else {
         setProfile(data);
         setFormData({
