@@ -129,15 +129,23 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    console.log('=== Starting profile update ===');
+    console.log('User ID:', user?.id);
+    console.log('Form data:', formData);
+
     setLoading(true);
     setError(null);
     setSaveSuccess(false);
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update(formData)
-        .eq('id', user!.id);
+        .eq('id', user!.id)
+        .select();
+
+      console.log('Update response:', { data, error });
 
       if (error) {
         console.error('Error updating profile:', error);
@@ -146,8 +154,10 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         return;
       }
 
+      console.log('Profile updated successfully!');
       setSaveSuccess(true);
       setEditing(false);
+      setLoading(false);
       await fetchProfile();
 
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -297,6 +307,15 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
         {editing ? (
           <form onSubmit={handleUpdateProfile} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                <div>
+                  <p className="text-red-800 font-semibold">Erreur</p>
+                  <p className="text-red-700 text-sm">{error}</p>
+                </div>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nom complet
