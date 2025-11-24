@@ -19,6 +19,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -128,15 +129,32 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSaveSuccess(false);
 
-    const { error } = await supabase
-      .from('profiles')
-      .update(formData)
-      .eq('id', user!.id);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(formData)
+        .eq('id', user!.id);
 
-    if (!error) {
+      if (error) {
+        console.error('Error updating profile:', error);
+        setError(`Erreur lors de la mise à jour du profil: ${error.message}`);
+        setLoading(false);
+        return;
+      }
+
+      setSaveSuccess(true);
       setEditing(false);
-      fetchProfile();
+      await fetchProfile();
+
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: any) {
+      console.error('Unexpected error:', err);
+      setError(`Erreur inattendue: ${err.message}`);
+      setLoading(false);
     }
   };
 
@@ -257,6 +275,12 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         />
       )}
       <div className="space-y-6">
+      {saveSuccess && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+          <CheckCircle className="w-6 h-6 text-green-600" />
+          <p className="text-green-800 font-semibold">Profil mis à jour avec succès !</p>
+        </div>
+      )}
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Mon Profil</h2>
@@ -430,15 +454,24 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               <button
                 type="button"
                 onClick={() => setEditing(false)}
-                className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                disabled={loading}
+                className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Annuler
               </button>
               <button
                 type="submit"
-                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                disabled={loading}
+                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Enregistrer
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  'Enregistrer'
+                )}
               </button>
             </div>
           </form>
