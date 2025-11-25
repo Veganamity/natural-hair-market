@@ -255,6 +255,52 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     window.location.href = '/';
   };
 
+  const handleDeleteAccount = async () => {
+    const confirmText = 'SUPPRIMER MON COMPTE';
+    const userInput = prompt(
+      `⚠️ ATTENTION : Cette action est irréversible.\n\n` +
+      `La suppression de votre compte entraînera :\n` +
+      `• La suppression définitive de toutes vos données personnelles\n` +
+      `• La suppression de toutes vos annonces\n` +
+      `• La suppression de votre historique de transactions\n` +
+      `• La perte de vos favoris et offres\n\n` +
+      `Pour confirmer, tapez exactement : ${confirmText}`
+    );
+
+    if (userInput !== confirmText) {
+      if (userInput !== null) {
+        alert('Suppression annulée : le texte de confirmation ne correspond pas.');
+      }
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Session expirée');
+      }
+
+      // Delete user account via Supabase admin API
+      const { error: deleteError } = await supabase.rpc('delete_user_account');
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      // Sign out and redirect
+      await supabase.auth.signOut();
+      alert('Votre compte a été supprimé avec succès.');
+      window.location.href = '/';
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      setError(`Erreur lors de la suppression du compte: ${error.message}`);
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -814,7 +860,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <LogOut className="w-6 h-6 text-gray-600" />
             <h2 className="text-2xl font-bold text-gray-800">Déconnexion</h2>
@@ -825,6 +871,29 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           >
             Se déconnecter
           </button>
+        </div>
+
+        <div className="border-t pt-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start gap-3 mb-3">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-bold text-red-800 mb-1">Zone de danger</h3>
+                <p className="text-sm text-red-700 mb-3">
+                  La suppression de votre compte est définitive et irréversible.
+                  Toutes vos données, annonces, transactions et favoris seront définitivement supprimés.
+                </p>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={loading}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Supprimer définitivement mon compte
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
