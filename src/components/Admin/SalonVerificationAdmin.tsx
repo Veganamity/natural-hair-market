@@ -45,7 +45,12 @@ export default function SalonVerificationAdmin() {
 
       // Call edge function to bypass schema cache
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/get-salon-verifications`, {
+      const url = `${supabaseUrl}/functions/v1/get-salon-verifications`;
+
+      console.log('Calling edge function:', url);
+      console.log('With filter:', filter);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -54,9 +59,19 @@ export default function SalonVerificationAdmin() {
         body: JSON.stringify({ status_filter: filter })
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -64,7 +79,10 @@ export default function SalonVerificationAdmin() {
       setVerifications(data || []);
     } catch (error: any) {
       console.error('Error loading verifications:', error);
-      setMessage({ type: 'error', text: `Erreur lors du chargement des demandes: ${error.message}` });
+      setMessage({
+        type: 'error',
+        text: `Erreur lors du chargement des demandes: ${error.message}. Vérifiez la console pour plus de détails.`
+      });
     } finally {
       setLoading(false);
     }
