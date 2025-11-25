@@ -20,6 +20,8 @@ import { SellerRules } from './components/Legal/SellerRules';
 import { BuyerRules } from './components/Legal/BuyerRules';
 import { FAQ } from './components/Legal/FAQ';
 import { AboutUs } from './components/Legal/AboutUs';
+import SalonVerificationAdmin from './components/Admin/SalonVerificationAdmin';
+import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
 import { Database } from './lib/database.types';
 import { supabase } from './lib/supabaseClient';
@@ -31,7 +33,7 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 function AppContent() {
   const { user, loading, signOut } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot-password' | 'reset-password'>('login');
-  const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about' | 'admin-salons' | 'salon-certifie'>('landing');
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
@@ -384,7 +386,9 @@ function AppContent() {
         {currentView === 'offers' && <OffersView />}
         {currentView === 'orders' && <OrderManagement />}
         {currentView === 'transactions' && <TransactionsView />}
-        {currentView === 'profile' && <ProfileView />}
+        {currentView === 'profile' && <ProfileView onNavigate={(view) => setCurrentView(view as any)} />}
+        {currentView === 'admin-salons' && <SalonVerificationAdmin />}
+        {currentView === 'salon-certifie' && <SalonCertificationForm />}
         {currentView === 'privacy' && <PrivacyPolicy />}
         {currentView === 'terms' && <TermsOfService />}
         {currentView === 'sales' && <SalesTerms />}
