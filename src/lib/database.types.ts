@@ -394,6 +394,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      salon_verifications: {
+        Row: {
+          id: string
+          user_id: string
+          salon_name: string
+          siret: string
+          address: string
+          phone: string | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          salon_name: string
+          siret: string
+          address: string
+          phone?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          salon_name?: string
+          siret?: string
+          address?: string
+          phone?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }
