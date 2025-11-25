@@ -38,19 +38,11 @@ export default function SalonVerificationAdmin() {
       setLoading(true);
       setMessage(null);
 
-      let query = supabase
-        .from('salon_verifications')
-        .select(`
-          *,
-          profiles(email, full_name)
-        `)
-        .order('created_at', { ascending: false });
+      const statusFilter = filter !== 'all' ? filter : null;
 
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await supabase.rpc('get_salon_verifications', {
+        status_filter: statusFilter
+      });
 
       if (error) {
         console.error('Error loading verifications:', error);
@@ -71,19 +63,12 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir approuver ce salon ?')) return;
 
     try {
-      const { error: updateError } = await supabase
-        .from('salon_verifications')
-        .update({ status: 'approved' })
-        .eq('id', verificationId);
+      const { error } = await supabase.rpc('approve_salon_verification', {
+        verification_id: verificationId,
+        user_id: userId
+      });
 
-      if (updateError) throw updateError;
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ is_certified_salon: true })
-        .eq('id', userId);
-
-      if (profileError) throw profileError;
+      if (error) throw error;
 
       setMessage({ type: 'success', text: 'Salon approuvé avec succès !' });
       await loadVerifications();
@@ -97,19 +82,12 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir refuser cette demande ?')) return;
 
     try {
-      const { error: updateError } = await supabase
-        .from('salon_verifications')
-        .update({ status: 'rejected' })
-        .eq('id', verificationId);
+      const { error } = await supabase.rpc('reject_salon_verification', {
+        verification_id: verificationId,
+        user_id: userId
+      });
 
-      if (updateError) throw updateError;
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ is_certified_salon: false })
-        .eq('id', userId);
-
-      if (profileError) throw profileError;
+      if (error) throw error;
 
       setMessage({ type: 'success', text: 'Demande refusée.' });
       await loadVerifications();
