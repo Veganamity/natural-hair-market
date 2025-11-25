@@ -87,8 +87,24 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       }
 
       if (!data) {
-        setError('Votre profil est en cours de création. Veuillez rafraîchir la page dans quelques instants.');
-        setLoading(false);
+        console.log('Profile not found, creating it...');
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            email: user.email,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          setError('Impossible de créer votre profil. Veuillez vous reconnecter.');
+          setLoading(false);
+          return;
+        }
+
+        fetchProfile();
         return;
       } else {
         setProfile(data);
@@ -254,12 +270,21 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           <p className="font-semibold">Erreur</p>
           <p className="text-sm">{error}</p>
         </div>
-        <button
-          onClick={() => fetchProfile()}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-        >
-          Réessayer
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => fetchProfile()}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            Réessayer
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Se déconnecter
+          </button>
+        </div>
       </div>
     );
   }
