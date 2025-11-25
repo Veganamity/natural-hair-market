@@ -35,13 +35,7 @@ export default function SalonCertificationForm() {
 
   const checkExistingRequest = async () => {
     try {
-      const { data, error } = await supabase
-        .from('salon_verifications')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('get_my_salon_verification_rpc');
 
       if (error) throw error;
       if (data) {
@@ -86,24 +80,23 @@ export default function SalonCertificationForm() {
     setLoading(true);
 
     try {
-      console.log('Inserting salon verification...');
-      const { data, error } = await supabase
-        .from('salon_verifications')
-        .insert({
-          user_id: user.id,
-          salon_name: formData.salon_name,
-          siret: formData.siret.replace(/\s/g, ''),
-          address: formData.address,
-          phone: formData.phone || null,
-          status: 'pending'
-        })
-        .select();
+      console.log('Submitting salon verification...');
+      const { data, error } = await supabase.rpc('submit_salon_verification_rpc', {
+        p_salon_name: formData.salon_name,
+        p_siret: formData.siret,
+        p_address: formData.address,
+        p_phone: formData.phone || null
+      });
 
-      console.log('Insert result:', { data, error });
+      console.log('Submit result:', { data, error });
 
       if (error) {
-        console.error('Insert error:', error);
+        console.error('Submit error:', error);
         throw error;
+      }
+
+      if (data && !data.success) {
+        throw new Error(data.error || 'Erreur inconnue');
       }
 
       setMessage({ type: 'success', text: 'Votre demande a été envoyée avec succès ! Nous la traiterons dans les plus brefs délais.' });
