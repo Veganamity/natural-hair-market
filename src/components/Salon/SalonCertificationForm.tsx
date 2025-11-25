@@ -61,6 +61,13 @@ export default function SalonCertificationForm() {
     e.preventDefault();
     setMessage(null);
 
+    console.log('Form submitted', formData);
+
+    if (!user?.id) {
+      setMessage({ type: 'error', text: 'Vous devez être connecté pour envoyer une demande.' });
+      return;
+    }
+
     if (!validateSiret(formData.siret)) {
       setMessage({ type: 'error', text: 'Le SIRET doit contenir exactement 14 chiffres.' });
       return;
@@ -79,18 +86,25 @@ export default function SalonCertificationForm() {
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      console.log('Inserting salon verification...');
+      const { data, error } = await supabase
         .from('salon_verifications')
         .insert({
-          user_id: user?.id,
+          user_id: user.id,
           salon_name: formData.salon_name,
           siret: formData.siret.replace(/\s/g, ''),
           address: formData.address,
           phone: formData.phone || null,
           status: 'pending'
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      console.log('Insert result:', { data, error });
+
+      if (error) {
+        console.error('Insert error:', error);
+        throw error;
+      }
 
       setMessage({ type: 'success', text: 'Votre demande a été envoyée avec succès ! Nous la traiterons dans les plus brefs délais.' });
       setFormData({
@@ -102,9 +116,9 @@ export default function SalonCertificationForm() {
       });
 
       await checkExistingRequest();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting request:', error);
-      setMessage({ type: 'error', text: 'Une erreur est survenue lors de l\'envoi de votre demande.' });
+      setMessage({ type: 'error', text: `Une erreur est survenue : ${error.message || 'Erreur inconnue'}` });
     } finally {
       setLoading(false);
     }
