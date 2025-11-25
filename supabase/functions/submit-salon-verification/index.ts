@@ -34,23 +34,56 @@ Deno.serve(async (req: Request) => {
     const { salon_name, siret, address, phone } = await req.json();
 
     const cleanedSiret = siret.replace(/\s/g, '');
-    
+
     if (!/^\d{14}$/.test(cleanedSiret)) {
       throw new Error('Le SIRET doit contenir exactement 14 chiffres');
     }
 
-    const { data, error } = await supabase
+    const { data: existingRequest } = await supabase
       .from('salon_verifications')
-      .insert({
-        user_id: user.id,
-        salon_name,
-        siret: cleanedSiret,
-        address,
-        phone: phone || null,
-        status: 'pending'
-      })
-      .select()
-      .single();
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    let data;
+    let error;
+
+    if (existingRequest && existingRequest.status !== 'approved') {
+      const result = await supabase
+        .from('salon_verifications')
+        .update({
+          salon_name,
+          siret: cleanedSiret,
+          address,
+          phone: phone || null,
+          status: 'pending',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingRequest.id)
+        .select()
+        .single();
+
+      data = result.data;
+      error = result.error;
+    } else if (!existingRequest) {
+      const result = await supabase
+        .from('salon_verifications')
+        .insert({
+          user_id: user.id,
+          salon_name,
+          siret: cleanedSiret,
+          address,
+          phone: phone || null,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      data = result.data;
+      error = result.error;
+    } else {
+      throw new Error('Votre demande a déjà été approuvée');
+    }
 
     if (error) throw error;
 

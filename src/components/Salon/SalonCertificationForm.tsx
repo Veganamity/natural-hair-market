@@ -97,10 +97,6 @@ export default function SalonCertificationForm() {
       return;
     }
 
-    if (existingRequest?.status === 'pending') {
-      setMessage({ type: 'info', text: 'Votre demande de certification est déjà en cours de traitement.' });
-      return;
-    }
 
     setLoading(true);
 
@@ -213,9 +209,19 @@ export default function SalonCertificationForm() {
               <p><span className="font-medium">Statut :</span> {getStatusBadge(existingRequest.status)}</p>
               <p><span className="font-medium">Date de demande :</span> {new Date(existingRequest.created_at).toLocaleDateString('fr-FR')}</p>
             </div>
+            {existingRequest.status === 'pending' && (
+              <p className="mt-3 text-sm text-blue-600">
+                Si vous avez fait une erreur, vous pouvez soumettre une nouvelle demande ci-dessous. L'ancienne demande sera automatiquement remplacée.
+              </p>
+            )}
             {existingRequest.status === 'rejected' && (
               <p className="mt-3 text-sm text-gray-600">
                 Vous pouvez soumettre une nouvelle demande ci-dessous.
+              </p>
+            )}
+            {existingRequest.status === 'approved' && (
+              <p className="mt-3 text-sm text-green-600">
+                Votre demande a été approuvée ! Le badge apparaît sur votre profil.
               </p>
             )}
           </div>
@@ -231,7 +237,7 @@ export default function SalonCertificationForm() {
           </div>
         )}
 
-        {(!existingRequest || existingRequest.status !== 'pending') && (
+        {(!existingRequest || existingRequest.status !== 'approved') && (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="salon_name" className="block text-sm font-medium text-gray-700 mb-1">
