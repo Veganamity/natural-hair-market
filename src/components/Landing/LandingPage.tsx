@@ -43,7 +43,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
           <div className="flex justify-center mb-4">
             <img
               src="/file_0000000094ac71f49db79e27f27b239c.png"
-              alt="NaturalHairMarket Logo"
+              alt="Marketplace de cheveux humains naturels & colorés"
               className="h-32 w-auto md:h-40"
             />
           </div>
@@ -387,7 +387,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
       <section className="py-8 md:py-10 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-6">
-            Pourquoi choisir NaturalHairMarket ?
+            Pourquoi choisir notre Marketplace ?
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:border-emerald-300 transition-colors">
@@ -444,7 +444,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
       <section className="py-8 md:py-10 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-6">
-            Comment fonctionne NaturalHairMarket ?
+            Comment fonctionne la Marketplace ?
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-lg">
@@ -537,7 +537,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
       <footer className="bg-gray-900 text-gray-300 py-8 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-white mb-2">NaturalHairMarket</h3>
+            <h3 className="text-xl font-bold text-white mb-2">Marketplace de cheveux humains naturels & colorés</h3>
             <p className="mb-4 text-sm">
               La première marketplace française dédiée aux cheveux naturels & colorés humains
             </p>
@@ -635,7 +635,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
           </div>
 
           <p className="text-sm text-gray-400 text-center">
-            © 2025 NaturalHairMarket. Tous droits réservés.
+            © 2025 Marketplace de cheveux humains naturels & colorés. Tous droits réservés.
           </p>
         </div>
       </footer>

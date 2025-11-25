@@ -79,7 +79,7 @@ function AppContent() {
               <div className="flex items-center justify-between h-16">
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-                    NaturalHairMarket
+                    Marketplace de cheveux humains naturels & colorés
                   </h1>
                 </div>
                 <button
@@ -114,7 +114,7 @@ function AppContent() {
               <div className="flex items-center justify-between h-16">
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-                    NaturalHairMarket
+                    Marketplace de cheveux humains naturels & colorés
                   </h1>
                 </div>
                 <div className="flex items-center gap-2">
@@ -414,7 +414,7 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-gray-600 text-sm">
-              © 2025 NaturalHairMarket. Tous droits réservés.
+              © 2025 Marketplace de cheveux humains naturels & colorés. Tous droits réservés.
             </p>
             <div className="flex gap-4">
               <button
