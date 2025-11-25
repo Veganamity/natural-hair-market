@@ -36,25 +36,33 @@ export default function SalonCertificationForm() {
   const checkExistingRequest = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.log('No session found');
+        return;
+      }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-salon-verification`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-salon-verification`;
+      console.log('Fetching from:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+
+      console.log('Response status:', response.status);
 
       if (!response.ok) {
-        console.error('Error fetching verification:', await response.text());
+        const errorText = await response.text();
+        console.error('Error fetching verification:', errorText);
         return;
       }
 
       const data = await response.json();
+      console.log('Received data:', data);
       if (data) {
         setExistingRequest(data);
       }
@@ -104,25 +112,29 @@ export default function SalonCertificationForm() {
         throw new Error('Session non trouvée');
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-salon-verification`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            salon_name: formData.salon_name,
-            siret: formData.siret,
-            address: formData.address,
-            phone: formData.phone || null,
-          }),
-        }
-      );
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-salon-verification`;
+      console.log('Submitting to:', url);
+
+      const payload = {
+        salon_name: formData.salon_name,
+        siret: formData.siret,
+        address: formData.address,
+        phone: formData.phone || null,
+      };
+      console.log('Payload:', payload);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log('Response status:', response.status);
 
       const result = await response.json();
-
       console.log('Submit result:', result);
 
       if (!response.ok || !result.success) {
