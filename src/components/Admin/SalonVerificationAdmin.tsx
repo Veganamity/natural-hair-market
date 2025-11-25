@@ -43,24 +43,20 @@ export default function SalonVerificationAdmin() {
         throw new Error('Non authentifié');
       }
 
-      const statusFilter = filter !== 'all' ? filter : null;
-
-      // Use direct fetch to PostgREST API to bypass client cache
+      // Call edge function to bypass schema cache
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/get_salon_verifications`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/get-salon-verifications`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${session.access_token}`,
-          'Prefer': 'return=representation'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status_filter: statusFilter })
+        body: JSON.stringify({ status_filter: filter })
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -82,19 +78,18 @@ export default function SalonVerificationAdmin() {
       if (!session) throw new Error('Non authentifié');
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/approve_salon_verification`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/approve-salon-verification`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ verification_id: verificationId, user_id: userId })
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! ${errorText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       setMessage({ type: 'success', text: 'Salon approuvé avec succès !' });
@@ -113,19 +108,18 @@ export default function SalonVerificationAdmin() {
       if (!session) throw new Error('Non authentifié');
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/reject_salon_verification`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/reject-salon-verification`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ verification_id: verificationId, user_id: userId })
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! ${errorText}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       setMessage({ type: 'success', text: 'Demande refusée.' });
