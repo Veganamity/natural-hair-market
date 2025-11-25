@@ -35,23 +35,13 @@ export default function SalonCertificationForm() {
 
   const checkExistingRequest = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      const { data, error } = await supabase.rpc('get_my_salon_verification_rpc');
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/get-my-salon-verification`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      if (error) {
+        console.error('RPC error:', error);
+        return;
       }
 
-      const data = await response.json();
       if (data) {
         setExistingRequest(data);
       }
@@ -95,29 +85,23 @@ export default function SalonCertificationForm() {
 
     try {
       console.log('Submitting salon verification...');
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Non authentifié');
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/submit-salon-verification`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          salon_name: formData.salon_name,
-          siret: formData.siret,
-          address: formData.address,
-          phone: formData.phone || null
-        })
+      const { data, error } = await supabase.rpc('submit_salon_verification_rpc', {
+        p_salon_name: formData.salon_name,
+        p_siret: formData.siret,
+        p_address: formData.address,
+        p_phone: formData.phone || null
       });
 
-      const result = await response.json();
-      console.log('Submit result:', result);
+      console.log('Submit result:', { data, error });
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || `HTTP ${response.status}`);
+      if (error) {
+        console.error('RPC error:', error);
+        throw error;
+      }
+
+      if (data && !data.success) {
+        throw new Error(data.error || 'Erreur inconnue');
       }
 
       setMessage({ type: 'success', text: 'Votre demande a été envoyée avec succès ! Nous la traiterons dans les plus brefs délais.' });
