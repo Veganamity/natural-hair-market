@@ -41,61 +41,45 @@ Deno.serve(async (req: Request) => {
     // Get status filter from request
     const { status_filter } = await req.json().catch(() => ({ status_filter: null }));
 
-    // Build query
-    let query = `
-      SELECT
-        sv.id,
-        sv.user_id,
-        sv.salon_name,
-        sv.siret,
-        sv.address,
-        sv.phone,
-        sv.status,
-        sv.created_at,
-        jsonb_build_object(
-          'email', p.email,
-          'full_name', p.full_name
-        ) as profiles
-      FROM salon_verifications sv
-      LEFT JOIN profiles p ON sv.user_id = p.id
-    `;
+    // Query using service role (bypasses RLS and cache)
+    let query = supabase
+      .from('salon_verifications')
+      .select(`
+        id,
+        user_id,
+        salon_name,
+        siret,
+        address,
+        phone,
+        status,
+        created_at,
+        profiles:user_id (
+          email,
+          full_name
+        )
+      `)
+      .order('created_at', { ascending: false });
 
     if (status_filter && status_filter !== 'all') {
-      query += ` WHERE sv.status = '${status_filter}'`;
+      query = query.eq('status', status_filter);
     }
 
-    query += ` ORDER BY sv.created_at DESC`;
-
-    // Execute raw SQL query using service role
-    const { data, error } = await supabase.rpc('exec_sql', { query_text: query }).single();
+    const { data, error } = await query;
 
     if (error) {
-      // If exec_sql doesn't exist, use direct query
-      const result = await supabase
-        .from('salon_verifications')
-        .select(`
-          *,
-          profiles!inner(email, full_name)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (status_filter && status_filter !== 'all') {
-        result.eq('status', status_filter);
-      }
-
-      const { data: fallbackData, error: fallbackError } = result;
-
-      if (fallbackError) throw fallbackError;
-
-      return new Response(JSON.stringify(fallbackData), {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      });
+      console.error('Query error:', error);
+      throw error;
     }
 
-    return new Response(JSON.stringify(data), {
+    // Transform data to match expected format
+    const transformedData = data.map(item => ({
+      ...item,
+      profiles: Array.isArray(item.profiles) && item.profiles.length > 0 
+        ? item.profiles[0] 
+        : item.profiles
+    }));
+
+    return new Response(JSON.stringify(transformedData), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
