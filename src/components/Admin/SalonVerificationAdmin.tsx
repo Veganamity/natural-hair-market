@@ -36,11 +36,13 @@ export default function SalonVerificationAdmin() {
   const loadVerifications = async () => {
     try {
       setLoading(true);
+      setMessage(null);
+
       let query = supabase
         .from('salon_verifications')
         .select(`
           *,
-          profiles!inner(email, full_name)
+          profiles(email, full_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -50,11 +52,16 @@ export default function SalonVerificationAdmin() {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading verifications:', error);
+        throw error;
+      }
+
+      console.log('Loaded verifications:', data);
       setVerifications(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading verifications:', error);
-      setMessage({ type: 'error', text: 'Erreur lors du chargement des demandes.' });
+      setMessage({ type: 'error', text: `Erreur lors du chargement des demandes: ${error.message}` });
     } finally {
       setLoading(false);
     }
