@@ -38,47 +38,20 @@ export default function SalonVerificationAdmin() {
       setLoading(true);
       setMessage(null);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Non authentifié');
+      console.log('Loading verifications with filter:', filter);
+
+      // Use RPC function to bypass schema cache
+      const { data, error } = await supabase.rpc('get_salon_verifications_rpc', {
+        status_filter: filter
+      });
+
+      if (error) {
+        console.error('RPC error:', error);
+        throw error;
       }
 
-      console.log('Calling edge function with filter:', filter);
-
-      // Use edge function with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-
-      try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const response = await fetch(`${supabaseUrl}/functions/v1/get-salon-verifications`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ status_filter: filter }),
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-          throw new Error(errorText || `HTTP ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Loaded verifications:', data);
-        setVerifications(data || []);
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-          throw new Error('La requête a expiré. Veuillez réessayer.');
-        }
-        throw fetchError;
-      }
+      console.log('Loaded verifications:', data);
+      setVerifications(data || []);
     } catch (error: any) {
       console.error('Error loading verifications:', error);
       setMessage({
@@ -94,23 +67,13 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir approuver ce salon ?')) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Non authentifié');
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/approve-salon-verification`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ verification_id: verificationId, user_id: userId })
+      const { data, error } = await supabase.rpc('approve_salon_verification_rpc', {
+        verification_id: verificationId,
+        user_id: userId
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP ${response.status}`);
-      }
+      if (error) throw error;
+      if (data && !data.success) throw new Error(data.error || 'Erreur inconnue');
 
       setMessage({ type: 'success', text: 'Salon approuvé avec succès !' });
       await loadVerifications();
@@ -124,23 +87,13 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir refuser cette demande ?')) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Non authentifié');
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/reject-salon-verification`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ verification_id: verificationId, user_id: userId })
+      const { data, error } = await supabase.rpc('reject_salon_verification_rpc', {
+        verification_id: verificationId,
+        user_id: userId
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || `HTTP ${response.status}`);
-      }
+      if (error) throw error;
+      if (data && !data.success) throw new Error(data.error || 'Erreur inconnue');
 
       setMessage({ type: 'success', text: 'Demande refusée.' });
       await loadVerifications();
