@@ -38,17 +38,32 @@ export default function SalonVerificationAdmin() {
       setLoading(true);
       setMessage(null);
 
-      const statusFilter = filter !== 'all' ? filter : null;
-
-      const { data, error } = await supabase.rpc('get_salon_verifications', {
-        status_filter: statusFilter
-      });
-
-      if (error) {
-        console.error('Error loading verifications:', error);
-        throw error;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Non authentifié');
       }
 
+      const statusFilter = filter !== 'all' ? filter : null;
+
+      // Use direct fetch to PostgREST API to bypass client cache
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/get_salon_verifications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session.access_token}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ status_filter: statusFilter })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
       console.log('Loaded verifications:', data);
       setVerifications(data || []);
     } catch (error: any) {
@@ -63,18 +78,30 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir approuver ce salon ?')) return;
 
     try {
-      const { error } = await supabase.rpc('approve_salon_verification', {
-        verification_id: verificationId,
-        user_id: userId
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/approve_salon_verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ verification_id: verificationId, user_id: userId })
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! ${errorText}`);
+      }
 
       setMessage({ type: 'success', text: 'Salon approuvé avec succès !' });
       await loadVerifications();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error approving salon:', error);
-      setMessage({ type: 'error', text: 'Erreur lors de l\'approbation du salon.' });
+      setMessage({ type: 'error', text: `Erreur lors de l'approbation du salon: ${error.message}` });
     }
   };
 
@@ -82,18 +109,30 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir refuser cette demande ?')) return;
 
     try {
-      const { error } = await supabase.rpc('reject_salon_verification', {
-        verification_id: verificationId,
-        user_id: userId
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/reject_salon_verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ verification_id: verificationId, user_id: userId })
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! ${errorText}`);
+      }
 
       setMessage({ type: 'success', text: 'Demande refusée.' });
       await loadVerifications();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error rejecting salon:', error);
-      setMessage({ type: 'error', text: 'Erreur lors du refus de la demande.' });
+      setMessage({ type: 'error', text: `Erreur lors du refus de la demande: ${error.message}` });
     }
   };
 
