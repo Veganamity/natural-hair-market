@@ -48,7 +48,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
             />
           </div>
           <p className="text-base sm:text-lg md:text-xl mb-1 font-semibold">
-            Marketplace française de cheveux humains naturels & colorés
+            Marketplace de cheveux humains naturels & colorés
           </p>
           <p className="text-sm sm:text-base md:text-lg mb-2 font-medium">
             Vendez et achetez en toute facilité
