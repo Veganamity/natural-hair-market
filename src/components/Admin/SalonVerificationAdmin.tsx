@@ -38,57 +38,52 @@ export default function SalonVerificationAdmin() {
       setLoading(true);
       setMessage(null);
 
-      console.log('Starting to load verifications...');
-
-      // Use direct Supabase query - works with RLS policies
-      let query = supabase
-        .from('salon_verifications')
-        .select(`
-          id,
-          user_id,
-          salon_name,
-          siret,
-          address,
-          phone,
-          status,
-          created_at,
-          profiles:user_id (
-            email,
-            full_name
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (filter !== 'all') {
-        query = query.eq('status', filter);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Non authentifié');
       }
 
-      console.log('Executing query with filter:', filter);
+      console.log('Calling edge function with filter:', filter);
 
-      const { data, error } = await query;
+      // Use edge function with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-      if (error) {
-        console.error('Query error:', error);
-        throw error;
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const response = await fetch(`${supabaseUrl}/functions/v1/get-salon-verifications`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status_filter: filter }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          throw new Error(errorText || `HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Loaded verifications:', data);
+        setVerifications(data || []);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error('La requête a expiré. Veuillez réessayer.');
+        }
+        throw fetchError;
       }
-
-      console.log('Raw data received:', data);
-
-      // Transform data to match expected format
-      const transformedData = (data || []).map((item: any) => ({
-        ...item,
-        profiles: Array.isArray(item.profiles) && item.profiles.length > 0
-          ? item.profiles[0]
-          : item.profiles || {}
-      }));
-
-      console.log('Transformed data:', transformedData);
-      setVerifications(transformedData);
     } catch (error: any) {
       console.error('Error loading verifications:', error);
       setMessage({
         type: 'error',
-        text: `Erreur lors du chargement des demandes: ${error.message}`
+        text: `Erreur: ${error.message}`
       });
     } finally {
       setLoading(false);
@@ -99,27 +94,29 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir approuver ce salon ?')) return;
 
     try {
-      // Update verification status
-      const { error: updateError } = await supabase
-        .from('salon_verifications')
-        .update({ status: 'approved', updated_at: new Date().toISOString() })
-        .eq('id', verificationId);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
 
-      if (updateError) throw updateError;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/approve-salon-verification`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ verification_id: verificationId, user_id: userId })
+      });
 
-      // Update profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ is_certified_salon: true })
-        .eq('id', userId);
-
-      if (profileError) throw profileError;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `HTTP ${response.status}`);
+      }
 
       setMessage({ type: 'success', text: 'Salon approuvé avec succès !' });
       await loadVerifications();
     } catch (error: any) {
       console.error('Error approving salon:', error);
-      setMessage({ type: 'error', text: `Erreur lors de l'approbation du salon: ${error.message}` });
+      setMessage({ type: 'error', text: `Erreur: ${error.message}` });
     }
   };
 
@@ -127,27 +124,29 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir refuser cette demande ?')) return;
 
     try {
-      // Update verification status
-      const { error: updateError } = await supabase
-        .from('salon_verifications')
-        .update({ status: 'rejected', updated_at: new Date().toISOString() })
-        .eq('id', verificationId);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
 
-      if (updateError) throw updateError;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/reject-salon-verification`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ verification_id: verificationId, user_id: userId })
+      });
 
-      // Update profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ is_certified_salon: false })
-        .eq('id', userId);
-
-      if (profileError) throw profileError;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `HTTP ${response.status}`);
+      }
 
       setMessage({ type: 'success', text: 'Demande refusée.' });
       await loadVerifications();
     } catch (error: any) {
       console.error('Error rejecting salon:', error);
-      setMessage({ type: 'error', text: `Erreur lors du refus de la demande: ${error.message}` });
+      setMessage({ type: 'error', text: `Erreur: ${error.message}` });
     }
   };
 
