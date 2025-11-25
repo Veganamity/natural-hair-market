@@ -19,13 +19,11 @@ Deno.serve(async (req: Request) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Authorization header required');
     }
 
-    // Get user from JWT
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
@@ -33,15 +31,12 @@ Deno.serve(async (req: Request) => {
       throw new Error('Unauthorized');
     }
 
-    // Check if user is admin
     if (user.email !== 'stephaniebuisson1115@gmail.com') {
       throw new Error('Access denied: admin privileges required');
     }
 
-    // Get status filter from request
     const { status_filter } = await req.json().catch(() => ({ status_filter: null }));
 
-    // Query using service role (bypasses RLS and cache)
     let query = supabase
       .from('salon_verifications')
       .select(`
@@ -71,7 +66,6 @@ Deno.serve(async (req: Request) => {
       throw error;
     }
 
-    // Transform data to match expected format
     const transformedData = data.map(item => ({
       ...item,
       profiles: Array.isArray(item.profiles) && item.profiles.length > 0 

@@ -19,13 +19,11 @@ Deno.serve(async (req: Request) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Authorization header required');
     }
 
-    // Get user from JWT
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
@@ -33,19 +31,16 @@ Deno.serve(async (req: Request) => {
       throw new Error('Unauthorized');
     }
 
-    // Check if user is admin
     if (user.email !== 'stephaniebuisson1115@gmail.com') {
       throw new Error('Access denied: admin privileges required');
     }
 
-    // Get verification_id and user_id from request
     const { verification_id, user_id } = await req.json();
 
     if (!verification_id || !user_id) {
       throw new Error('verification_id and user_id are required');
     }
 
-    // Update verification status
     const { error: updateError } = await supabase
       .from('salon_verifications')
       .update({ status: 'approved', updated_at: new Date().toISOString() })
@@ -53,7 +48,6 @@ Deno.serve(async (req: Request) => {
 
     if (updateError) throw updateError;
 
-    // Update profile
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ is_certified_salon: true })
