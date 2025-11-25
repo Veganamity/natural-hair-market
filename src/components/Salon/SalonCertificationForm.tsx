@@ -87,10 +87,10 @@ export default function SalonCertificationForm() {
       console.log('Submitting salon verification...');
 
       const { data, error } = await supabase.rpc('submit_salon_verification_rpc', {
-        p_salon_name: formData.salon_name,
-        p_siret: formData.siret,
         p_address: formData.address,
-        p_phone: formData.phone || null
+        p_phone: formData.phone || null,
+        p_salon_name: formData.salon_name,
+        p_siret: formData.siret
       });
 
       console.log('Submit result:', { data, error });
@@ -98,10 +98,6 @@ export default function SalonCertificationForm() {
       if (error) {
         console.error('RPC error:', error);
         throw error;
-      }
-
-      if (data && !data.success) {
-        throw new Error(data.error || 'Erreur inconnue');
       }
 
       setMessage({ type: 'success', text: 'Votre demande a été envoyée avec succès ! Nous la traiterons dans les plus brefs délais.' });

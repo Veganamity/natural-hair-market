@@ -41,8 +41,9 @@ export default function SalonVerificationAdmin() {
       console.log('Loading verifications with filter:', filter);
 
       // Use RPC function to bypass schema cache
+      const filterValue = filter === 'all' ? null : filter;
       const { data, error } = await supabase.rpc('get_salon_verifications_rpc', {
-        status_filter: filter
+        status_filter: filterValue
       });
 
       if (error) {
