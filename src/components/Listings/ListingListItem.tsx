@@ -104,7 +104,7 @@ export function ListingListItem({
               {seller?.is_certified_salon && (
                 <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-full" title="Salon Certifié">
                   <BadgeCheck className="w-3.5 h-3.5 text-blue-600" />
-                  <span className="text-xs text-blue-700 font-medium">Certifié</span>
+                  <span className="text-xs text-blue-700 font-medium">Salon Certifié</span>
                 </div>
               )}
               {listing.status === 'active' && (
