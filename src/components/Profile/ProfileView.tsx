@@ -689,13 +689,22 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 <p className="text-sm text-gray-600">Gérer les certifications des salons</p>
               </div>
             </div>
-            <button
-              onClick={() => onNavigate?.('admin-salons')}
-              className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2"
-            >
-              <Shield className="w-5 h-5" />
-              Page Admin Salons
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => onNavigate?.('admin-salons')}
+                className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2"
+              >
+                <Shield className="w-5 h-5" />
+                Certifications Salons
+              </button>
+              <button
+                onClick={() => onNavigate?.('admin-listings')}
+                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+              >
+                <Package className="w-5 h-5" />
+                Gestion Annonces
+              </button>
+            </div>
           </div>
         </div>
       )}

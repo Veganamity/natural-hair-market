@@ -21,6 +21,7 @@ import { BuyerRules } from './components/Legal/BuyerRules';
 import { FAQ } from './components/Legal/FAQ';
 import { AboutUs } from './components/Legal/AboutUs';
 import SalonVerificationAdmin from './components/Admin/SalonVerificationAdmin';
+import ListingAdmin from './components/Admin/ListingAdmin';
 import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
 import { Database } from './lib/database.types';
@@ -33,7 +34,7 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 function AppContent() {
   const { user, loading, signOut } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot-password' | 'reset-password'>('login');
-  const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about' | 'admin-salons' | 'salon-certifie'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about' | 'admin-salons' | 'admin-listings' | 'salon-certifie'>('landing');
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
@@ -416,6 +417,7 @@ function AppContent() {
         {currentView === 'transactions' && <TransactionsView />}
         {currentView === 'profile' && <ProfileView onNavigate={(view) => setCurrentView(view as any)} />}
         {currentView === 'admin-salons' && <SalonVerificationAdmin />}
+        {currentView === 'admin-listings' && <ListingAdmin />}
         {currentView === 'salon-certifie' && <SalonCertificationForm />}
         {currentView === 'privacy' && <PrivacyPolicy />}
         {currentView === 'terms' && <TermsOfService />}
