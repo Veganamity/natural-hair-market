@@ -76,23 +76,23 @@ function AppContent() {
       return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
           <nav className="bg-white shadow-md sticky top-0 z-40">
-            <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
+            <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6">
               <div className="flex items-center justify-between h-16">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
-                    Marketplace de cheveux naturels
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <h1 className="text-base sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
+                    NaturalHairMarket
                   </h1>
                 </div>
                 <button
                   onClick={() => setCurrentView('landing')}
-                  className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-sm"
+                  className="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                 >
                   Retour
                 </button>
               </div>
             </div>
           </nav>
-          <main className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-8">
+          <main className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
             {currentView === 'privacy' && <PrivacyPolicy />}
             {currentView === 'terms' && <TermsOfService />}
             {currentView === 'sales' && <SalesTerms />}
@@ -111,27 +111,27 @@ function AppContent() {
       return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
           <nav className="bg-white shadow-md sticky top-0 z-40">
-            <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
+            <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6">
               <div className="flex items-center justify-between h-16">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 min-w-0 flex-1">
                   <button
                     onClick={() => setCurrentView('landing')}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                     title="Retour à l'accueil"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
-                  <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
-                    Marketplace de cheveux naturels
+                  <h1 className="text-base sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
+                    NaturalHairMarket
                   </h1>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                   <button
                     onClick={() => {
                       setAuthMode('login');
                       setCurrentView('profile');
                     }}
-                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-sm"
+                    className="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-xs sm:text-sm whitespace-nowrap"
                   >
                     Connexion
                   </button>
@@ -140,7 +140,7 @@ function AppContent() {
                       setAuthMode('signup');
                       setCurrentView('profile');
                     }}
-                    className="px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors text-sm"
+                    className="px-2 py-1.5 sm:px-3 sm:py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors text-xs sm:text-sm whitespace-nowrap"
                   >
                     Inscription
                   </button>
@@ -148,7 +148,7 @@ function AppContent() {
               </div>
             </div>
           </nav>
-          <main className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-8">
+          <main className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
             <MarketplaceView onListingClick={() => {
               setAuthMode('signup');
               setCurrentView('profile');
@@ -182,19 +182,19 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
       <nav className="bg-white shadow-md sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
               {currentView !== 'marketplace' && (
                 <button
                   onClick={() => setCurrentView('marketplace')}
-                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                   title="Retour au Marketplace"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4" />
                 </button>
               )}
-              <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
+              <h1 className="text-base sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
                 NaturalHairMarket
               </h1>
             </div>
@@ -409,7 +409,7 @@ function AppContent() {
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-8">
+      <main className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
         {currentView === 'marketplace' && <MarketplaceView isGuest={false} />}
         {currentView === 'favorites' && <FavoritesView />}
         {currentView === 'offers' && <OffersView />}
