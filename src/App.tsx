@@ -25,7 +25,7 @@ import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
 import { Database } from './lib/database.types';
 import { supabase } from './lib/supabaseClient';
-import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, HelpCircle } from 'lucide-react';
+import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, HelpCircle, ArrowLeft } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -113,6 +113,13 @@ function AppContent() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between h-16">
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setCurrentView('landing')}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Retour à l'accueil"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
                     Marketplace de cheveux humains naturels & colorés
                   </h1>
@@ -177,6 +184,15 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
+              {currentView !== 'marketplace' && (
+                <button
+                  onClick={() => setCurrentView('marketplace')}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Retour au Marketplace"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
               <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
                 NaturalHairMarket
               </h1>
@@ -274,6 +290,18 @@ function AppContent() {
 
           {mobileMenuOpen && (
             <div className="md:hidden border-t border-gray-200 py-3 space-y-2">
+              {currentView !== 'marketplace' && (
+                <button
+                  onClick={() => {
+                    setCurrentView('marketplace');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-gray-600 hover:bg-gray-100 border-b border-gray-200 pb-3"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Retour au Marketplace
+                </button>
+              )}
               <button
                 onClick={() => {
                   setCurrentView('marketplace');
