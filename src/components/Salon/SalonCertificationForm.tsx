@@ -45,12 +45,11 @@ export default function SalonCertificationForm() {
       console.log('Fetching from:', url);
 
       const response = await fetch(url, {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({}),
       });
 
       console.log('Response status:', response.status);
