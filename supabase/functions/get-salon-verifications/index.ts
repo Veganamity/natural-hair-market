@@ -35,45 +35,14 @@ Deno.serve(async (req: Request) => {
       throw new Error('Access denied: admin privileges required');
     }
 
-    const { status_filter } = await req.json().catch(() => ({ status_filter: null }));
-
-    let query = supabase
+    const { data, error } = await supabase
       .from('salon_verifications')
-      .select(`
-        id,
-        user_id,
-        salon_name,
-        siret,
-        address,
-        phone,
-        status,
-        created_at,
-        profiles:user_id (
-          email,
-          full_name
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
-    if (status_filter && status_filter !== 'all') {
-      query = query.eq('status', status_filter);
-    }
+    if (error) throw error;
 
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Query error:', error);
-      throw error;
-    }
-
-    const transformedData = data.map(item => ({
-      ...item,
-      profiles: Array.isArray(item.profiles) && item.profiles.length > 0 
-        ? item.profiles[0] 
-        : item.profiles
-    }));
-
-    return new Response(JSON.stringify(transformedData), {
+    return new Response(JSON.stringify(data), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
