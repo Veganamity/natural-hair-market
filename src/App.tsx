@@ -38,6 +38,7 @@ function AppContent() {
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
+
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
@@ -46,6 +47,7 @@ function AppContent() {
       }
       if (event === 'SIGNED_IN') {
         setCurrentView('marketplace');
+        window.history.pushState({ view: 'marketplace' }, '', '#marketplace');
       }
     });
 
@@ -53,6 +55,37 @@ function AppContent() {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.view) {
+        setCurrentView(event.state.view);
+      } else {
+        const hash = window.location.hash.slice(1);
+        if (hash) {
+          setCurrentView(hash as any);
+        } else {
+          setCurrentView('landing');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      setCurrentView(hash as any);
+    }
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  const navigateToView = (view: typeof currentView) => {
+    setCurrentView(view);
+    window.history.pushState({ view }, '', `#${view}`);
+  };
 
   if (loading) {
     return (
@@ -66,9 +99,9 @@ function AppContent() {
     if (currentView === 'landing') {
       return <LandingPage
         onGetStarted={() => {
-          setCurrentView('marketplace');
+          navigateToView('marketplace');
         }}
-        onNavigate={(view) => setCurrentView(view)}
+        onNavigate={(view) => navigateToView(view)}
       />;
     }
 
@@ -84,7 +117,7 @@ function AppContent() {
                   </h1>
                 </div>
                 <button
-                  onClick={() => setCurrentView('landing')}
+                  onClick={() => navigateToView('landing')}
                   className="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                 >
                   Retour
@@ -100,8 +133,8 @@ function AppContent() {
             {currentView === 'safety' && <SafetyQuality />}
             {currentView === 'seller-rules' && <SellerRules />}
             {currentView === 'buyer-rules' && <BuyerRules />}
-            {currentView === 'faq' && <FAQ onClose={() => setCurrentView('landing')} />}
-            {currentView === 'about' && <AboutUs onClose={() => setCurrentView('landing')} />}
+            {currentView === 'faq' && <FAQ onClose={() => navigateToView('landing')} />}
+            {currentView === 'about' && <AboutUs onClose={() => navigateToView('landing')} />}
           </main>
         </div>
       );
@@ -115,7 +148,7 @@ function AppContent() {
               <div className="flex items-center justify-between h-16">
                 <div className="flex items-center gap-1 min-w-0 flex-1">
                   <button
-                    onClick={() => setCurrentView('landing')}
+                    onClick={() => navigateToView('landing')}
                     className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                     title="Retour à l'accueil"
                   >
@@ -129,7 +162,7 @@ function AppContent() {
                   <button
                     onClick={() => {
                       setAuthMode('login');
-                      setCurrentView('profile');
+                      navigateToView('profile');
                     }}
                     className="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-xs sm:text-sm whitespace-nowrap"
                   >
@@ -138,7 +171,7 @@ function AppContent() {
                   <button
                     onClick={() => {
                       setAuthMode('signup');
-                      setCurrentView('profile');
+                      navigateToView('profile');
                     }}
                     className="px-2 py-1.5 sm:px-3 sm:py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors text-xs sm:text-sm whitespace-nowrap"
                   >
@@ -151,7 +184,7 @@ function AppContent() {
           <main className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
             <MarketplaceView onListingClick={() => {
               setAuthMode('signup');
-              setCurrentView('profile');
+              navigateToView('profile');
             }} isGuest={true} />
           </main>
         </div>
@@ -187,7 +220,7 @@ function AppContent() {
             <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
               {currentView !== 'marketplace' && (
                 <button
-                  onClick={() => setCurrentView('marketplace')}
+                  onClick={() => navigateToView('marketplace')}
                   className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                   title="Retour au Marketplace"
                 >
@@ -201,7 +234,7 @@ function AppContent() {
 
             <div className="hidden md:flex items-center gap-1">
               <button
-                onClick={() => setCurrentView('marketplace')}
+                onClick={() => navigateToView('marketplace')}
                 className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'marketplace'
                     ? 'bg-emerald-100 text-emerald-700'
@@ -212,7 +245,7 @@ function AppContent() {
                 Marketplace
               </button>
               <button
-                onClick={() => setCurrentView('favorites')}
+                onClick={() => navigateToView('favorites')}
                 className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'favorites'
                     ? 'bg-emerald-100 text-emerald-700'
@@ -223,7 +256,7 @@ function AppContent() {
                 Favoris
               </button>
               <button
-                onClick={() => setCurrentView('offers')}
+                onClick={() => navigateToView('offers')}
                 className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'offers'
                     ? 'bg-emerald-100 text-emerald-700'
@@ -234,7 +267,7 @@ function AppContent() {
                 Offres
               </button>
               <button
-                onClick={() => setCurrentView('orders')}
+                onClick={() => navigateToView('orders')}
                 className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'orders'
                     ? 'bg-emerald-100 text-emerald-700'
@@ -245,7 +278,7 @@ function AppContent() {
                 Commandes
               </button>
               <button
-                onClick={() => setCurrentView('transactions')}
+                onClick={() => navigateToView('transactions')}
                 className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'transactions'
                     ? 'bg-emerald-100 text-emerald-700'
@@ -256,7 +289,7 @@ function AppContent() {
                 Historique
               </button>
               <button
-                onClick={() => setCurrentView('profile')}
+                onClick={() => navigateToView('profile')}
                 className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'profile'
                     ? 'bg-emerald-100 text-emerald-700'
@@ -294,7 +327,7 @@ function AppContent() {
               {currentView !== 'marketplace' && (
                 <button
                   onClick={() => {
-                    setCurrentView('marketplace');
+                    navigateToView('marketplace');
                     setMobileMenuOpen(false);
                   }}
                   className="w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-gray-600 hover:bg-gray-100 border-b border-gray-200 pb-3"
@@ -305,7 +338,7 @@ function AppContent() {
               )}
               <button
                 onClick={() => {
-                  setCurrentView('marketplace');
+                  navigateToView('marketplace');
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
@@ -319,7 +352,7 @@ function AppContent() {
               </button>
               <button
                 onClick={() => {
-                  setCurrentView('favorites');
+                  navigateToView('favorites');
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
@@ -333,7 +366,7 @@ function AppContent() {
               </button>
               <button
                 onClick={() => {
-                  setCurrentView('offers');
+                  navigateToView('offers');
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
@@ -347,7 +380,7 @@ function AppContent() {
               </button>
               <button
                 onClick={() => {
-                  setCurrentView('orders');
+                  navigateToView('orders');
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
@@ -361,7 +394,7 @@ function AppContent() {
               </button>
               <button
                 onClick={() => {
-                  setCurrentView('transactions');
+                  navigateToView('transactions');
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
@@ -375,7 +408,7 @@ function AppContent() {
               </button>
               <button
                 onClick={() => {
-                  setCurrentView('profile');
+                  navigateToView('profile');
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
@@ -415,7 +448,7 @@ function AppContent() {
         {currentView === 'offers' && <OffersView />}
         {currentView === 'orders' && <OrderManagement />}
         {currentView === 'transactions' && <TransactionsView />}
-        {currentView === 'profile' && <ProfileView onNavigate={(view) => setCurrentView(view as any)} />}
+        {currentView === 'profile' && <ProfileView onNavigate={(view) => navigateToView(view as any)} />}
         {currentView === 'admin-salons' && <SalonVerificationAdmin />}
         {currentView === 'admin-listings' && <ListingAdmin />}
         {currentView === 'salon-certifie' && <SalonCertificationForm />}
@@ -426,8 +459,8 @@ function AppContent() {
         {currentView === 'safety' && <SafetyQuality />}
         {currentView === 'seller-rules' && <SellerRules />}
         {currentView === 'buyer-rules' && <BuyerRules />}
-        {currentView === 'faq' && <FAQ onClose={() => setCurrentView('marketplace')} />}
-        {currentView === 'about' && <AboutUs onClose={() => setCurrentView('marketplace')} />}
+        {currentView === 'faq' && <FAQ onClose={() => navigateToView('marketplace')} />}
+        {currentView === 'about' && <AboutUs onClose={() => navigateToView('marketplace')} />}
       </main>
 
       {showCreateListing && (
