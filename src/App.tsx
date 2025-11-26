@@ -79,8 +79,8 @@ function AppContent() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between h-16">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-                    Marketplace de cheveux humains naturels & colorés
+                  <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
+                    Marketplace de cheveux naturels
                   </h1>
                 </div>
                 <button
@@ -92,7 +92,7 @@ function AppContent() {
               </div>
             </div>
           </nav>
-          <main className="w-full px-8 py-8">
+          <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {currentView === 'privacy' && <PrivacyPolicy />}
             {currentView === 'terms' && <TermsOfService />}
             {currentView === 'sales' && <SalesTerms />}
@@ -121,8 +121,8 @@ function AppContent() {
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-                    Marketplace de cheveux humains naturels & colorés
+                  <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
+                    Marketplace de cheveux naturels
                   </h1>
                 </div>
                 <div className="flex items-center gap-2">
@@ -148,7 +148,7 @@ function AppContent() {
               </div>
             </div>
           </nav>
-          <main className="w-full px-8 py-8">
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <MarketplaceView onListingClick={() => {
               setAuthMode('signup');
               setCurrentView('profile');
@@ -194,7 +194,7 @@ function AppContent() {
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               )}
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
+              <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
                 NaturalHairMarket
               </h1>
             </div>
@@ -409,7 +409,7 @@ function AppContent() {
         </div>
       </nav>
 
-      <main className="w-full px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentView === 'marketplace' && <MarketplaceView isGuest={false} />}
         {currentView === 'favorites' && <FavoritesView />}
         {currentView === 'offers' && <OffersView />}
