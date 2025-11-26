@@ -610,13 +610,13 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               </div>
             )}
 
-            {profile.is_verified_salon && (
+            {profile.is_certified_salon && (
               <div className="border-t pt-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center gap-3">
                     <BadgeCheck className="w-8 h-8 text-blue-600" />
                     <div>
-                      <h3 className="font-bold text-blue-800">Salon Vérifié</h3>
+                      <h3 className="font-bold text-blue-800">Salon Certifié</h3>
                       <p className="text-sm text-gray-700">
                         Ce compte est vérifié en tant que salon professionnel
                       </p>

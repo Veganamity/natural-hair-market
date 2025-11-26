@@ -106,10 +106,10 @@ export function ListingCard({
             <span className="text-[10px]">{formatDate(listing.created_at)}</span>
           </div>
           <div className="flex items-center gap-1">
-            {seller?.is_verified_salon && (
-              <div className="flex items-center gap-0.5 bg-blue-50 px-1.5 py-0.5 rounded-full" title="Salon Vérifié">
+            {seller?.is_certified_salon && (
+              <div className="flex items-center gap-0.5 bg-blue-50 px-1.5 py-0.5 rounded-full" title="Salon Certifié">
                 <BadgeCheck className="w-3 h-3 text-blue-600" />
-                <span className="text-[10px] text-blue-700 font-medium">Vérifié</span>
+                <span className="text-[10px] text-blue-700 font-medium">Certifié</span>
               </div>
             )}
             {listing.status === 'active' && (

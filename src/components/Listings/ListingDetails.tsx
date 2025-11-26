@@ -209,10 +209,10 @@ export function ListingDetails({
                   <div className="flex-1">
                     <div className="flex items-center gap-0.5">
                       <p className="font-semibold text-gray-800 text-[10px]">{seller.full_name || 'Utilisateur'}</p>
-                      {seller.is_verified_salon && (
-                        <div className="flex items-center gap-0.5 bg-blue-50 px-0.5 py-0.5 rounded-full" title="Salon Professionnel Vérifié">
+                      {seller.is_certified_salon && (
+                        <div className="flex items-center gap-0.5 bg-blue-50 px-0.5 py-0.5 rounded-full" title="Salon Certifié">
                           <BadgeCheck className="w-2 h-2 text-blue-600" />
-                          <span className="text-[8px] text-blue-700 font-medium">Vérifié</span>
+                          <span className="text-[8px] text-blue-700 font-medium">Certifié</span>
                         </div>
                       )}
                     </div>
