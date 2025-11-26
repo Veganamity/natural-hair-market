@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import { Shield, CheckCircle, XCircle, AlertCircle, ExternalLink, Mail } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, AlertCircle, ExternalLink, Mail, Phone } from 'lucide-react';
 
 interface SalonVerification {
   id: string;
@@ -233,9 +233,6 @@ export default function SalonVerificationAdmin() {
                       <div>
                         <p className="font-semibold text-gray-900">{verification.salon_name}</p>
                         <p className="text-sm text-gray-600">{verification.address}</p>
-                        {verification.phone && (
-                          <p className="text-sm text-gray-500">{verification.phone}</p>
-                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4">
@@ -253,8 +250,8 @@ export default function SalonVerificationAdmin() {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <div>
-                        <p className="text-sm text-gray-900">{verification.profiles?.full_name || 'N/A'}</p>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-gray-900">{verification.profiles?.full_name || 'N/A'}</p>
                         <a
                           href={`mailto:${verification.profiles?.email}`}
                           className="text-sm text-blue-600 hover:underline flex items-center gap-1"
@@ -262,6 +259,15 @@ export default function SalonVerificationAdmin() {
                           <Mail className="w-3 h-3" />
                           {verification.profiles?.email}
                         </a>
+                        {verification.phone && (
+                          <a
+                            href={`tel:${verification.phone}`}
+                            className="text-sm text-emerald-600 hover:underline flex items-center gap-1 font-medium"
+                          >
+                            <Phone className="w-3 h-3" />
+                            {verification.phone}
+                          </a>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-600">
