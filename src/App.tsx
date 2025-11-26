@@ -76,7 +76,7 @@ function AppContent() {
       return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
           <nav className="bg-white shadow-md sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
               <div className="flex items-center justify-between h-16">
                 <div className="flex items-center gap-3">
                   <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
@@ -85,14 +85,14 @@ function AppContent() {
                 </div>
                 <button
                   onClick={() => setCurrentView('landing')}
-                  className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                  className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-sm"
                 >
                   Retour
                 </button>
               </div>
             </div>
           </nav>
-          <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <main className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-8">
             {currentView === 'privacy' && <PrivacyPolicy />}
             {currentView === 'terms' && <TermsOfService />}
             {currentView === 'sales' && <SalesTerms />}
@@ -111,15 +111,15 @@ function AppContent() {
       return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
           <nav className="bg-white shadow-md sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
               <div className="flex items-center justify-between h-16">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCurrentView('landing')}
                     className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                     title="Retour à l'accueil"
                   >
-                    <ArrowLeft className="w-5 h-5" />
+                    <ArrowLeft className="w-4 h-4" />
                   </button>
                   <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
                     Marketplace de cheveux naturels
@@ -131,7 +131,7 @@ function AppContent() {
                       setAuthMode('login');
                       setCurrentView('profile');
                     }}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-sm"
                   >
                     Connexion
                   </button>
@@ -140,7 +140,7 @@ function AppContent() {
                       setAuthMode('signup');
                       setCurrentView('profile');
                     }}
-                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                    className="px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors text-sm"
                   >
                     Inscription
                   </button>
@@ -148,7 +148,7 @@ function AppContent() {
               </div>
             </div>
           </nav>
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <main className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-8">
             <MarketplaceView onListingClick={() => {
               setAuthMode('signup');
               setCurrentView('profile');
@@ -182,7 +182,7 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
       <nav className="bg-white shadow-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
               {currentView !== 'marketplace' && (
@@ -199,85 +199,85 @@ function AppContent() {
               </h1>
             </div>
 
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1">
               <button
                 onClick={() => setCurrentView('marketplace')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'marketplace'
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Home className="w-5 h-5" />
+                <Home className="w-4 h-4" />
                 Marketplace
               </button>
               <button
                 onClick={() => setCurrentView('favorites')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'favorites'
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Heart className="w-5 h-5" />
+                <Heart className="w-4 h-4" />
                 Favoris
               </button>
               <button
                 onClick={() => setCurrentView('offers')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'offers'
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Tag className="w-5 h-5" />
+                <Tag className="w-4 h-4" />
                 Offres
               </button>
               <button
                 onClick={() => setCurrentView('orders')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'orders'
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Package className="w-5 h-5" />
+                <Package className="w-4 h-4" />
                 Commandes
               </button>
               <button
                 onClick={() => setCurrentView('transactions')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'transactions'
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <Receipt className="w-5 h-5" />
+                <Receipt className="w-4 h-4" />
                 Historique
               </button>
               <button
                 onClick={() => setCurrentView('profile')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
                   currentView === 'profile'
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <User className="w-5 h-5" />
+                <User className="w-4 h-4" />
                 Profil
               </button>
               <button
                 onClick={() => setShowCreateListing(true)}
-                className="ml-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                className="ml-1 px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 text-sm"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 Nouvelle annonce
               </button>
               <button
                 onClick={signOut}
-                className="ml-2 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
+                className="ml-1 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
 
@@ -409,7 +409,7 @@ function AppContent() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-8">
         {currentView === 'marketplace' && <MarketplaceView isGuest={false} />}
         {currentView === 'favorites' && <FavoritesView />}
         {currentView === 'offers' && <OffersView />}
