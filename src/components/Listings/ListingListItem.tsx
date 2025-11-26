@@ -1,10 +1,11 @@
-import { Heart, MapPin, Calendar, Globe } from 'lucide-react';
+import { Heart, MapPin, Calendar, Globe, BadgeCheck } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 
 interface ListingListItemProps {
   listing: Listing;
+  seller?: any;
   onFavoriteToggle?: (listingId: string) => void;
   isFavorited?: boolean;
   onClick?: () => void;
@@ -12,6 +13,7 @@ interface ListingListItemProps {
 
 export function ListingListItem({
   listing,
+  seller,
   onFavoriteToggle,
   isFavorited,
   onClick
@@ -98,11 +100,19 @@ export function ListingListItem({
               <Calendar className="w-3.5 h-3.5" />
               <span>{formatDate(listing.created_at)}</span>
             </div>
-            {listing.status === 'active' && (
-              <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
-                Disponible
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {seller?.is_certified_salon && (
+                <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-full" title="Salon Certifié">
+                  <BadgeCheck className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="text-xs text-blue-700 font-medium">Certifié</span>
+                </div>
+              )}
+              {listing.status === 'active' && (
+                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                  Disponible
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

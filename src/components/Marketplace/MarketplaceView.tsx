@@ -37,7 +37,18 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
     setLoading(true);
     const { data, error } = await supabase
       .from('listings')
-      .select('*')
+      .select(`
+        *,
+        profiles:seller_id (
+          id,
+          full_name,
+          email,
+          avatar_url,
+          location,
+          is_certified_salon,
+          is_verified_salon
+        )
+      `)
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 
@@ -46,7 +57,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
     }
 
     if (data) {
-      console.log('Fetched listings:', data);
+      console.log('Fetched listings with profiles:', data);
       setListings(data);
     }
     setLoading(false);
@@ -242,6 +253,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
             <ListingListItem
               key={listing.id}
               listing={listing}
+              seller={(listing as any).profiles}
               onFavoriteToggle={handleFavoriteToggle}
               isFavorited={favorites.has(listing.id)}
               onClick={() => {
@@ -260,6 +272,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
             <ListingCard
               key={listing.id}
               listing={listing}
+              seller={(listing as any).profiles}
               onFavoriteToggle={handleFavoriteToggle}
               isFavorited={favorites.has(listing.id)}
               onClick={() => {
