@@ -1,4 +1,4 @@
-import { X, Heart, CheckCircle, XCircle, ShoppingCart, Tag, Flag, BadgeCheck } from 'lucide-react';
+import { X, Heart, CheckCircle, XCircle, ShoppingCart, Tag, Flag, BadgeCheck, Hash } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState, useEffect } from 'react';
@@ -15,6 +15,10 @@ interface ListingDetailsProps {
   onFavoriteToggle: (listingId: string) => void;
   isFavorited: boolean;
 }
+
+const getListingNumber = (id: string): string => {
+  return id.substring(0, 8).toUpperCase();
+};
 
 export function ListingDetails({
   listing,
@@ -122,12 +126,20 @@ export function ListingDetails({
           <div className="space-y-1">
             <div>
               <h1 className="text-sm font-bold text-gray-800 mb-0.5 leading-tight">{listing.title}</h1>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded">
+                  <Hash className="w-3 h-3 text-gray-500" />
+                  <span className="font-mono text-[10px] font-semibold text-gray-600">
+                    {getListingNumber(listing.id)}
+                  </span>
+                </div>
+                {listing.status === 'active' && (
+                  <span className="inline-block bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full text-[9px] font-medium">
+                    Disponible
+                  </span>
+                )}
+              </div>
               <div className="text-lg font-bold text-emerald-600 mb-0.5">{listing.price}€</div>
-              {listing.status === 'active' && (
-                <span className="inline-block bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full text-[9px] font-medium">
-                  Disponible
-                </span>
-              )}
             </div>
 
             <div className="space-y-1 border-t border-gray-200 pt-1">

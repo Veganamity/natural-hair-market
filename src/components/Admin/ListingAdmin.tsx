@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import { Package, Trash2, AlertCircle, Eye, Search, Filter, ExternalLink } from 'lucide-react';
+import { Package, Trash2, AlertCircle, Eye, Search, Filter, ExternalLink, Hash } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
@@ -13,6 +13,10 @@ interface ListingWithSeller extends Listing {
     is_certified_salon: boolean;
   };
 }
+
+const getListingNumber = (id: string): string => {
+  return id.substring(0, 8).toUpperCase();
+};
 
 export default function ListingAdmin() {
   const { user, profile } = useAuth();
@@ -214,6 +218,9 @@ export default function ListingAdmin() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    N° Annonce
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Annonce
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -243,6 +250,14 @@ export default function ListingAdmin() {
 
                   return (
                     <tr key={listing.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <Hash className="w-4 h-4 text-gray-400" />
+                          <span className="font-mono text-sm font-semibold text-gray-700">
+                            {getListingNumber(listing.id)}
+                          </span>
+                        </div>
+                      </td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <img
