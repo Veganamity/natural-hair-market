@@ -26,6 +26,8 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
   const [sortBy, setSortBy] = useState('recent');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [minLength, setMinLength] = useState('');
+  const [maxLength, setMaxLength] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
@@ -117,7 +119,11 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
         (!minPrice || listing.price >= parseFloat(minPrice)) &&
         (!maxPrice || listing.price <= parseFloat(maxPrice));
 
-      return matchesSearch && matchesFilter && matchesPriceRange;
+      const matchesLengthRange =
+        (!minLength || listing.length_cm >= parseFloat(minLength)) &&
+        (!maxLength || listing.length_cm <= parseFloat(maxLength));
+
+      return matchesSearch && matchesFilter && matchesPriceRange && matchesLengthRange;
     });
 
     switch (sortBy) {
@@ -185,16 +191,16 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
-              <label className="text-sm font-semibold text-gray-700">Fourchette de prix :</label>
+              <label className="text-sm font-semibold text-gray-700 min-w-fit">Fourchette de prix :</label>
               <div className="flex items-center gap-2 flex-wrap">
                 <input
                   type="number"
                   placeholder="Min"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-28 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                 />
                 <span className="text-gray-500">-</span>
                 <input
@@ -202,7 +208,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                   placeholder="Max"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-28 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                 />
                 <span className="text-gray-500 text-sm">€</span>
                 {(minPrice || maxPrice) && (
@@ -219,30 +225,63 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
               </div>
             </div>
 
-            <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                title="Vue liste"
-              >
-                <List className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                title="Vue grille"
-              >
-                <Grid className="w-5 h-5" />
-              </button>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
+              <label className="text-sm font-semibold text-gray-700 min-w-fit">Longueur (cm) :</label>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={minLength}
+                  onChange={(e) => setMinLength(e.target.value)}
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                />
+                <span className="text-gray-500">-</span>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={maxLength}
+                  onChange={(e) => setMaxLength(e.target.value)}
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                />
+                <span className="text-gray-500 text-sm">cm</span>
+                {(minLength || maxLength) && (
+                  <button
+                    onClick={() => {
+                      setMinLength('');
+                      setMaxLength('');
+                    }}
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    Réinitialiser
+                  </button>
+                )}
+              </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1 self-start">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title="Vue liste"
+            >
+              <List className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded transition-colors ${
+                viewMode === 'grid'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              title="Vue grille"
+            >
+              <Grid className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
