@@ -10,6 +10,7 @@ interface ListingWithSeller extends Listing {
   profiles?: {
     full_name: string | null;
     email: string;
+    phone: string | null;
     is_certified_salon: boolean;
   };
 }
@@ -46,6 +47,7 @@ export default function ListingAdmin() {
           profiles:seller_id (
             full_name,
             email,
+            phone,
             is_certified_salon
           )
         `)
@@ -287,6 +289,9 @@ export default function ListingAdmin() {
                             )}
                           </p>
                           <p className="text-xs text-gray-600">{listing.profiles?.email}</p>
+                          {listing.profiles?.phone && (
+                            <p className="text-xs text-gray-600 font-medium mt-0.5">📞 {listing.profiles.phone}</p>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-4">
