@@ -170,7 +170,7 @@ function AppContent() {
                     }}
                     className="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-xs sm:text-sm whitespace-nowrap"
                   >
-                    Connexion
+                    {t('nav.login')}
                   </button>
                   <button
                     onClick={() => {
@@ -179,7 +179,7 @@ function AppContent() {
                     }}
                     className="px-2 py-1.5 sm:px-3 sm:py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors text-xs sm:text-sm whitespace-nowrap"
                   >
-                    Inscription
+                    {t('nav.signup')}
                   </button>
                 </div>
               </div>

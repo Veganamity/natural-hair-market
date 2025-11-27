@@ -15,12 +15,17 @@ export const fr = {
     filter: 'Filtrer',
     view: 'Voir',
     required: 'Requis',
+    yes: 'Oui',
+    no: 'Non',
+    submit: 'Soumettre',
+    send: 'Envoyer',
   },
   nav: {
     marketplace: 'Marketplace',
     favorites: 'Favoris',
     myListings: 'Mes Annonces',
     createListing: 'Créer une Annonce',
+    newListing: 'Nouvelle annonce',
     transactions: 'Transactions',
     offers: 'Offres',
     orders: 'Commandes',
@@ -29,6 +34,8 @@ export const fr = {
     login: 'Connexion',
     logout: 'Déconnexion',
     signup: 'Inscription',
+    backToMarketplace: 'Retour au Marketplace',
+    backToHome: "Retour à l'accueil",
   },
   auth: {
     email: 'Email',
@@ -44,11 +51,14 @@ export const fr = {
     fullName: 'Nom complet',
     phone: 'Téléphone',
     orContinueWith: 'Ou continuer avec',
+    continueWithGoogle: 'Continuer avec Google',
+    signInWithGoogle: 'Se connecter avec Google',
   },
   marketplace: {
     title: 'Marketplace',
     allListings: 'Toutes les annonces',
     noPriceSet: 'Prix non défini',
+    noListings: 'Aucune annonce disponible',
     views: 'vues',
     offers: 'offres',
     makeOffer: 'Faire une offre',
@@ -58,6 +68,7 @@ export const fr = {
     report: 'Signaler',
     filterByCountry: 'Filtrer par pays',
     allCountries: 'Tous les pays',
+    searchPlaceholder: 'Rechercher des annonces...',
   },
   listing: {
     title: 'Titre',
@@ -82,6 +93,11 @@ export const fr = {
     active: 'Actif',
     sold: 'Vendu',
     inactive: 'Inactif',
+    details: 'Détails',
+    seller: 'Vendeur',
+    postedOn: 'Publié le',
+    cm: 'cm',
+    grams: 'grammes',
   },
   hairTypes: {
     straight: 'Raides',
@@ -94,6 +110,20 @@ export const fr = {
     good: 'Bon',
     fair: 'Correct',
   },
+  profile: {
+    title: 'Mon Profil',
+    myAccount: 'Mon Compte',
+    personalInfo: 'Informations personnelles',
+    contactInfo: 'Coordonnées',
+    address: 'Adresse',
+    myListings: 'Mes Annonces',
+    favorites: 'Mes Favoris',
+    transactions: 'Mes Transactions',
+    settings: 'Paramètres',
+    deleteAccount: 'Supprimer mon compte',
+    salonCertification: 'Certification Salon',
+    becomeCertified: 'Devenir salon certifié',
+  },
   footer: {
     aboutUs: 'À propos',
     termsOfService: 'Conditions générales',
@@ -104,6 +134,8 @@ export const fr = {
     buyerRules: 'Règles acheteurs',
     safetyQuality: 'Sécurité et qualité',
     faq: 'FAQ',
+    contact: 'Contact',
+    legal: 'Mentions légales',
   },
   landing: {
     title: 'Marketplace de cheveux humains naturels & colorés',
@@ -130,5 +162,40 @@ export const fr = {
     feature3Desc: 'Paiements protégés et garantie satisfait ou remboursé.',
     feature4Title: 'Communauté vérifiée',
     feature4Desc: 'Tous nos membres sont vérifiés pour votre sécurité.',
+    forEveryone: 'Pour tous',
+    forEveryoneDesc: 'Salons de coiffure, particuliers, perruquiers, prothésistes, grossistes et professionnels du cheveu',
+    transparent: 'Transparent',
+    transparentDesc: 'Transactions directes, simples et transparentes. Aucun coût caché, aucun intermédiaire',
+    quality: 'Qualité',
+    qualityDesc: 'Cheveux européens naturels, colorés, gris, blonds, bruns, châtains, roux, lisses ou bouclés',
+  },
+  faq: {
+    title: 'Questions Fréquentes',
+    subtitle: 'Trouvez des réponses à vos questions',
+  },
+  about: {
+    title: 'À Propos',
+    subtitle: 'Qui sommes-nous ?',
+  },
+  terms: {
+    title: 'Conditions Générales d\'Utilisation',
+  },
+  privacy: {
+    title: 'Politique de Confidentialité',
+  },
+  sales: {
+    title: 'Conditions de Vente',
+  },
+  refund: {
+    title: 'Politique de Remboursement',
+  },
+  sellerRules: {
+    title: 'Règles pour les Vendeurs',
+  },
+  buyerRules: {
+    title: 'Règles pour les Acheteurs',
+  },
+  safety: {
+    title: 'Sécurité et Qualité',
   },
 };
