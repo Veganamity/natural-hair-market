@@ -50,7 +50,7 @@ export function ListingCard({
     const cm = parseInt(lengthStr);
     if (isNaN(cm)) return lengthStr;
     const inches = cmToInches(cm);
-    return `${cm}cm (${inches}")`;
+    return `${cm}cm (${inches} pouces)`;
   };
 
   return (

@@ -70,7 +70,7 @@ export function ListingDetails({
     const cm = parseInt(lengthStr);
     if (isNaN(cm)) return lengthStr;
     const inches = cmToInches(cm);
-    return `${cm}cm (${inches}")`;
+    return `${cm}cm (${inches} pouces)`;
   };
 
   const isOwner = user?.id === listing.seller_id;
