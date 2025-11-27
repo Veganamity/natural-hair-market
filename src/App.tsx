@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { LanguageSelector } from './components/LanguageSelector';
 import { LoginForm } from './components/Auth/LoginForm';
 import { SignUpForm } from './components/Auth/SignUpForm';
@@ -35,6 +35,7 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 
 function AppContent() {
   const { user, loading, signOut } = useAuth();
+  const { t } = useLanguage();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot-password' | 'reset-password'>('login');
   const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about' | 'admin-salons' | 'admin-listings' | 'salon-certifie'>('landing');
   const [showCreateListing, setShowCreateListing] = useState(false);

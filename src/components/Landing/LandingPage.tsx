@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Database } from '../../lib/database.types';
 import { ListingCard } from '../Listings/ListingCard';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { LanguageSelector } from '../LanguageSelector';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 
@@ -12,6 +14,7 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
+  const { t } = useLanguage();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,36 +41,39 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
   };
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-6 md:py-8 px-4">
+      <header className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-6 md:py-8 px-4 relative">
+        <div className="absolute top-4 right-4">
+          <LanguageSelector />
+        </div>
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-4">
             <img
               src="/file_0000000094ac71f49db79e27f27b239c.png"
-              alt="Marketplace de cheveux humains naturels & colorés"
+              alt={t('landing.title')}
               className="h-32 w-auto md:h-40"
             />
           </div>
           <p className="text-base sm:text-lg md:text-xl mb-1 font-semibold">
-            Marketplace de cheveux humains naturels & colorés
+            {t('landing.title')}
           </p>
           <p className="text-sm sm:text-base md:text-lg mb-2 font-medium">
-            Vendez et achetez en toute facilité
+            {t('landing.subtitle')}
           </p>
           <div className="flex flex-col md:flex-row gap-2 md:gap-4 justify-center items-center mb-3 md:mb-4">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              <span className="text-xs sm:text-sm md:text-sm font-semibold">Vendeurs : 100% gratuit</span>
+              <span className="text-xs sm:text-sm md:text-sm font-semibold">{t('landing.sellersFree')}</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              <span className="text-xs sm:text-sm md:text-sm font-semibold">Acheteurs : 0,99€ de frais</span>
+              <span className="text-xs sm:text-sm md:text-sm font-semibold">{t('landing.buyersFee')}</span>
             </div>
           </div>
           <button
             onClick={onGetStarted}
             className="bg-white text-emerald-700 px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition-all transform hover:scale-105 shadow-lg"
           >
-            Se connecter
+            {t('landing.getStarted')}
           </button>
         </div>
       </header>
@@ -76,10 +82,10 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-2 md:mb-3">
             <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-1">
-              Annonces récentes
+              {t('landing.recentListings')}
             </h2>
             <p className="text-xs sm:text-sm text-gray-600">
-              Découvrez quelques-unes de nos dernières annonces de cheveux naturels
+              {t('landing.recentListingsSubtitle')}
             </p>
           </div>
 
@@ -100,7 +106,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
               onClick={onGetStarted}
               className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:from-emerald-700 hover:to-teal-700 transition-all transform hover:scale-105 shadow-lg"
             >
-              Voir toutes les annonces
+              {t('landing.viewAllListings')}
             </button>
           </div>
         </div>
