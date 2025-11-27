@@ -119,9 +119,9 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
               <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
                 <Users className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Pour tous</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">{t('landing.forEveryone')}</h3>
               <p className="text-gray-600">
-                Salons de coiffure, particuliers, perruquiers, prothésistes, grossistes et professionnels du cheveu
+                {t('landing.forEveryoneDesc')}
               </p>
             </div>
 
@@ -129,9 +129,9 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
               <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-3">
                 <Shield className="w-6 h-6 text-teal-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Transparent</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">{t('landing.transparent')}</h3>
               <p className="text-gray-600">
-                Transactions directes, simples et transparentes. Aucun coût caché, aucun intermédiaire
+                {t('landing.transparentDesc')}
               </p>
             </div>
 
@@ -139,9 +139,9 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
               <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
                 <Sparkles className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Qualité</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">{t('landing.quality')}</h3>
               <p className="text-gray-600">
-                Cheveux européens naturels, colorés, gris, blonds, bruns, châtains, roux, lisses ou bouclés
+                {t('landing.qualityDesc')}
               </p>
             </div>
           </div>

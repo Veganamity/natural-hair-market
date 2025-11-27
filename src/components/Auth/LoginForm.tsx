@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { LogIn } from 'lucide-react';
 import { GoogleButton } from './GoogleButton';
 
@@ -9,6 +10,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -34,8 +36,8 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
       <div className="flex items-center justify-center mb-6">
         <LogIn className="w-12 h-12 text-emerald-600" />
       </div>
-      <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">Connexion</h2>
-      <p className="text-center text-gray-600 mb-6">Accédez à votre compte</p>
+      <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">{t('auth.signIn')}</h2>
+      <p className="text-center text-gray-600 mb-6">Access your account</p>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -44,14 +46,14 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
       )}
 
       <div className="space-y-4 mb-6">
-        <GoogleButton text="Continuer avec Google" />
+        <GoogleButton text={t('auth.continueWithGoogle')} />
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">ou</span>
+            <span className="px-2 bg-white text-gray-500">or</span>
           </div>
         </div>
       </div>
@@ -59,7 +61,7 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
+            {t('auth.email')}
           </label>
           <input
             id="email"
@@ -73,7 +75,7 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Mot de passe
+            {t('auth.password')}
           </label>
           <input
             id="password"
@@ -90,7 +92,7 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
           disabled={loading}
           className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Connexion...' : 'Se connecter'}
+          {loading ? `${t('auth.signIn')}...` : t('auth.signIn')}
         </button>
 
         {onForgotPassword && (
@@ -100,7 +102,7 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
               onClick={onForgotPassword}
               className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
             >
-              Mot de passe oublié ?
+              {t('auth.forgotPassword')}
             </button>
           </div>
         )}
@@ -111,7 +113,7 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
           onClick={onToggleMode}
           className="text-emerald-600 hover:text-emerald-700 font-medium"
         >
-          Pas encore de compte ? Inscrivez-vous
+          {t('auth.dontHaveAccount')} {t('auth.signUp')}
         </button>
       </div>
     </div>

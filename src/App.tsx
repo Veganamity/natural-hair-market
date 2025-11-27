@@ -123,7 +123,7 @@ function AppContent() {
                   onClick={() => navigateToView('landing')}
                   className="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                 >
-                  Retour
+                  {t('common.back')}
                 </button>
               </div>
             </div>
@@ -153,7 +153,7 @@ function AppContent() {
                   <button
                     onClick={() => navigateToView('landing')}
                     className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-                    title="Retour à l'accueil"
+                    title={t('nav.backToHome')}
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
@@ -226,7 +226,7 @@ function AppContent() {
                 <button
                   onClick={() => navigateToView('marketplace')}
                   className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-                  title="Retour au Marketplace"
+                  title={t('nav.backToMarketplace')}
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
@@ -247,7 +247,7 @@ function AppContent() {
                 }`}
               >
                 <Home className="w-4 h-4" />
-                Marketplace
+                {t('nav.marketplace')}
               </button>
               <button
                 onClick={() => navigateToView('favorites')}
@@ -258,7 +258,7 @@ function AppContent() {
                 }`}
               >
                 <Heart className="w-4 h-4" />
-                Favoris
+                {t('nav.favorites')}
               </button>
               <button
                 onClick={() => navigateToView('offers')}
@@ -269,7 +269,7 @@ function AppContent() {
                 }`}
               >
                 <Tag className="w-4 h-4" />
-                Offres
+                {t('nav.offers')}
               </button>
               <button
                 onClick={() => navigateToView('orders')}
@@ -302,14 +302,14 @@ function AppContent() {
                 }`}
               >
                 <User className="w-4 h-4" />
-                Profil
+                {t('nav.profile')}
               </button>
               <button
                 onClick={() => setShowCreateListing(true)}
                 className="ml-1 px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 text-sm"
               >
                 <Plus className="w-4 h-4" />
-                Nouvelle annonce
+                {t('nav.newListing')}
               </button>
               <button
                 onClick={signOut}
@@ -341,7 +341,7 @@ function AppContent() {
                   className="w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-gray-600 hover:bg-gray-100 border-b border-gray-200 pb-3"
                 >
                   <ArrowLeft className="w-5 h-5" />
-                  Retour au Marketplace
+                  {t('nav.backToMarketplace')}
                 </button>
               )}
               <button
@@ -356,7 +356,7 @@ function AppContent() {
                 }`}
               >
                 <Home className="w-5 h-5" />
-                Marketplace
+                {t('nav.marketplace')}
               </button>
               <button
                 onClick={() => {
@@ -370,7 +370,7 @@ function AppContent() {
                 }`}
               >
                 <Heart className="w-5 h-5" />
-                Favoris
+                {t('nav.favorites')}
               </button>
               <button
                 onClick={() => {
@@ -384,7 +384,7 @@ function AppContent() {
                 }`}
               >
                 <Tag className="w-5 h-5" />
-                Offres
+                {t('nav.offers')}
               </button>
               <button
                 onClick={() => {
@@ -398,7 +398,7 @@ function AppContent() {
                 }`}
               >
                 <Package className="w-5 h-5" />
-                Commandes
+                {t('nav.orders')}
               </button>
               <button
                 onClick={() => {
@@ -412,7 +412,7 @@ function AppContent() {
                 }`}
               >
                 <Receipt className="w-5 h-5" />
-                Historique
+                {t('nav.transactions')}
               </button>
               <button
                 onClick={() => {
@@ -426,7 +426,7 @@ function AppContent() {
                 }`}
               >
                 <User className="w-5 h-5" />
-                Profil
+                {t('nav.profile')}
               </button>
               <button
                 onClick={() => {
@@ -436,14 +436,14 @@ function AppContent() {
                 className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
-                Nouvelle annonce
+                {t('nav.newListing')}
               </button>
               <button
                 onClick={signOut}
                 className="w-full px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
               >
                 <LogOut className="w-5 h-5" />
-                Déconnexion
+                {t('nav.logout')}
               </button>
             </div>
           )}

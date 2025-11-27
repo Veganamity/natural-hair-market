@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { UserPlus } from 'lucide-react';
 import { GoogleButton } from './GoogleButton';
 
@@ -8,6 +9,7 @@ interface SignUpFormProps {
 }
 
 export function SignUpForm({ onToggleMode }: SignUpFormProps) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -33,8 +35,8 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
       <div className="flex items-center justify-center mb-6">
         <UserPlus className="w-12 h-12 text-emerald-600" />
       </div>
-      <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">Inscription</h2>
-      <p className="text-center text-gray-600 mb-6">Créez votre compte vendeur ou acheteur</p>
+      <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">{t('auth.signUp')}</h2>
+      <p className="text-center text-gray-600 mb-6">Create your seller or buyer account</p>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -43,14 +45,14 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
       )}
 
       <div className="space-y-4 mb-6">
-        <GoogleButton text="S'inscrire avec Google" />
+        <GoogleButton text={t('auth.signInWithGoogle')} />
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">ou</span>
+            <span className="px-2 bg-white text-gray-500">or</span>
           </div>
         </div>
       </div>
@@ -58,7 +60,7 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-            Nom complet
+            {t('auth.fullName')}
           </label>
           <input
             id="fullName"
@@ -72,7 +74,7 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
 
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
+            {t('auth.email')}
           </label>
           <input
             id="email"
@@ -86,7 +88,7 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
 
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Mot de passe
+            {t('auth.password')}
           </label>
           <input
             id="password"
@@ -97,7 +99,7 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
             minLength={6}
             required
           />
-          <p className="text-xs text-gray-500 mt-1">Minimum 6 caractères</p>
+          <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
         </div>
 
         <button
@@ -105,7 +107,7 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
           disabled={loading}
           className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Création du compte...' : "S'inscrire"}
+          {loading ? `${t('common.loading')}` : t('auth.signUp')}
         </button>
       </form>
 
@@ -114,7 +116,7 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
           onClick={onToggleMode}
           className="text-emerald-600 hover:text-emerald-700 font-medium"
         >
-          Déjà un compte ? Connectez-vous
+          {t('auth.alreadyHaveAccount')} {t('auth.signIn')}
         </button>
       </div>
     </div>
