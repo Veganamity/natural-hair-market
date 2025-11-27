@@ -1,5 +1,6 @@
 import { Heart, MapPin, Calendar, Globe, BadgeCheck } from 'lucide-react';
 import { Database } from '../../lib/database.types';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 
@@ -24,16 +25,14 @@ export function ListingCard({
   isFavorited,
   onClick
 }: ListingCardProps) {
+  const { t } = useLanguage();
   const isOldApi = onFavoriteToggle !== undefined;
   const isFav = isOldApi ? isFavorited : isFavorite;
   const images = Array.isArray(listing.images) ? listing.images : [];
   const mainImage = images[0] || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg';
 
-  const hairTypeLabels: Record<string, string> = {
-    straight: 'Raides',
-    wavy: 'Ondulés',
-    curly: 'Bouclés',
-    coily: 'Frisés',
+  const getHairTypeLabel = (type: string) => {
+    return t(`hairTypes.${type}` as any) || type;
   };
 
   const formatDate = (date: string) => {
@@ -50,7 +49,7 @@ export function ListingCard({
     const cm = parseInt(lengthStr);
     if (isNaN(cm)) return lengthStr;
     const inches = cmToInches(cm);
-    return `${cm}cm (${inches} pouces)`;
+    return `${cm}cm (${inches}")`;
   };
 
   return (
@@ -92,10 +91,10 @@ export function ListingCard({
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <span className="font-medium">{formatLength(listing.hair_length)}</span>
             <span>•</span>
-            <span>{hairTypeLabels[listing.hair_type] || listing.hair_type}</span>
+            <span>{getHairTypeLabel(listing.hair_type)}</span>
           </div>
           <div className="text-xs text-gray-600">
-            <span className="font-medium">Couleur:</span> {listing.hair_color}
+            <span className="font-medium">{t('listing.hairColor')}:</span> {listing.hair_color}
           </div>
           {listing.country && (
             <div className="flex items-center gap-1 text-xs text-gray-600">

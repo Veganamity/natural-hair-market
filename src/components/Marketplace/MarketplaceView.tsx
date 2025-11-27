@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { ListingCard } from '../Listings/ListingCard';
 import { ListingListItem } from '../Listings/ListingListItem';
 import { ListingDetails } from '../Listings/ListingDetails';
@@ -17,6 +18,7 @@ interface MarketplaceViewProps {
 
 export function MarketplaceView({ onListingClick, isGuest = false }: MarketplaceViewProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [listings, setListings] = useState<Listing[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
@@ -163,7 +165,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Rechercher des cheveux..."
+                placeholder={t('marketplace.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -176,11 +178,11 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                 onChange={(e) => setFilterType(e.target.value)}
                 className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               >
-                <option value="all">Tous types</option>
-                <option value="straight">Raides</option>
-                <option value="wavy">Ondulés</option>
-                <option value="curly">Bouclés</option>
-                <option value="coily">Frisés</option>
+                <option value="all">All types</option>
+                <option value="straight">{t('hairTypes.straight')}</option>
+                <option value="wavy">{t('hairTypes.wavy')}</option>
+                <option value="curly">{t('hairTypes.curly')}</option>
+                <option value="coily">{t('hairTypes.coily')}</option>
               </select>
             </div>
             <div className="flex items-center gap-2">
@@ -190,17 +192,17 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               >
-                <option value="relevant">Pertinence</option>
-                <option value="recent">Plus récent</option>
-                <option value="price_asc">Prix croissant</option>
-                <option value="price_desc">Prix décroissant</option>
+                <option value="relevant">Relevance</option>
+                <option value="recent">Most recent</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
               </select>
             </div>
           </div>
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
-              <label className="text-sm font-semibold text-gray-700 min-w-fit">Fourchette de prix :</label>
+              <label className="text-sm font-semibold text-gray-700 min-w-fit">Price range:</label>
               <div className="flex items-center gap-2 flex-wrap">
                 <input
                   type="number"
@@ -226,7 +228,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                     }}
                     className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                   >
-                    Réinitialiser
+                    Reset
                   </button>
                 )}
               </div>
@@ -234,7 +236,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-gray-700 min-w-fit">Longueur :</label>
+                <label className="text-sm font-semibold text-gray-700 min-w-fit">Length:</label>
                 <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
                   <button
                     type="button"
@@ -256,7 +258,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    pouces
+                    inches
                   </button>
                 </div>
               </div>
@@ -285,7 +287,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                     }}
                     className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                   >
-                    Réinitialiser
+                    Reset
                   </button>
                 )}
               </div>

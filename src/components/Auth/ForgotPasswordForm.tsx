@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Mail, ArrowLeft } from 'lucide-react';
 
 interface ForgotPasswordFormProps {
@@ -7,6 +8,7 @@ interface ForgotPasswordFormProps {
 }
 
 export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -42,15 +44,15 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
           </div>
         </div>
         <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
-          Email envoyé !
+          Email sent!
         </h2>
         <p className="text-center text-gray-600 mb-6">
-          Nous avons envoyé un lien de réinitialisation à <strong>{email}</strong>
+          We've sent a reset link to <strong>{email}</strong>
         </p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-blue-800">
-            Vérifiez votre boîte de réception et cliquez sur le lien pour réinitialiser votre mot de passe.
-            Le lien expire dans 1 heure.
+            Check your inbox and click the link to reset your password.
+            The link expires in 1 hour.
           </p>
         </div>
         <button
@@ -58,7 +60,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
           className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
-          Retour à la connexion
+          {t('common.back')} to login
         </button>
       </div>
     );
@@ -70,10 +72,10 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
         <Mail className="w-12 h-12 text-emerald-600" />
       </div>
       <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">
-        Mot de passe oublié ?
+        {t('auth.forgotPassword')}
       </h2>
       <p className="text-center text-gray-600 mb-6">
-        Entrez votre email pour recevoir un lien de réinitialisation
+        Enter your email to receive a reset link
       </p>
 
       {error && (
@@ -85,7 +87,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
+            {t('auth.email')}
           </label>
           <input
             id="email"
@@ -103,7 +105,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
           disabled={loading}
           className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Envoi en cours...' : 'Envoyer le lien'}
+          {loading ? `${t('common.loading')}` : t('auth.sendResetLink')}
         </button>
       </form>
 
@@ -113,7 +115,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
           className="text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-2 mx-auto"
         >
           <ArrowLeft className="w-4 h-4" />
-          Retour à la connexion
+          {t('common.back')} to login
         </button>
       </div>
     </div>
