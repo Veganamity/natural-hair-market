@@ -218,83 +218,38 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                   </button>
                 </div>
               </div>
-              <select
-                value={formData.hair_length}
-                onChange={(e) => setFormData({ ...formData, hair_length: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                required
-              >
-                <option value="">Sélectionnez</option>
-                {lengthUnit === 'cm' ? (
-                  <>
-                    <option value="10cm">10cm (4")</option>
-                    <option value="15cm">15cm (6")</option>
-                    <option value="20cm">20cm (8")</option>
-                    <option value="25cm">25cm (10")</option>
-                    <option value="30cm">30cm (12")</option>
-                    <option value="35cm">35cm (14")</option>
-                    <option value="40cm">40cm (16")</option>
-                    <option value="45cm">45cm (18")</option>
-                    <option value="50cm">50cm (20")</option>
-                    <option value="55cm">55cm (22")</option>
-                    <option value="60cm">60cm (24")</option>
-                    <option value="65cm">65cm (26")</option>
-                    <option value="70cm">70cm (28")</option>
-                    <option value="75cm">75cm (30")</option>
-                    <option value="80cm">80cm (32")</option>
-                    <option value="85cm">85cm (34")</option>
-                    <option value="90cm">90cm (36")</option>
-                    <option value="95cm">95cm (38")</option>
-                    <option value="100cm">100cm (40")</option>
-                    <option value="105cm">105cm (42")</option>
-                    <option value="110cm">110cm (44")</option>
-                    <option value="115cm">115cm (46")</option>
-                    <option value="120cm">120cm (48")</option>
-                    <option value="125cm">125cm (50")</option>
-                    <option value="130cm">130cm (52")</option>
-                    <option value="135cm">135cm (54")</option>
-                    <option value="140cm">140cm (56")</option>
-                    <option value="145cm">145cm (58")</option>
-                    <option value="150cm">150cm (60")</option>
-                    <option value="155cm">155cm (62")</option>
-                    <option value="160cm">160cm (64")</option>
-                  </>
-                ) : (
-                  <>
-                    <option value="10cm">4" (10cm)</option>
-                    <option value="15cm">6" (15cm)</option>
-                    <option value="20cm">8" (20cm)</option>
-                    <option value="25cm">10" (25cm)</option>
-                    <option value="30cm">12" (30cm)</option>
-                    <option value="35cm">14" (35cm)</option>
-                    <option value="40cm">16" (40cm)</option>
-                    <option value="45cm">18" (45cm)</option>
-                    <option value="50cm">20" (50cm)</option>
-                    <option value="55cm">22" (55cm)</option>
-                    <option value="60cm">24" (60cm)</option>
-                    <option value="65cm">26" (65cm)</option>
-                    <option value="70cm">28" (70cm)</option>
-                    <option value="75cm">30" (75cm)</option>
-                    <option value="80cm">32" (80cm)</option>
-                    <option value="85cm">34" (85cm)</option>
-                    <option value="90cm">36" (90cm)</option>
-                    <option value="95cm">38" (95cm)</option>
-                    <option value="100cm">40" (100cm)</option>
-                    <option value="105cm">42" (105cm)</option>
-                    <option value="110cm">44" (110cm)</option>
-                    <option value="115cm">46" (115cm)</option>
-                    <option value="120cm">48" (120cm)</option>
-                    <option value="125cm">50" (125cm)</option>
-                    <option value="130cm">52" (130cm)</option>
-                    <option value="135cm">54" (135cm)</option>
-                    <option value="140cm">56" (140cm)</option>
-                    <option value="145cm">58" (145cm)</option>
-                    <option value="150cm">60" (150cm)</option>
-                    <option value="155cm">62" (155cm)</option>
-                    <option value="160cm">64" (160cm)</option>
-                  </>
-                )}
-              </select>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="1"
+                  max={lengthUnit === 'cm' ? '200' : '80'}
+                  step="1"
+                  value={formData.hair_length.replace('cm', '')}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value) {
+                      const numValue = lengthUnit === 'cm' ? parseInt(value) : inchesToCm(parseInt(value));
+                      setFormData({ ...formData, hair_length: `${numValue}cm` });
+                    } else {
+                      setFormData({ ...formData, hair_length: '' });
+                    }
+                  }}
+                  className="w-full px-4 py-3 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required
+                  placeholder={lengthUnit === 'cm' ? '50' : '20'}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
+                  {lengthUnit === 'cm' ? 'cm' : 'pouces'}
+                  {formData.hair_length && (
+                    <span className="ml-1 text-xs text-gray-400">
+                      ({lengthUnit === 'cm'
+                        ? `${cmToInches(parseInt(formData.hair_length))} pouces`
+                        : `${formData.hair_length}`
+                      })
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -367,55 +322,30 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Poids
+                Poids (optionnel)
               </label>
-              <select
-                value={formData.hair_weight}
-                onChange={(e) => setFormData({ ...formData, hair_weight: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="">Sélectionnez (optionnel)</option>
-                <option value="25g">25g</option>
-                <option value="50g">50g</option>
-                <option value="75g">75g</option>
-                <option value="100g">100g</option>
-                <option value="125g">125g</option>
-                <option value="150g">150g</option>
-                <option value="175g">175g</option>
-                <option value="200g">200g</option>
-                <option value="225g">225g</option>
-                <option value="250g">250g</option>
-                <option value="275g">275g</option>
-                <option value="300g">300g</option>
-                <option value="325g">325g</option>
-                <option value="350g">350g</option>
-                <option value="375g">375g</option>
-                <option value="400g">400g</option>
-                <option value="425g">425g</option>
-                <option value="450g">450g</option>
-                <option value="475g">475g</option>
-                <option value="500g">500g</option>
-                <option value="525g">525g</option>
-                <option value="550g">550g</option>
-                <option value="575g">575g</option>
-                <option value="600g">600g</option>
-                <option value="625g">625g</option>
-                <option value="650g">650g</option>
-                <option value="675g">675g</option>
-                <option value="700g">700g</option>
-                <option value="725g">725g</option>
-                <option value="750g">750g</option>
-                <option value="775g">775g</option>
-                <option value="800g">800g</option>
-                <option value="825g">825g</option>
-                <option value="850g">850g</option>
-                <option value="875g">875g</option>
-                <option value="900g">900g</option>
-                <option value="925g">925g</option>
-                <option value="950g">950g</option>
-                <option value="975g">975g</option>
-                <option value="1000g">1000g</option>
-              </select>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="1"
+                  max="5000"
+                  step="1"
+                  value={formData.hair_weight.replace('g', '')}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value) {
+                      setFormData({ ...formData, hair_weight: `${value}g` });
+                    } else {
+                      setFormData({ ...formData, hair_weight: '' });
+                    }
+                  }}
+                  className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="100"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
+                  g
+                </div>
+              </div>
             </div>
           </div>
 
