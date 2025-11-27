@@ -14,6 +14,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [lengthUnit, setLengthUnit] = useState<'cm' | 'inches'>('cm');
 
   const [formData, setFormData] = useState({
     price: '',
@@ -29,6 +30,9 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
     country: 'France',
     certification_accepted: false,
   });
+
+  const cmToInches = (cm: number) => Math.round(cm / 2.54);
+  const inchesToCm = (inches: number) => Math.round(inches * 2.54);
 
   const generateTitle = () => {
     const parts = [];
@@ -185,9 +189,35 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Longueur *
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Longueur *
+                </label>
+                <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                  <button
+                    type="button"
+                    onClick={() => setLengthUnit('cm')}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      lengthUnit === 'cm'
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    cm
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLengthUnit('inches')}
+                    className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      lengthUnit === 'inches'
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    pouces
+                  </button>
+                </div>
+              </div>
               <select
                 value={formData.hair_length}
                 onChange={(e) => setFormData({ ...formData, hair_length: e.target.value })}
@@ -195,37 +225,75 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 required
               >
                 <option value="">Sélectionnez</option>
-                <option value="10cm">10cm</option>
-                <option value="15cm">15cm</option>
-                <option value="20cm">20cm</option>
-                <option value="25cm">25cm</option>
-                <option value="30cm">30cm</option>
-                <option value="35cm">35cm</option>
-                <option value="40cm">40cm</option>
-                <option value="45cm">45cm</option>
-                <option value="50cm">50cm</option>
-                <option value="55cm">55cm</option>
-                <option value="60cm">60cm</option>
-                <option value="65cm">65cm</option>
-                <option value="70cm">70cm</option>
-                <option value="75cm">75cm</option>
-                <option value="80cm">80cm</option>
-                <option value="85cm">85cm</option>
-                <option value="90cm">90cm</option>
-                <option value="95cm">95cm</option>
-                <option value="100cm">100cm</option>
-                <option value="105cm">105cm</option>
-                <option value="110cm">110cm</option>
-                <option value="115cm">115cm</option>
-                <option value="120cm">120cm</option>
-                <option value="125cm">125cm</option>
-                <option value="130cm">130cm</option>
-                <option value="135cm">135cm</option>
-                <option value="140cm">140cm</option>
-                <option value="145cm">145cm</option>
-                <option value="150cm">150cm</option>
-                <option value="155cm">155cm</option>
-                <option value="160cm">160cm</option>
+                {lengthUnit === 'cm' ? (
+                  <>
+                    <option value="10cm">10cm (4")</option>
+                    <option value="15cm">15cm (6")</option>
+                    <option value="20cm">20cm (8")</option>
+                    <option value="25cm">25cm (10")</option>
+                    <option value="30cm">30cm (12")</option>
+                    <option value="35cm">35cm (14")</option>
+                    <option value="40cm">40cm (16")</option>
+                    <option value="45cm">45cm (18")</option>
+                    <option value="50cm">50cm (20")</option>
+                    <option value="55cm">55cm (22")</option>
+                    <option value="60cm">60cm (24")</option>
+                    <option value="65cm">65cm (26")</option>
+                    <option value="70cm">70cm (28")</option>
+                    <option value="75cm">75cm (30")</option>
+                    <option value="80cm">80cm (32")</option>
+                    <option value="85cm">85cm (34")</option>
+                    <option value="90cm">90cm (36")</option>
+                    <option value="95cm">95cm (38")</option>
+                    <option value="100cm">100cm (40")</option>
+                    <option value="105cm">105cm (42")</option>
+                    <option value="110cm">110cm (44")</option>
+                    <option value="115cm">115cm (46")</option>
+                    <option value="120cm">120cm (48")</option>
+                    <option value="125cm">125cm (50")</option>
+                    <option value="130cm">130cm (52")</option>
+                    <option value="135cm">135cm (54")</option>
+                    <option value="140cm">140cm (56")</option>
+                    <option value="145cm">145cm (58")</option>
+                    <option value="150cm">150cm (60")</option>
+                    <option value="155cm">155cm (62")</option>
+                    <option value="160cm">160cm (64")</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="10cm">4" (10cm)</option>
+                    <option value="15cm">6" (15cm)</option>
+                    <option value="20cm">8" (20cm)</option>
+                    <option value="25cm">10" (25cm)</option>
+                    <option value="30cm">12" (30cm)</option>
+                    <option value="35cm">14" (35cm)</option>
+                    <option value="40cm">16" (40cm)</option>
+                    <option value="45cm">18" (45cm)</option>
+                    <option value="50cm">20" (50cm)</option>
+                    <option value="55cm">22" (55cm)</option>
+                    <option value="60cm">24" (60cm)</option>
+                    <option value="65cm">26" (65cm)</option>
+                    <option value="70cm">28" (70cm)</option>
+                    <option value="75cm">30" (75cm)</option>
+                    <option value="80cm">32" (80cm)</option>
+                    <option value="85cm">34" (85cm)</option>
+                    <option value="90cm">36" (90cm)</option>
+                    <option value="95cm">38" (95cm)</option>
+                    <option value="100cm">40" (100cm)</option>
+                    <option value="105cm">42" (105cm)</option>
+                    <option value="110cm">44" (110cm)</option>
+                    <option value="115cm">46" (115cm)</option>
+                    <option value="120cm">48" (120cm)</option>
+                    <option value="125cm">50" (125cm)</option>
+                    <option value="130cm">52" (130cm)</option>
+                    <option value="135cm">54" (135cm)</option>
+                    <option value="140cm">56" (140cm)</option>
+                    <option value="145cm">58" (145cm)</option>
+                    <option value="150cm">60" (150cm)</option>
+                    <option value="155cm">62" (155cm)</option>
+                    <option value="160cm">64" (160cm)</option>
+                  </>
+                )}
               </select>
             </div>
           </div>

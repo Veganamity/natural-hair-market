@@ -28,7 +28,11 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
   const [maxPrice, setMaxPrice] = useState('');
   const [minLength, setMinLength] = useState('');
   const [maxLength, setMaxLength] = useState('');
+  const [lengthUnit, setLengthUnit] = useState<'cm' | 'inches'>('cm');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const cmToInches = (cm: number) => Math.round(cm / 2.54);
+  const inchesToCm = (inches: number) => Math.round(inches * 2.54);
 
   useEffect(() => {
     fetchListings();
@@ -119,9 +123,12 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
         (!minPrice || listing.price >= parseFloat(minPrice)) &&
         (!maxPrice || listing.price <= parseFloat(maxPrice));
 
+      const minLengthCm = minLength ? (lengthUnit === 'cm' ? parseFloat(minLength) : inchesToCm(parseFloat(minLength))) : null;
+      const maxLengthCm = maxLength ? (lengthUnit === 'cm' ? parseFloat(maxLength) : inchesToCm(parseFloat(maxLength))) : null;
+
       const matchesLengthRange =
-        (!minLength || listing.length_cm >= parseFloat(minLength)) &&
-        (!maxLength || listing.length_cm <= parseFloat(maxLength));
+        (!minLengthCm || listing.length_cm >= minLengthCm) &&
+        (!maxLengthCm || listing.length_cm <= maxLengthCm);
 
       return matchesSearch && matchesFilter && matchesPriceRange && matchesLengthRange;
     });
@@ -226,14 +233,40 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
-              <label className="text-sm font-semibold text-gray-700 min-w-fit">Longueur (cm) :</label>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-semibold text-gray-700 min-w-fit">Longueur :</label>
+                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setLengthUnit('cm')}
+                    className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                      lengthUnit === 'cm'
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    cm
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLengthUnit('inches')}
+                    className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                      lengthUnit === 'inches'
+                        ? 'bg-emerald-600 text-white'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    pouces
+                  </button>
+                </div>
+              </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <input
                   type="number"
                   placeholder="Min"
                   value={minLength}
                   onChange={(e) => setMinLength(e.target.value)}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                 />
                 <span className="text-gray-500">-</span>
                 <input
@@ -241,9 +274,9 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                   placeholder="Max"
                   value={maxLength}
                   onChange={(e) => setMaxLength(e.target.value)}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                 />
-                <span className="text-gray-500 text-sm">cm</span>
+                <span className="text-gray-500 text-sm">{lengthUnit === 'cm' ? 'cm' : '"'}</span>
                 {(minLength || maxLength) && (
                   <button
                     onClick={() => {
