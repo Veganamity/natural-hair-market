@@ -224,7 +224,13 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                   min="1"
                   max={lengthUnit === 'cm' ? '200' : '80'}
                   step="1"
-                  value={formData.hair_length.replace('cm', '')}
+                  value={
+                    formData.hair_length
+                      ? lengthUnit === 'cm'
+                        ? formData.hair_length.replace('cm', '')
+                        : cmToInches(parseInt(formData.hair_length.replace('cm', '')))
+                      : ''
+                  }
                   onChange={(e) => {
                     const value = e.target.value;
                     if (value) {
