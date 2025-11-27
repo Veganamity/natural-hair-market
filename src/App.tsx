@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageSelector } from './components/LanguageSelector';
 import { LoginForm } from './components/Auth/LoginForm';
 import { SignUpForm } from './components/Auth/SignUpForm';
 import { ForgotPasswordForm } from './components/Auth/ForgotPasswordForm';
@@ -159,6 +161,7 @@ function AppContent() {
                   </h1>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                  <LanguageSelector />
                   <button
                     onClick={() => {
                       setAuthMode('login');
@@ -233,6 +236,7 @@ function AppContent() {
             </div>
 
             <div className="hidden md:flex items-center gap-1">
+              <LanguageSelector />
               <button
                 onClick={() => navigateToView('marketplace')}
                 className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
@@ -324,6 +328,9 @@ function AppContent() {
 
           {mobileMenuOpen && (
             <div className="md:hidden border-t border-gray-200 py-3 space-y-2">
+              <div className="px-4 pb-3 border-b border-gray-200">
+                <LanguageSelector />
+              </div>
               {currentView !== 'marketplace' && (
                 <button
                   onClick={() => {
@@ -514,9 +521,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 
