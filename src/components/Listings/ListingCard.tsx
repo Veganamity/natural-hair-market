@@ -44,6 +44,15 @@ export function ListingCard({
     });
   };
 
+  const cmToInches = (cm: number) => Math.round(cm / 2.54);
+
+  const formatLength = (lengthStr: string) => {
+    const cm = parseInt(lengthStr);
+    if (isNaN(cm)) return lengthStr;
+    const inches = cmToInches(cm);
+    return `${cm}cm (${inches}")`;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer">
       <div className="relative" onClick={onClick}>
@@ -81,7 +90,7 @@ export function ListingCard({
 
         <div className="space-y-1 mb-1.5">
           <div className="flex items-center gap-2 text-xs text-gray-600">
-            <span className="font-medium">{listing.hair_length}</span>
+            <span className="font-medium">{formatLength(listing.hair_length)}</span>
             <span>•</span>
             <span>{hairTypeLabels[listing.hair_type] || listing.hair_type}</span>
           </div>

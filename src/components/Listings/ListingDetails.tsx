@@ -64,6 +64,15 @@ export function ListingDetails({
     fair: 'Moyen',
   };
 
+  const cmToInches = (cm: number) => Math.round(cm / 2.54);
+
+  const formatLength = (lengthStr: string) => {
+    const cm = parseInt(lengthStr);
+    if (isNaN(cm)) return lengthStr;
+    const inches = cmToInches(cm);
+    return `${cm}cm (${inches}")`;
+  };
+
   const isOwner = user?.id === listing.seller_id;
 
   const handleInstantBuy = () => {
@@ -146,7 +155,7 @@ export function ListingDetails({
               <div className="grid grid-cols-2 gap-1 text-sm">
                 <div>
                   <span className="text-[10px] text-gray-600">Longueur</span>
-                  <p className="font-semibold text-gray-800 text-xs">{listing.hair_length}</p>
+                  <p className="font-semibold text-gray-800 text-xs">{formatLength(listing.hair_length)}</p>
                 </div>
                 <div>
                   <span className="text-[10px] text-gray-600">Type</span>

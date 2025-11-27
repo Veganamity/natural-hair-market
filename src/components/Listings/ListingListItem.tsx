@@ -36,6 +36,15 @@ export function ListingListItem({
     });
   };
 
+  const cmToInches = (cm: number) => Math.round(cm / 2.54);
+
+  const formatLength = (lengthStr: string) => {
+    const cm = parseInt(lengthStr);
+    if (isNaN(cm)) return lengthStr;
+    const inches = cmToInches(cm);
+    return `${cm}cm (${inches}")`;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer">
       <div className="flex flex-col sm:flex-row gap-4 p-4" onClick={onClick}>
@@ -74,7 +83,7 @@ export function ListingListItem({
             </div>
 
             <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-2">
-              <span className="font-medium">{listing.hair_length}</span>
+              <span className="font-medium">{formatLength(listing.hair_length)}</span>
               <span>•</span>
               <span>{hairTypeLabels[listing.hair_type] || listing.hair_type}</span>
               <span>•</span>
