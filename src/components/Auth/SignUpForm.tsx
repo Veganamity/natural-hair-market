@@ -36,7 +36,7 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
         <UserPlus className="w-12 h-12 text-emerald-600" />
       </div>
       <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">{t('auth.signUp')}</h2>
-      <p className="text-center text-gray-600 mb-6">Create your seller or buyer account</p>
+      <p className="text-center text-gray-600 mb-6">{t('auth.createAccount')}</p>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -52,7 +52,7 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">or</span>
+            <span className="px-2 bg-white text-gray-500">{t('auth.or')}</span>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
             minLength={6}
             required
           />
-          <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+          <p className="text-xs text-gray-500 mt-1">{t('auth.minCharacters')}</p>
         </div>
 
         <button

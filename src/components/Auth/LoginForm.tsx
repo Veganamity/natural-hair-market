@@ -37,7 +37,7 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
         <LogIn className="w-12 h-12 text-emerald-600" />
       </div>
       <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">{t('auth.signIn')}</h2>
-      <p className="text-center text-gray-600 mb-6">Access your account</p>
+      <p className="text-center text-gray-600 mb-6">{t('auth.accessAccount')}</p>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -53,7 +53,7 @@ export function LoginForm({ onToggleMode, onForgotPassword }: LoginFormProps) {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">or</span>
+            <span className="px-2 bg-white text-gray-500">{t('auth.or')}</span>
           </div>
         </div>
       </div>

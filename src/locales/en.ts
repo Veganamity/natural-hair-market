@@ -52,7 +52,16 @@ export const en = {
     "phone": "Phone",
     "orContinueWith": "Or continue with",
     "continueWithGoogle": "Continue with Google",
-    "signInWithGoogle": "Sign in with Google"
+    "signInWithGoogle": "Sign in with Google",
+    "accessAccount": "Access your account",
+    "createAccount": "Create your seller or buyer account",
+    "emailSent": "Email sent!",
+    "resetLinkSent": "We've sent a reset link to",
+    "checkInbox": "Check your inbox and click the link to reset your password. The link expires in 1 hour.",
+    "backToLogin": "Back to login",
+    "enterEmailReset": "Enter your email to receive a reset link",
+    "minCharacters": "Minimum 6 characters",
+    "or": "or"
   },
   "marketplace": {
     "title": "Marketplace",
@@ -68,7 +77,18 @@ export const en = {
     "report": "Report",
     "filterByCountry": "Filter by country",
     "allCountries": "All countries",
-    "searchPlaceholder": "Search listings..."
+    "searchPlaceholder": "Search listings...",
+    "allTypes": "All types",
+    "relevance": "Relevance",
+    "mostRecent": "Most recent",
+    "priceLowToHigh": "Price: Low to High",
+    "priceHighToLow": "Price: High to Low",
+    "priceRange": "Price range",
+    "length": "Length",
+    "reset": "Reset",
+    "min": "Min",
+    "max": "Max",
+    "inches": "inches"
   },
   "listing": {
     "title": "Title",

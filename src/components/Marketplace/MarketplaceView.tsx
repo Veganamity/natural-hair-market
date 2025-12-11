@@ -178,7 +178,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                 onChange={(e) => setFilterType(e.target.value)}
                 className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               >
-                <option value="all">All types</option>
+                <option value="all">{t('marketplace.allTypes')}</option>
                 <option value="straight">{t('hairTypes.straight')}</option>
                 <option value="wavy">{t('hairTypes.wavy')}</option>
                 <option value="curly">{t('hairTypes.curly')}</option>
@@ -192,21 +192,21 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               >
-                <option value="relevant">Relevance</option>
-                <option value="recent">Most recent</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
+                <option value="relevant">{t('marketplace.relevance')}</option>
+                <option value="recent">{t('marketplace.mostRecent')}</option>
+                <option value="price_asc">{t('marketplace.priceLowToHigh')}</option>
+                <option value="price_desc">{t('marketplace.priceHighToLow')}</option>
               </select>
             </div>
           </div>
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
-              <label className="text-sm font-semibold text-gray-700 min-w-fit">Price range:</label>
+              <label className="text-sm font-semibold text-gray-700 min-w-fit">{t('marketplace.priceRange')} :</label>
               <div className="flex items-center gap-2 flex-wrap">
                 <input
                   type="number"
-                  placeholder="Min"
+                  placeholder={t('marketplace.min')}
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
                   className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
@@ -214,7 +214,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                 <span className="text-gray-500">-</span>
                 <input
                   type="number"
-                  placeholder="Max"
+                  placeholder={t('marketplace.max')}
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
                   className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
@@ -228,7 +228,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                     }}
                     className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                   >
-                    Reset
+                    {t('marketplace.reset')}
                   </button>
                 )}
               </div>
@@ -236,7 +236,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
               <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-gray-700 min-w-fit">Length:</label>
+                <label className="text-sm font-semibold text-gray-700 min-w-fit">{t('marketplace.length')} :</label>
                 <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
                   <button
                     type="button"
@@ -258,14 +258,14 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    inches
+                    {t('marketplace.inches')}
                   </button>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <input
                   type="number"
-                  placeholder="Min"
+                  placeholder={t('marketplace.min')}
                   value={minLength}
                   onChange={(e) => setMinLength(e.target.value)}
                   className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
@@ -273,7 +273,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                 <span className="text-gray-500">-</span>
                 <input
                   type="number"
-                  placeholder="Max"
+                  placeholder={t('marketplace.max')}
                   value={maxLength}
                   onChange={(e) => setMaxLength(e.target.value)}
                   className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
@@ -287,7 +287,7 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
                     }}
                     className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
                   >
-                    Reset
+                    {t('marketplace.reset')}
                   </button>
                 )}
               </div>

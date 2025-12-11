@@ -44,15 +44,14 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
           </div>
         </div>
         <h2 className="text-2xl font-bold text-center mb-2 text-gray-800">
-          Email sent!
+          {t('auth.emailSent')}
         </h2>
         <p className="text-center text-gray-600 mb-6">
-          We've sent a reset link to <strong>{email}</strong>
+          {t('auth.resetLinkSent')} <strong>{email}</strong>
         </p>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-blue-800">
-            Check your inbox and click the link to reset your password.
-            The link expires in 1 hour.
+            {t('auth.checkInbox')}
           </p>
         </div>
         <button
@@ -60,7 +59,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
           className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
-          {t('common.back')} to login
+          {t('auth.backToLogin')}
         </button>
       </div>
     );
@@ -75,7 +74,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
         {t('auth.forgotPassword')}
       </h2>
       <p className="text-center text-gray-600 mb-6">
-        Enter your email to receive a reset link
+        {t('auth.enterEmailReset')}
       </p>
 
       {error && (
@@ -115,7 +114,7 @@ export function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
           className="text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-2 mx-auto"
         >
           <ArrowLeft className="w-4 h-4" />
-          {t('common.back')} to login
+          {t('auth.backToLogin')}
         </button>
       </div>
     </div>
