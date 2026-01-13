@@ -1,6 +1,7 @@
 export const fr = {
   common: {
     loading: 'Chargement...',
+    loadingApp: 'Chargement de l\'application...',
     error: 'Erreur',
     success: 'Succès',
     cancel: 'Annuler',

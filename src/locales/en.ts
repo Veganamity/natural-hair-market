@@ -1,6 +1,7 @@
 export const en = {
   "common": {
     "loading": "Loading...",
+    "loadingApp": "Loading application...",
     "error": "Error",
     "success": "Success",
     "cancel": "Cancel",

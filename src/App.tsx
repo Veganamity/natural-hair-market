@@ -93,7 +93,7 @@ function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
-        <div className="text-gray-600 text-lg">Chargement...</div>
+        <div className="text-gray-600 text-lg">{t('common.loadingApp')}</div>
       </div>
     );
   }
