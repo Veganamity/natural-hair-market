@@ -8,58 +8,68 @@
 
 -- Function: Get salon verifications with optional status filter
 CREATE OR REPLACE FUNCTION get_salon_verifications_rpc(status_filter text DEFAULT NULL)
-RETURNS TABLE (
-  id uuid,
-  user_id uuid,
-  salon_name text,
-  siret text,
-  address text,
-  phone text,
-  status text,
-  created_at timestamptz,
-  updated_at timestamptz
-)
+RETURNS json
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
+DECLARE
+  result json;
 BEGIN
   -- Check if user is admin
   IF (select auth.jwt()->>'email') != 'stephaniebuisson1115@gmail.com' THEN
     RAISE EXCEPTION 'Access denied: admin privileges required';
   END IF;
 
-  -- Return filtered or all verifications
+  -- Return filtered or all verifications with profile data as JSON
   IF status_filter IS NOT NULL THEN
-    RETURN QUERY
-    SELECT 
-      sv.id,
-      sv.user_id,
-      sv.salon_name,
-      sv.siret,
-      sv.address,
-      sv.phone,
-      sv.status,
-      sv.created_at,
-      sv.updated_at
-    FROM salon_verifications sv
-    WHERE sv.status = status_filter
-    ORDER BY sv.created_at DESC;
+    SELECT json_agg(row_to_json(t))
+    INTO result
+    FROM (
+      SELECT
+        sv.id,
+        sv.user_id,
+        sv.salon_name,
+        sv.siret,
+        sv.address,
+        sv.phone,
+        sv.status,
+        sv.created_at,
+        sv.updated_at,
+        json_build_object(
+          'email', p.email,
+          'full_name', p.full_name
+        ) as profiles
+      FROM salon_verifications sv
+      LEFT JOIN profiles p ON p.id = sv.user_id
+      WHERE sv.status = status_filter
+      ORDER BY sv.created_at DESC
+    ) t;
   ELSE
-    RETURN QUERY
-    SELECT 
-      sv.id,
-      sv.user_id,
-      sv.salon_name,
-      sv.siret,
-      sv.address,
-      sv.phone,
-      sv.status,
-      sv.created_at,
-      sv.updated_at
-    FROM salon_verifications sv
-    ORDER BY sv.created_at DESC;
+    SELECT json_agg(row_to_json(t))
+    INTO result
+    FROM (
+      SELECT
+        sv.id,
+        sv.user_id,
+        sv.salon_name,
+        sv.siret,
+        sv.address,
+        sv.phone,
+        sv.status,
+        sv.created_at,
+        sv.updated_at,
+        json_build_object(
+          'email', p.email,
+          'full_name', p.full_name
+        ) as profiles
+      FROM salon_verifications sv
+      LEFT JOIN profiles p ON p.id = sv.user_id
+      ORDER BY sv.created_at DESC
+    ) t;
   END IF;
+
+  RETURN COALESCE(result, '[]'::json);
 END;
 $$;
 
