@@ -188,22 +188,38 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
   if (isVerifiedSalon === false) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
           <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
-              <ShieldCheck className="h-8 w-8 text-red-600" />
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 mb-4">
+              <ShieldCheck className="h-8 w-8 text-amber-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Certification requise
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              Certification Salon Requise
             </h3>
-            <p className="text-gray-600 mb-6">
-              Vous devez être un salon certifié pour publier des annonces. Seuls les salons approuvés par l'administrateur peuvent vendre des cheveux sur cette plateforme.
+            <p className="text-gray-700 mb-6 text-left">
+              Pour garantir la qualité et l'authenticité des cheveux vendus sur notre plateforme, <strong>seuls les salons de coiffure certifiés</strong> peuvent publier des annonces.
             </p>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
+              <h4 className="font-semibold text-blue-900 mb-2">Comment devenir salon certifié :</h4>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
+                <li>Allez dans votre <strong>Profil</strong></li>
+                <li>Cliquez sur <strong>"Demander la certification salon"</strong></li>
+                <li>Remplissez le formulaire avec votre <strong>numéro SIRET</strong></li>
+                <li>Téléchargez les documents justificatifs demandés</li>
+                <li>Attendez l'approbation de l'administrateur (24-48h)</li>
+              </ol>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Une fois certifié, vous pourrez créer des annonces et vendre vos cheveux en toute sécurité.
+            </p>
+
             <button
               onClick={onClose}
               className="w-full bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700 transition-colors font-medium"
             >
-              Compris
+              J'ai compris
             </button>
           </div>
         </div>
