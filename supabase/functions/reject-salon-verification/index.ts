@@ -50,7 +50,7 @@ Deno.serve(async (req: Request) => {
 
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ is_certified_salon: false })
+      .update({ is_verified_salon: false })
       .eq('id', user_id);
 
     if (profileError) throw profileError;

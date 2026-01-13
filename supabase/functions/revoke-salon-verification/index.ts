@@ -26,7 +26,7 @@ Deno.serve(async (req: Request) => {
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
+
     if (authError || !user) {
       throw new Error('Unauthorized');
     }
@@ -43,14 +43,14 @@ Deno.serve(async (req: Request) => {
 
     const { error: updateError } = await supabase
       .from('salon_verifications')
-      .update({ status: 'approved', updated_at: new Date().toISOString() })
+      .update({ status: 'revoked', updated_at: new Date().toISOString() })
       .eq('id', verification_id);
 
     if (updateError) throw updateError;
 
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ is_verified_salon: true })
+      .update({ is_verified_salon: false })
       .eq('id', user_id);
 
     if (profileError) throw profileError;

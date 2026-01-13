@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import { Shield, CheckCircle, XCircle, AlertCircle, ExternalLink, Mail, Phone } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, AlertCircle, ExternalLink, Mail, Phone, Ban } from 'lucide-react';
 
 interface SalonVerification {
   id: string;
@@ -10,7 +10,7 @@ interface SalonVerification {
   siret: string;
   address: string;
   phone?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'revoked';
   created_at: string;
   profiles?: {
     email: string;
@@ -22,7 +22,7 @@ export default function SalonVerificationAdmin() {
   const { user, profile } = useAuth();
   const [verifications, setVerifications] = useState<SalonVerification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'revoked'>('pending');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const isAdmin = profile?.email === 'stephaniebuisson1115@gmail.com';
@@ -104,6 +104,40 @@ export default function SalonVerificationAdmin() {
     }
   };
 
+  const handleRevoke = async (verificationId: string, userId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir révoquer cette certification ? Le salon perdra son badge certifié.')) return;
+
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error('No session');
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/revoke-salon-verification`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          verification_id: verificationId,
+          user_id: userId
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error || 'Erreur lors de la révocation');
+      }
+
+      setMessage({ type: 'success', text: 'Certification révoquée avec succès.' });
+      await loadVerifications();
+    } catch (error: any) {
+      console.error('Error revoking salon certification:', error);
+      setMessage({ type: 'error', text: `Erreur: ${error.message}` });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
@@ -120,6 +154,11 @@ export default function SalonVerificationAdmin() {
         return <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
           <XCircle className="w-3 h-3 mr-1" />
           Refusé
+        </span>;
+      case 'revoked':
+        return <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          <Ban className="w-3 h-3 mr-1" />
+          Révoqué
         </span>;
       default:
         return null;
@@ -178,6 +217,14 @@ export default function SalonVerificationAdmin() {
               }`}
             >
               Refusés
+            </button>
+            <button
+              onClick={() => setFilter('revoked')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                filter === 'revoked' ? 'bg-gray-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Révoqués
             </button>
           </div>
         </div>
@@ -299,7 +346,16 @@ export default function SalonVerificationAdmin() {
                           </button>
                         </div>
                       )}
-                      {verification.status !== 'pending' && (
+                      {verification.status === 'approved' && (
+                        <button
+                          onClick={() => handleRevoke(verification.id, verification.user_id)}
+                          className="inline-flex items-center px-3 py-1 bg-gray-600 text-white text-sm font-medium rounded hover:bg-gray-700 transition-colors"
+                        >
+                          <Ban className="w-4 h-4 mr-1" />
+                          Révoquer
+                        </button>
+                      )}
+                      {(verification.status === 'rejected' || verification.status === 'revoked') && (
                         <span className="text-sm text-gray-500">-</span>
                       )}
                     </td>
