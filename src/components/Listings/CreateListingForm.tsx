@@ -15,6 +15,8 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
   const [error, setError] = useState('');
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [lengthUnit, setLengthUnit] = useState<'cm' | 'inches'>('cm');
+  const [isVerifiedSalon, setIsVerifiedSalon] = useState<boolean | null>(null);
+  const [checkingVerification, setCheckingVerification] = useState(true);
 
   const [formData, setFormData] = useState({
     price: '',
@@ -33,6 +35,31 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
 
   const cmToInches = (cm: number) => Math.round(cm / 2.54);
   const inchesToCm = (inches: number) => Math.round(inches * 2.54);
+
+  useEffect(() => {
+    const checkSalonVerification = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_verified_salon')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        setIsVerifiedSalon(data.is_verified_salon || false);
+      } catch (err) {
+        console.error('Error checking salon verification:', err);
+        setIsVerifiedSalon(false);
+      } finally {
+        setCheckingVerification(false);
+      }
+    };
+
+    checkSalonVerification();
+  }, [user]);
 
   const generateTitle = () => {
     const parts = [];
@@ -144,6 +171,45 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
       setLoading(false);
     }
   };
+
+  if (checkingVerification) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Vérification en cours...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isVerifiedSalon === false) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+              <ShieldCheck className="h-8 w-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Certification requise
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Vous devez être un salon certifié pour publier des annonces. Seuls les salons approuvés par l'administrateur peuvent vendre des cheveux sur cette plateforme.
+            </p>
+            <button
+              onClick={onClose}
+              className="w-full bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+            >
+              Compris
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
