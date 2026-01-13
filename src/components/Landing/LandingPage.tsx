@@ -17,6 +17,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
   const { t } = useLanguage();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchFeaturedListings();
@@ -33,8 +34,12 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
 
       if (error) throw error;
       setFeaturedListings(data || []);
-    } catch (error) {
+      setError('');
+    } catch (error: any) {
       console.error('Error fetching featured listings:', error);
+      if (error?.message === 'Failed to fetch' || error?.name === 'TypeError') {
+        setError('Impossible de charger les annonces. Vérifiez votre connexion internet.');
+      }
     } finally {
       setLoading(false);
     }
@@ -98,6 +103,20 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
                   onClick={onGetStarted}
                 />
               ))}
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 max-w-2xl mx-auto">
+              <p className="font-semibold mb-2">{error}</p>
+              <div className="text-sm mt-2 space-y-1">
+                <p className="font-semibold">Si le problème persiste :</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Vérifiez votre connexion internet</li>
+                  <li>Assurez-vous que votre domaine est autorisé dans Supabase</li>
+                  <li>Contactez le support technique</li>
+                </ul>
+              </div>
             </div>
           )}
 

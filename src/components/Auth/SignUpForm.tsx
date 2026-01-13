@@ -40,7 +40,17 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
+          <p className="font-semibold mb-2">{error}</p>
+          {error.includes('serveur') && (
+            <div className="text-sm mt-2 space-y-1">
+              <p className="font-semibold">Si le problème persiste :</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Vérifiez votre connexion internet</li>
+                <li>Assurez-vous que votre domaine est autorisé dans Supabase</li>
+                <li>Contactez le support technique</li>
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

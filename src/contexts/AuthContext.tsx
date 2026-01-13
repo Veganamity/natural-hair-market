@@ -104,7 +104,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       return { error: null };
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message === 'Failed to fetch' || error?.name === 'TypeError') {
+        return {
+          error: new Error('Impossible de se connecter au serveur. Vérifiez votre connexion internet ou contactez le support.')
+        };
+      }
       return { error: error as Error };
     }
   };
@@ -118,7 +123,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
       return { error: null };
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message === 'Failed to fetch' || error?.name === 'TypeError') {
+        return {
+          error: new Error('Impossible de se connecter au serveur. Vérifiez votre connexion internet ou contactez le support.')
+        };
+      }
       return { error: error as Error };
     }
   };
