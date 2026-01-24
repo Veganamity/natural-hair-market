@@ -249,10 +249,12 @@ function AppContent() {
               <h1 className="text-base sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
                 NaturalHairMarket
               </h1>
+              <div className="hidden md:block ml-2">
+                <LanguageSelector />
+              </div>
             </div>
 
             <div className="hidden md:flex items-center gap-1">
-              <LanguageSelector />
               <button
                 onClick={() => navigateToView('marketplace')}
                 className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
