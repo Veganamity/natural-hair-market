@@ -28,7 +28,7 @@ import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
 import { Database } from './lib/database.types';
 import { supabase } from './lib/supabaseClient';
-import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, HelpCircle, ArrowLeft } from 'lucide-react';
+import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, HelpCircle, ArrowLeft, ChevronDown } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -41,6 +41,7 @@ function AppContent() {
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
@@ -84,6 +85,20 @@ function AppContent() {
       window.removeEventListener('popstate', handlePopState);
     };
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (accountMenuOpen && !target.closest('.relative')) {
+        setAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [accountMenuOpen]);
 
   const navigateToView = (view: typeof currentView) => {
     setCurrentView(view);
@@ -249,61 +264,97 @@ function AppContent() {
                 <Home className="w-4 h-4" />
                 {t('nav.marketplace')}
               </button>
-              <button
-                onClick={() => navigateToView('favorites')}
-                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
-                  currentView === 'favorites'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Heart className="w-4 h-4" />
-                {t('nav.favorites')}
-              </button>
-              <button
-                onClick={() => navigateToView('offers')}
-                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
-                  currentView === 'offers'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Tag className="w-4 h-4" />
-                {t('nav.offers')}
-              </button>
-              <button
-                onClick={() => navigateToView('orders')}
-                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
-                  currentView === 'orders'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Package className="w-4 h-4" />
-                Commandes
-              </button>
-              <button
-                onClick={() => navigateToView('transactions')}
-                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
-                  currentView === 'transactions'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Receipt className="w-4 h-4" />
-                Historique
-              </button>
-              <button
-                onClick={() => navigateToView('profile')}
-                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
-                  currentView === 'profile'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <User className="w-4 h-4" />
-                {t('nav.profile')}
-              </button>
+
+              <div className="relative">
+                <button
+                  onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                  className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
+                    ['favorites', 'offers', 'orders', 'transactions', 'profile'].includes(currentView)
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  Mon Compte
+                  <ChevronDown className={`w-4 h-4 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {accountMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        navigateToView('profile');
+                        setAccountMenuOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                        currentView === 'profile'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <User className="w-4 h-4" />
+                      {t('nav.profile')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigateToView('favorites');
+                        setAccountMenuOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                        currentView === 'favorites'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Heart className="w-4 h-4" />
+                      {t('nav.favorites')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigateToView('offers');
+                        setAccountMenuOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                        currentView === 'offers'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Tag className="w-4 h-4" />
+                      {t('nav.offers')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigateToView('orders');
+                        setAccountMenuOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                        currentView === 'orders'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Package className="w-4 h-4" />
+                      Commandes
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigateToView('transactions');
+                        setAccountMenuOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                        currentView === 'transactions'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Receipt className="w-4 h-4" />
+                      Historique
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={() => setShowCreateListing(true)}
                 className="ml-1 px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 text-sm"
