@@ -80,8 +80,13 @@ Deno.serve(async (req: Request) => {
       throw new Error("Seller Stripe account not found");
     }
 
+    const sellerAmount = transaction.seller_amount || (
+      transaction.amount -
+      (transaction.marketplace_commission_amount || transaction.platform_fee || 0)
+    );
+
     const transfer = await stripe.transfers.create({
-      amount: Math.round(transaction.seller_amount * 100),
+      amount: Math.round(sellerAmount * 100),
       currency: "eur",
       destination: sellerProfile.stripe_account_id,
       transfer_group: transaction.id,
@@ -90,6 +95,8 @@ Deno.serve(async (req: Request) => {
         listingId: transaction.listing_id,
         sellerId: transaction.seller_id,
         buyerId: transaction.buyer_id,
+        marketplaceCommission: (transaction.marketplace_commission_amount || transaction.platform_fee || 0).toString(),
+        sellerShippingFee: (transaction.seller_shipping_fee || 0).toString(),
       },
     });
 

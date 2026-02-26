@@ -375,10 +375,9 @@ export function ListingDetails({
           listingId={listing.id}
           listingTitle={listing.title}
           amount={listing.price}
+          sellerShippingFee={listing.seller_shipping_fee || 4.99}
           onClose={() => setShowPaymentModal(false)}
           onSuccess={handlePaymentSuccess}
-          listingWeight={listing.hair_weight || undefined}
-          listingCountry={listing.country || undefined}
         />
       )}
 

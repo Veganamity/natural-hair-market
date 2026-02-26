@@ -33,6 +33,8 @@ export interface Database {
           siret: string | null
           is_verified_salon: boolean | null
           is_certified_salon: boolean | null
+          default_shipping_fee: number | null
+          accepts_marketplace_terms: boolean | null
         }
         Insert: {
           id: string
@@ -81,6 +83,8 @@ export interface Database {
           siret?: string | null
           is_verified_salon?: boolean | null
           is_certified_salon?: boolean | null
+          default_shipping_fee?: number | null
+          accepts_marketplace_terms?: boolean | null
         }
       }
       listings: {
@@ -110,6 +114,9 @@ export interface Database {
           shipping_time_days: number | null
           country: string | null
           certification_accepted: boolean | null
+          seller_shipping_fee: number | null
+          seller_address_city: string | null
+          seller_address_postal_code: string | null
         }
         Insert: {
           id?: string
@@ -137,6 +144,9 @@ export interface Database {
           shipping_time_days?: number | null
           country?: string | null
           certification_accepted?: boolean | null
+          seller_shipping_fee?: number | null
+          seller_address_city?: string | null
+          seller_address_postal_code?: string | null
         }
         Update: {
           id?: string
@@ -164,6 +174,9 @@ export interface Database {
           shipping_time_days?: number | null
           country?: string | null
           certification_accepted?: boolean | null
+          seller_shipping_fee?: number | null
+          seller_address_city?: string | null
+          seller_address_postal_code?: string | null
         }
       }
       favorites: {
@@ -191,7 +204,7 @@ export interface Database {
           id: string
           listing_id: string
           buyer_id: string
-          offer_amount: number
+          amount: number
           message: string | null
           status: string
           created_at: string
@@ -201,7 +214,7 @@ export interface Database {
           id?: string
           listing_id: string
           buyer_id: string
-          offer_amount: number
+          amount: number
           message?: string | null
           status?: string
           created_at?: string
@@ -211,7 +224,7 @@ export interface Database {
           id?: string
           listing_id?: string
           buyer_id?: string
-          offer_amount?: number
+          amount?: number
           message?: string | null
           status?: string
           created_at?: string
@@ -225,6 +238,11 @@ export interface Database {
           buyer_id: string
           seller_id: string
           amount: number
+          seller_amount: number | null
+          platform_fee: number | null
+          marketplace_commission_rate: number | null
+          marketplace_commission_amount: number | null
+          seller_shipping_fee: number | null
           stripe_payment_intent_id: string | null
           payment_status: string
           shipping_address: Json | null
@@ -238,6 +256,22 @@ export interface Database {
           shipping_label_url: string | null
           sendcloud_parcel_id: string | null
           colissimo_parcel_number: string | null
+          shipping_method: string | null
+          shipping_cost: number | null
+          shipping_address_id: string | null
+          delivery_status: string | null
+          delivery_confirmed_at: string | null
+          captured_at: string | null
+          cancelled_at: string | null
+          transfer_id: string | null
+          payment_method: string | null
+          capture_method: string | null
+          shipping_status: string | null
+          shipping_price: number | null
+          shipping_carrier_id: string | null
+          relay_point_id: string | null
+          relay_point_name: string | null
+          relay_point_address: string | null
         }
         Insert: {
           id?: string
@@ -245,6 +279,11 @@ export interface Database {
           buyer_id: string
           seller_id: string
           amount: number
+          seller_amount?: number | null
+          platform_fee?: number | null
+          marketplace_commission_rate?: number | null
+          marketplace_commission_amount?: number | null
+          seller_shipping_fee?: number | null
           stripe_payment_intent_id?: string | null
           payment_status?: string
           shipping_address?: Json | null
@@ -258,6 +297,22 @@ export interface Database {
           shipping_label_url?: string | null
           sendcloud_parcel_id?: string | null
           colissimo_parcel_number?: string | null
+          shipping_method?: string | null
+          shipping_cost?: number | null
+          shipping_address_id?: string | null
+          delivery_status?: string | null
+          delivery_confirmed_at?: string | null
+          captured_at?: string | null
+          cancelled_at?: string | null
+          transfer_id?: string | null
+          payment_method?: string | null
+          capture_method?: string | null
+          shipping_status?: string | null
+          shipping_price?: number | null
+          shipping_carrier_id?: string | null
+          relay_point_id?: string | null
+          relay_point_name?: string | null
+          relay_point_address?: string | null
         }
         Update: {
           id?: string
@@ -265,6 +320,11 @@ export interface Database {
           buyer_id?: string
           seller_id?: string
           amount?: number
+          seller_amount?: number | null
+          platform_fee?: number | null
+          marketplace_commission_rate?: number | null
+          marketplace_commission_amount?: number | null
+          seller_shipping_fee?: number | null
           stripe_payment_intent_id?: string | null
           payment_status?: string
           shipping_address?: Json | null
@@ -278,6 +338,22 @@ export interface Database {
           shipping_label_url?: string | null
           sendcloud_parcel_id?: string | null
           colissimo_parcel_number?: string | null
+          shipping_method?: string | null
+          shipping_cost?: number | null
+          shipping_address_id?: string | null
+          delivery_status?: string | null
+          delivery_confirmed_at?: string | null
+          captured_at?: string | null
+          cancelled_at?: string | null
+          transfer_id?: string | null
+          payment_method?: string | null
+          capture_method?: string | null
+          shipping_status?: string | null
+          shipping_price?: number | null
+          shipping_carrier_id?: string | null
+          relay_point_id?: string | null
+          relay_point_name?: string | null
+          relay_point_address?: string | null
         }
       }
       payouts: {

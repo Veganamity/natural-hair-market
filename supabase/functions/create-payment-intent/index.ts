@@ -8,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const PLATFORM_FEE = 0.99;
+const MARKETPLACE_COMMISSION_RATE = 0.10;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -40,15 +40,15 @@ Deno.serve(async (req: Request) => {
       throw new Error("Unauthorized");
     }
 
-    const { listingId, amount, shippingData, shippingCarrier } = await req.json();
+    const { listingId, shippingData } = await req.json();
 
-    if (!listingId || !amount || amount <= 0) {
+    if (!listingId) {
       throw new Error("Invalid parameters");
     }
 
     const { data: listing, error: listingError } = await supabase
       .from("listings")
-      .select("id, seller_id, price, status")
+      .select("id, seller_id, price, status, seller_shipping_fee")
       .eq("id", listingId)
       .maybeSingle();
 
@@ -78,29 +78,30 @@ Deno.serve(async (req: Request) => {
       throw new Error("Seller's Stripe account is not active");
     }
 
-    const sellerAmount = amount - PLATFORM_FEE;
+    const itemPrice = listing.price;
+    const sellerShippingFee = listing.seller_shipping_fee || 0;
+    const totalAmount = itemPrice + sellerShippingFee;
 
-    if (sellerAmount < 0) {
-      throw new Error("Amount too low to cover platform fee");
+    const marketplaceCommission = Math.round(itemPrice * MARKETPLACE_COMMISSION_RATE * 100) / 100;
+    const sellerReceives = itemPrice - marketplaceCommission + sellerShippingFee;
+
+    if (sellerReceives < 0) {
+      throw new Error("Invalid pricing calculation");
     }
 
     const metadata: any = {
       listingId,
       buyerId: user.id,
       sellerId: listing.seller_id,
-      platformFee: PLATFORM_FEE.toString(),
-      sellerAmount: sellerAmount.toString(),
+      itemPrice: itemPrice.toString(),
+      sellerShippingFee: sellerShippingFee.toString(),
+      marketplaceCommission: marketplaceCommission.toString(),
+      sellerReceives: sellerReceives.toString(),
       sellerStripeAccountId: sellerProfile.stripe_account_id,
     };
 
-    if (shippingCarrier) {
-      metadata.shippingCarrierId = shippingCarrier.id?.toString();
-      metadata.shippingCarrierName = shippingCarrier.name;
-      metadata.shippingPrice = shippingCarrier.price?.toString();
-    }
-
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100),
+      amount: Math.round(totalAmount * 100),
       currency: "eur",
       payment_method_types: ["sepa_debit", "card"],
       capture_method: "manual",
@@ -111,9 +112,12 @@ Deno.serve(async (req: Request) => {
       listing_id: listingId,
       buyer_id: user.id,
       seller_id: listing.seller_id,
-      amount: amount,
-      seller_amount: sellerAmount,
-      platform_fee: PLATFORM_FEE,
+      amount: totalAmount,
+      seller_amount: sellerReceives,
+      platform_fee: marketplaceCommission,
+      marketplace_commission_rate: MARKETPLACE_COMMISSION_RATE,
+      marketplace_commission_amount: marketplaceCommission,
+      seller_shipping_fee: sellerShippingFee,
       stripe_payment_intent_id: paymentIntent.id,
       status: "pending",
       payment_method: "sepa_debit",
@@ -121,15 +125,9 @@ Deno.serve(async (req: Request) => {
       delivery_status: "pending",
     };
 
-    if (shippingCarrier) {
-      transactionData.shipping_carrier = shippingCarrier.name;
-      transactionData.shipping_carrier_id = shippingCarrier.id;
-      transactionData.shipping_price = shippingCarrier.price;
-    }
-
     if (shippingData) {
       transactionData.shipping_method = shippingData.method;
-      transactionData.shipping_cost = shippingData.cost || 0;
+      transactionData.shipping_cost = sellerShippingFee;
       if (shippingData.addressId) {
         transactionData.shipping_address_id = shippingData.addressId;
       }
