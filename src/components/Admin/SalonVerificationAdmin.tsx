@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import { Shield, CheckCircle, XCircle, AlertCircle, ExternalLink, Mail, Phone, Ban } from 'lucide-react';
+import { Shield, CheckCircle, XCircle, AlertCircle, ExternalLink, Mail, Phone, Ban, Search } from 'lucide-react';
 
 interface SalonVerification {
   id: string;
@@ -21,8 +21,10 @@ interface SalonVerification {
 export default function SalonVerificationAdmin() {
   const { user, profile } = useAuth();
   const [verifications, setVerifications] = useState<SalonVerification[]>([]);
+  const [filteredVerifications, setFilteredVerifications] = useState<SalonVerification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'revoked'>('pending');
+  const [searchQuery, setSearchQuery] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const isAdmin = profile?.email === 'stephaniebuisson1115@gmail.com';
@@ -32,6 +34,20 @@ export default function SalonVerificationAdmin() {
       loadVerifications();
     }
   }, [isAdmin, filter]);
+
+  useEffect(() => {
+    // Filter verifications based on search query
+    if (searchQuery.trim() === '') {
+      setFilteredVerifications(verifications);
+    } else {
+      const query = searchQuery.toLowerCase().trim();
+      const filtered = verifications.filter(verification =>
+        verification.salon_name.toLowerCase().includes(query) ||
+        verification.siret.includes(query)
+      );
+      setFilteredVerifications(filtered);
+    }
+  }, [searchQuery, verifications]);
 
   const loadVerifications = async () => {
     try {
@@ -53,6 +69,7 @@ export default function SalonVerificationAdmin() {
 
       console.log('Loaded verifications:', data);
       setVerifications(data || []);
+      setFilteredVerifications(data || []);
     } catch (error: any) {
       console.error('Error loading verifications:', error);
       setMessage({
@@ -180,12 +197,28 @@ export default function SalonVerificationAdmin() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <Shield className="w-8 h-8 text-blue-600 mr-3" />
-            <h1 className="text-2xl font-bold text-gray-900">Gestion des certifications salons</h1>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Shield className="w-8 h-8 text-blue-600 mr-3" />
+              <h1 className="text-2xl font-bold text-gray-900">Gestion des certifications salons</h1>
+            </div>
           </div>
-          <div className="flex gap-2">
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Rechercher par nom de salon ou SIRET..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -226,6 +259,7 @@ export default function SalonVerificationAdmin() {
             >
               Révoqués
             </button>
+            </div>
           </div>
         </div>
 
@@ -243,10 +277,12 @@ export default function SalonVerificationAdmin() {
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="mt-4 text-gray-600">Chargement...</p>
           </div>
-        ) : verifications.length === 0 ? (
+        ) : filteredVerifications.length === 0 ? (
           <div className="text-center py-12">
             <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600">Aucune demande trouvée.</p>
+            <p className="text-gray-600">
+              {searchQuery ? 'Aucun résultat trouvé pour votre recherche.' : 'Aucune demande trouvée.'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -274,7 +310,7 @@ export default function SalonVerificationAdmin() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {verifications.map((verification) => (
+                {filteredVerifications.map((verification) => (
                   <tr key={verification.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4">
                       <div>
