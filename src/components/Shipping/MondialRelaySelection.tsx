@@ -55,7 +55,7 @@ export function MondialRelaySelection({
     setError('');
 
     try {
-      const { data, error } = await supabase.functions.invoke('search-mondial-relay-points', {
+      const { data, error: fnError } = await supabase.functions.invoke('search-mondial-relay-points', {
         body: {
           postalCode,
           country,
@@ -63,19 +63,27 @@ export function MondialRelaySelection({
         },
       });
 
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Failed to search relay points');
+      if (fnError) {
+        console.error('Edge function error:', fnError);
+        if (fnError.message?.includes('Failed to send')) {
+          throw new Error('Service temporairement indisponible. Veuillez reessayer.');
+        }
+        throw new Error(fnError.message || 'Erreur de recherche des points relais');
       }
 
       if (!data?.success) {
-        throw new Error(data?.error || 'Failed to search relay points');
+        throw new Error(data?.error || 'Erreur de recherche des points relais');
       }
 
       setRelayPoints(data.relayPoints || []);
     } catch (err) {
       console.error('Error searching relay points:', err);
-      setError((err as Error).message);
+      const errorMessage = (err as Error).message;
+      if (errorMessage.includes('Failed to send') || errorMessage.includes('fetch')) {
+        setError('Service temporairement indisponible. Veuillez reessayer.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
