@@ -55,33 +55,24 @@ export function MondialRelaySelection({
     setError('');
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
+      const { data, error } = await supabase.functions.invoke('search-mondial-relay-points', {
+        body: {
+          postalCode,
+          country,
+          weight,
+        },
+      });
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-mondial-relay-points`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            postalCode,
-            country,
-            weight,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to search relay points');
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to search relay points');
       }
 
-      setRelayPoints(result.relayPoints || []);
+      if (!data?.success) {
+        throw new Error(data?.error || 'Failed to search relay points');
+      }
+
+      setRelayPoints(data.relayPoints || []);
     } catch (err) {
       console.error('Error searching relay points:', err);
       setError((err as Error).message);
