@@ -7,22 +7,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-function generateMD5Security(params: string): string {
+async function generateMD5Security(params: string): Promise<string> {
   const privateKey = Deno.env.get("MONDIAL_RELAY_PRIVATE_KEY") || "";
   const stringToHash = params + privateKey;
 
   const encoder = new TextEncoder();
   const data = encoder.encode(stringToHash);
 
-  return Array.from(data)
-    .reduce((hash, byte) => {
-      hash = ((hash << 5) - hash) + byte;
-      return hash & hash;
-    }, 0)
-    .toString(16)
-    .toUpperCase()
-    .padStart(32, '0')
-    .substring(0, 32);
+  const hashBuffer = await crypto.subtle.digest('MD5', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  return hashHex.toUpperCase();
 }
 
 interface MondialRelayAddress {
@@ -115,7 +111,7 @@ Deno.serve(async (req: Request) => {
     const orderNumber = transaction.id.substring(0, 15);
 
     const paramsForSecurity = `${enseigne}${codeMarque}${senderCountry}${senderPostalCode}${senderCity}${recipientCountry}${relayPointId}${weightInGrams}`;
-    const securityHash = generateMD5Security(paramsForSecurity);
+    const securityHash = await generateMD5Security(paramsForSecurity);
 
     const soapBody = `<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
