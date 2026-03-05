@@ -26,107 +26,47 @@ export interface AddressInput {
   is_default: boolean;
 }
 
-const getApiUrl = () => {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  return `${supabaseUrl}/functions/v1/manage-saved-addresses`;
-};
+const callFunction = async (body: Record<string, unknown>) => {
+  const { data, error } = await supabase.functions.invoke('manage-saved-addresses', {
+    body,
+  });
 
-const getHeaders = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Not authenticated');
+  if (error) {
+    console.error('Edge function error:', error);
+    if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+      throw new Error('Impossible de contacter le serveur. Verifiez votre connexion internet.');
+    }
+    throw new Error(error.message || 'Erreur serveur');
+  }
 
-  return {
-    'Authorization': `Bearer ${session.access_token}`,
-    'Content-Type': 'application/json',
-    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-  };
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+
+  return data;
 };
 
 export const addressService = {
   async list(): Promise<SavedAddress[]> {
-    try {
-      const headers = await getHeaders();
-      const response = await fetch(getApiUrl(), {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ action: 'list' }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erreur serveur: ${response.status} - ${errorText}`);
-      }
-
-      const result = await response.json();
-      if (result.error) throw new Error(result.error);
-      return result.addresses || [];
-    } catch (error: any) {
-      if (error.message === 'Failed to fetch') {
-        throw new Error('Impossible de contacter le serveur. Verifiez votre connexion internet.');
-      }
-      throw error;
-    }
+    const result = await callFunction({ action: 'list' });
+    return result.addresses || [];
   },
 
   async create(address: AddressInput): Promise<SavedAddress> {
-    try {
-      const headers = await getHeaders();
-      const response = await fetch(getApiUrl(), {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ action: 'create', address }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erreur serveur: ${response.status} - ${errorText}`);
-      }
-
-      const result = await response.json();
-      if (result.error) throw new Error(result.error);
-      return result.address;
-    } catch (error: any) {
-      if (error.message === 'Failed to fetch') {
-        throw new Error('Impossible de contacter le serveur. Verifiez votre connexion internet.');
-      }
-      throw error;
-    }
+    const result = await callFunction({ action: 'create', address });
+    return result.address;
   },
 
   async update(id: string, address: AddressInput): Promise<SavedAddress> {
-    const headers = await getHeaders();
-    const response = await fetch(getApiUrl(), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ action: 'update', id, address }),
-    });
-
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
+    const result = await callFunction({ action: 'update', id, address });
     return result.address;
   },
 
   async delete(id: string): Promise<void> {
-    const headers = await getHeaders();
-    const response = await fetch(getApiUrl(), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ action: 'delete', id }),
-    });
-
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
+    await callFunction({ action: 'delete', id });
   },
 
   async setDefault(id: string): Promise<void> {
-    const headers = await getHeaders();
-    const response = await fetch(getApiUrl(), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ action: 'set-default', id }),
-    });
-
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
+    await callFunction({ action: 'set-default', id });
   },
 };
