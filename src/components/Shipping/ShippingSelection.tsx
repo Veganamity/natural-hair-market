@@ -152,6 +152,13 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
         </div>
       </div>
 
+      {(shippingMethod === 'chronopost' || shippingMethod === 'colissimo' || shippingMethod === 'mondial_relay') && (
+        <AddressSelector
+          onSelectAddress={handleAddressSelect}
+          selectedAddressId={selectedAddress?.id}
+        />
+      )}
+
       {shippingMethod === 'mondial_relay' && selectedAddress && (
         <MondialRelaySelection
           postalCode={selectedAddress.postal_code}
@@ -159,13 +166,6 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
           weight={weight}
           onSelectPoint={setSelectedRelayPoint}
           selectedPointId={selectedRelayPoint?.id}
-        />
-      )}
-
-      {(shippingMethod === 'chronopost' || shippingMethod === 'colissimo' || shippingMethod === 'mondial_relay') && (
-        <AddressSelector
-          onSelectAddress={handleAddressSelect}
-          selectedAddressId={selectedAddress?.id}
         />
       )}
     </div>
