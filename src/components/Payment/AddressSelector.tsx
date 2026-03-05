@@ -1,20 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { MapPin, Plus, Check } from 'lucide-react';
-
-interface SavedAddress {
-  id: string;
-  label: string;
-  full_name: string;
-  address_line1: string;
-  address_line2?: string;
-  postal_code: string;
-  city: string;
-  country: string;
-  phone: string;
-  is_default: boolean;
-}
+import { addressService, SavedAddress, AddressInput } from '../../lib/addressService';
 
 interface AddressSelectorProps {
   onSelectAddress: (address: SavedAddress) => void;
@@ -46,10 +33,7 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
 
   const fetchAddresses = async () => {
     try {
-      const { data, error } = await supabase
-        .rpc('get_saved_addresses');
-
-      if (error) throw error;
+      const data = await addressService.list();
 
       setAddresses(data || []);
 
@@ -68,20 +52,19 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
     e.preventDefault();
 
     try {
-      const { data: newAddressId, error } = await supabase
-        .rpc('create_saved_address', {
-          p_label: formData.label,
-          p_full_name: formData.full_name,
-          p_address_line1: formData.address_line1,
-          p_address_line2: formData.address_line2 || null,
-          p_postal_code: formData.postal_code,
-          p_city: formData.city,
-          p_country: formData.country,
-          p_phone: formData.phone,
-          p_is_default: formData.is_default,
-        });
+      const addressInput: AddressInput = {
+        label: formData.label,
+        full_name: formData.full_name,
+        address_line1: formData.address_line1,
+        address_line2: formData.address_line2 || undefined,
+        postal_code: formData.postal_code,
+        city: formData.city,
+        country: formData.country,
+        phone: formData.phone,
+        is_default: formData.is_default,
+      };
 
-      if (error) throw error;
+      const newAddress = await addressService.create(addressInput);
 
       alert('Adresse ajoutée avec succès');
       setShowNewAddressForm(false);
@@ -99,11 +82,8 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
 
       await fetchAddresses();
 
-      if (newAddressId) {
-        const newAddress = addresses.find(addr => addr.id === newAddressId);
-        if (newAddress) {
-          onSelectAddress(newAddress);
-        }
+      if (newAddress) {
+        onSelectAddress(newAddress);
       }
     } catch (error: any) {
       console.error('Error saving address:', error);
