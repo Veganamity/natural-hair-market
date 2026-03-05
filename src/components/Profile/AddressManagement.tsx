@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { MapPin, Plus, Edit2, Trash2, Check, X, Star } from 'lucide-react';
+import { MapPin, Plus, CreditCard as Edit2, Trash2, Check, X, Star } from 'lucide-react';
 
 interface SavedAddress {
   id: string;

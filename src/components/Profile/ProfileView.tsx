@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield } from 'lucide-react';
+import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
 import { AddressManagement } from './AddressManagement';
 
