@@ -31,6 +31,12 @@ export function OffersView() {
     fetchFavorites();
   }, [user]);
 
+  useEffect(() => {
+    if (activeTab === 'received' && receivedOffers.length > 0) {
+      markOffersAsRead();
+    }
+  }, [activeTab, receivedOffers]);
+
   const fetchFavorites = async () => {
     if (!user) return;
 
@@ -98,6 +104,21 @@ export function OffersView() {
       setSentOffers(offersWithBuyers as any);
     }
     setLoading(false);
+  };
+
+  const markOffersAsRead = async () => {
+    if (!user || receivedOffers.length === 0) return;
+
+    const unreadOfferIds = receivedOffers
+      .filter(offer => !offer.seller_read && offer.status === 'pending')
+      .map(offer => offer.id);
+
+    if (unreadOfferIds.length > 0) {
+      await supabase
+        .from('offers')
+        .update({ seller_read: true })
+        .in('id', unreadOfferIds);
+    }
   };
 
   const handleAcceptOffer = async (offerId: string) => {
