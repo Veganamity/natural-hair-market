@@ -8,21 +8,22 @@ type ShippingAddress = Database['public']['Tables']['shipping_addresses']['Row']
 
 interface ShippingSelectionProps {
   onShippingSelected: (data: {
-    method: 'mondial_relay' | 'chronopost';
+    method: 'mondial_relay' | 'chronopost' | 'colissimo';
     cost: number;
     addressId?: string;
     relayPointId?: string;
     relayPointName?: string;
     relayPointAddress?: string;
   }) => void;
-  selectedMethod?: 'mondial_relay' | 'chronopost';
+  selectedMethod?: 'mondial_relay' | 'chronopost' | 'colissimo';
+  weight?: number;
 }
 
-export function ShippingSelection({ onShippingSelected, selectedMethod }: ShippingSelectionProps) {
+export function ShippingSelection({ onShippingSelected, selectedMethod, weight = 100 }: ShippingSelectionProps) {
   const { user } = useAuth();
   const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
-  const [shippingMethod, setShippingMethod] = useState<'mondial_relay' | 'chronopost'>(selectedMethod || 'mondial_relay');
+  const [shippingMethod, setShippingMethod] = useState<'mondial_relay' | 'chronopost' | 'colissimo'>(selectedMethod || 'colissimo');
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [selectedRelayPoint, setSelectedRelayPoint] = useState<any>(null);
   const [relayPoints, setRelayPoints] = useState<any[]>([]);
@@ -81,6 +82,8 @@ export function ShippingSelection({ onShippingSelected, selectedMethod }: Shippi
       cost = 4.99;
     } else if (shippingMethod === 'chronopost') {
       cost = 8.99;
+    } else if (shippingMethod === 'colissimo') {
+      cost = 6.99;
     }
 
     const shippingData: any = {
@@ -88,7 +91,7 @@ export function ShippingSelection({ onShippingSelected, selectedMethod }: Shippi
       cost,
     };
 
-    if (shippingMethod === 'chronopost' && selectedAddress) {
+    if ((shippingMethod === 'chronopost' || shippingMethod === 'colissimo') && selectedAddress) {
       shippingData.addressId = selectedAddress;
     } else if (shippingMethod === 'mondial_relay' && selectedRelayPoint) {
       shippingData.relayPointId = selectedRelayPoint.id;
@@ -102,28 +105,37 @@ export function ShippingSelection({ onShippingSelected, selectedMethod }: Shippi
   const fetchRelayPoints = async (postalCode: string) => {
     setLoadingRelayPoints(true);
     try {
-      const mockRelayPointsByZip: Record<string, any[]> = {
-        '75001': [
-          { id: 'MR001', name: 'Relay Point Tabac Presse', address: '15 Rue de la République, 75001 Paris', distance: '0.5 km' },
-          { id: 'MR002', name: 'Relay Point Supermarché', address: '42 Rue de Rivoli, 75001 Paris', distance: '0.8 km' },
-        ],
-        '75008': [
-          { id: 'MR003', name: 'Relay Point Supermarché', address: '42 Avenue des Champs-Élysées, 75008 Paris', distance: '0.3 km' },
-          { id: 'MR004', name: 'Relay Point Pharmacie', address: '78 Rue du Faubourg Saint-Honoré, 75008 Paris', distance: '1.0 km' },
-        ],
-        '75005': [
-          { id: 'MR005', name: 'Relay Point Boulangerie', address: '8 Boulevard Saint-Germain, 75005 Paris', distance: '0.4 km' },
-          { id: 'MR006', name: 'Relay Point Librairie', address: '25 Rue des Écoles, 75005 Paris', distance: '0.9 km' },
-        ],
-      };
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
 
-      const zipPrefix = postalCode.substring(0, 5);
-      const points = mockRelayPointsByZip[zipPrefix] || [
-        { id: `MR_${postalCode}_1`, name: 'Relay Point Centre-ville', address: `12 Rue Principale, ${postalCode}`, distance: '0.5 km' },
-        { id: `MR_${postalCode}_2`, name: 'Relay Point Commerce', address: `45 Avenue de la Gare, ${postalCode}`, distance: '1.2 km' },
-      ];
+      const address = addresses.find(a => a.id === selectedAddressForRelay);
+      const country = address?.country || 'FR';
 
-      setRelayPoints(points);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-mondial-relay-points`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            postalCode,
+            country,
+            weight,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success && result.relayPoints) {
+        setRelayPoints(result.relayPoints);
+      } else {
+        setRelayPoints([]);
+      }
     } catch (error) {
       console.error('Error fetching relay points:', error);
       setRelayPoints([]);
@@ -168,7 +180,32 @@ export function ShippingSelection({ onShippingSelected, selectedMethod }: Shippi
       <div>
         <h3 className="text-lg font-bold text-gray-800 mb-4">Choisir le mode de livraison</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => setShippingMethod('colissimo')}
+            className={`p-4 border-2 rounded-xl transition-all ${
+              shippingMethod === 'colissimo'
+                ? 'border-emerald-600 bg-emerald-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <Package className="w-6 h-6 text-emerald-600 flex-shrink-0" />
+              <div className="flex-1 text-left">
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="font-bold text-gray-800">Colissimo</h4>
+                  <span className="font-bold text-emerald-600">6,99€</span>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Livraison à domicile sous 48h (International)
+                </p>
+              </div>
+              {shippingMethod === 'colissimo' && (
+                <Check className="w-5 h-5 text-emerald-600" />
+              )}
+            </div>
+          </button>
+
           <button
             onClick={() => setShippingMethod('mondial_relay')}
             className={`p-4 border-2 rounded-xl transition-all ${
@@ -178,7 +215,7 @@ export function ShippingSelection({ onShippingSelected, selectedMethod }: Shippi
             }`}
           >
             <div className="flex items-start gap-3">
-              <Package className="w-6 h-6 text-teal-600 flex-shrink-0" />
+              <MapPin className="w-6 h-6 text-teal-600 flex-shrink-0" />
               <div className="flex-1 text-left">
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="font-bold text-gray-800">Mondial Relay</h4>
@@ -198,23 +235,23 @@ export function ShippingSelection({ onShippingSelected, selectedMethod }: Shippi
             onClick={() => setShippingMethod('chronopost')}
             className={`p-4 border-2 rounded-xl transition-all ${
               shippingMethod === 'chronopost'
-                ? 'border-teal-600 bg-teal-50'
+                ? 'border-blue-600 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
             <div className="flex items-start gap-3">
-              <Truck className="w-6 h-6 text-teal-600 flex-shrink-0" />
+              <Truck className="w-6 h-6 text-blue-600 flex-shrink-0" />
               <div className="flex-1 text-left">
                 <div className="flex items-center justify-between mb-1">
                   <h4 className="font-bold text-gray-800">Chronopost</h4>
-                  <span className="font-bold text-teal-600">8,99€</span>
+                  <span className="font-bold text-blue-600">8,99€</span>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Livraison à domicile sous 24-48h
+                  Livraison express sous 24-48h
                 </p>
               </div>
               {shippingMethod === 'chronopost' && (
-                <Check className="w-5 h-5 text-teal-600" />
+                <Check className="w-5 h-5 text-blue-600" />
               )}
             </div>
           </button>
@@ -404,16 +441,16 @@ export function ShippingSelection({ onShippingSelected, selectedMethod }: Shippi
         </div>
       )}
 
-      {shippingMethod === 'chronopost' && (
+      {(shippingMethod === 'chronopost' || shippingMethod === 'colissimo') && (
         <div>
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-teal-600" />
+              <MapPin className="w-5 h-5 text-emerald-600" />
               Adresse de livraison
             </h4>
             <button
               onClick={() => setShowAddressForm(!showAddressForm)}
-              className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+              className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
             >
               <Plus className="w-4 h-4" />
               Ajouter une adresse
