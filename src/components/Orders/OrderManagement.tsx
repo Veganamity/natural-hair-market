@@ -90,8 +90,12 @@ export function OrderManagement() {
     }
   };
 
-  const handleCancelOrder = async (transactionId: string) => {
-    if (!confirm('Annuler cette commande et rembourser l\'acheteur ?')) return;
+  const handleCancelOrder = async (transactionId: string, hasPayment: boolean) => {
+    const reason = prompt('Raison de l\'annulation (optionnelle):');
+
+    if (reason === null) return;
+
+    if (!confirm(hasPayment ? 'Annuler cette commande et rembourser l\'acheteur ?' : 'Annuler cette transaction ?')) return;
 
     setProcessingId(transactionId);
 
@@ -99,28 +103,33 @@ export function OrderManagement() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
+      const endpoint = hasPayment ? 'cancel-payment' : 'cancel-transaction';
+
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-payment`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${endpoint}`,
         {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ transactionId, reason: 'requested_by_customer' }),
+          body: JSON.stringify({
+            transactionId,
+            reason: reason || 'Annulation par l\'utilisateur'
+          }),
         }
       );
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to cancel payment');
+        throw new Error(result.error || 'Failed to cancel transaction');
       }
 
-      alert('Commande annulée avec succès !');
+      alert(hasPayment ? 'Commande annulée et remboursée avec succès !' : 'Transaction annulée avec succès !');
       fetchTransactions();
     } catch (error: any) {
-      console.error('Error cancelling payment:', error);
+      console.error('Error cancelling transaction:', error);
       alert(`Erreur: ${error.message}`);
     } finally {
       setProcessingId(null);
@@ -215,6 +224,7 @@ export function OrderManagement() {
           const otherParty = isSellerView ? transaction.buyer : transaction.seller;
           const canConfirm = isSellerView && transaction.status === 'processing';
           const canCancel = ['pending', 'processing'].includes(transaction.status);
+          const hasPaymentIntent = !!transaction.stripe_payment_intent_id;
 
           return (
             <div key={transaction.id} className="bg-white rounded-xl shadow-md p-6">
@@ -294,7 +304,7 @@ export function OrderManagement() {
                     )}
                     {canCancel && (
                       <button
-                        onClick={() => handleCancelOrder(transaction.id)}
+                        onClick={() => handleCancelOrder(transaction.id, hasPaymentIntent)}
                         disabled={processingId === transaction.id}
                         className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >

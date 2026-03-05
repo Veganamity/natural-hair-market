@@ -21,12 +21,8 @@ Deno.serve(async (req: Request) => {
       throw new Error("Postal code and country are required");
     }
 
-    const apiUsername = Deno.env.get("MONDIAL_RELAY_API_USERNAME") || "CC20EUCU@business-api.mondialrelay.com";
-    const apiPassword = Deno.env.get("MONDIAL_RELAY_API_PASSWORD");
-
-    if (!apiPassword) {
-      throw new Error("Mondial Relay API credentials not configured");
-    }
+    const apiUsername = "CC20EUCU@business-api.mondialrelay.com";
+    const apiPassword = Deno.env.get("MONDIAL_RELAY_API_PASSWORD") || "\\zYDC=g<kj3WBIQ[6QKF";
 
     const countryCode = country.toUpperCase().substring(0, 2);
     const weightGrams = weight || 500;
