@@ -55,10 +55,7 @@ export function AddressManagement() {
   const fetchAddresses = async () => {
     try {
       const { data, error } = await supabase
-        .from('saved_addresses')
-        .select('*')
-        .order('is_default', { ascending: false })
-        .order('created_at', { ascending: false });
+        .rpc('get_saved_addresses');
 
       if (error) throw error;
       setAddresses(data || []);
@@ -75,16 +72,34 @@ export function AddressManagement() {
     try {
       if (editingId) {
         const { error } = await supabase
-          .from('saved_addresses')
-          .update(formData)
-          .eq('id', editingId);
+          .rpc('update_saved_address', {
+            p_id: editingId,
+            p_label: formData.label,
+            p_full_name: formData.full_name,
+            p_address_line1: formData.address_line1,
+            p_address_line2: formData.address_line2 || null,
+            p_postal_code: formData.postal_code,
+            p_city: formData.city,
+            p_country: formData.country,
+            p_phone: formData.phone,
+            p_is_default: formData.is_default,
+          });
 
         if (error) throw error;
         alert('Adresse mise à jour avec succès');
       } else {
         const { error } = await supabase
-          .from('saved_addresses')
-          .insert([{ ...formData, user_id: user!.id }]);
+          .rpc('create_saved_address', {
+            p_label: formData.label,
+            p_full_name: formData.full_name,
+            p_address_line1: formData.address_line1,
+            p_address_line2: formData.address_line2 || null,
+            p_postal_code: formData.postal_code,
+            p_city: formData.city,
+            p_country: formData.country,
+            p_phone: formData.phone,
+            p_is_default: formData.is_default,
+          });
 
         if (error) throw error;
         alert('Adresse ajoutée avec succès');
@@ -121,9 +136,7 @@ export function AddressManagement() {
 
     try {
       const { error } = await supabase
-        .from('saved_addresses')
-        .delete()
-        .eq('id', id);
+        .rpc('delete_saved_address', { p_id: id });
 
       if (error) throw error;
       alert('Adresse supprimée avec succès');
@@ -137,9 +150,7 @@ export function AddressManagement() {
   const handleSetDefault = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('saved_addresses')
-        .update({ is_default: true })
-        .eq('id', id);
+        .rpc('set_default_address', { p_id: id });
 
       if (error) throw error;
       fetchAddresses();

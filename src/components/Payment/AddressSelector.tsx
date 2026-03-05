@@ -47,10 +47,7 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
   const fetchAddresses = async () => {
     try {
       const { data, error } = await supabase
-        .from('saved_addresses')
-        .select('*')
-        .order('is_default', { ascending: false })
-        .order('created_at', { ascending: false });
+        .rpc('get_saved_addresses');
 
       if (error) throw error;
 
@@ -71,11 +68,18 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
     e.preventDefault();
 
     try {
-      const { data, error } = await supabase
-        .from('saved_addresses')
-        .insert([{ ...formData, user_id: user!.id }])
-        .select()
-        .single();
+      const { data: newAddressId, error } = await supabase
+        .rpc('create_saved_address', {
+          p_label: formData.label,
+          p_full_name: formData.full_name,
+          p_address_line1: formData.address_line1,
+          p_address_line2: formData.address_line2 || null,
+          p_postal_code: formData.postal_code,
+          p_city: formData.city,
+          p_country: formData.country,
+          p_phone: formData.phone,
+          p_is_default: formData.is_default,
+        });
 
       if (error) throw error;
 
@@ -92,10 +96,14 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
         phone: '',
         is_default: false,
       });
-      fetchAddresses();
 
-      if (data) {
-        onSelectAddress(data);
+      await fetchAddresses();
+
+      if (newAddressId) {
+        const newAddress = addresses.find(addr => addr.id === newAddressId);
+        if (newAddress) {
+          onSelectAddress(newAddress);
+        }
       }
     } catch (error: any) {
       console.error('Error saving address:', error);
