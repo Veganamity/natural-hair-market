@@ -44,29 +44,53 @@ const getHeaders = async () => {
 
 export const addressService = {
   async list(): Promise<SavedAddress[]> {
-    const headers = await getHeaders();
-    const response = await fetch(getApiUrl(), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ action: 'list' }),
-    });
+    try {
+      const headers = await getHeaders();
+      const response = await fetch(getApiUrl(), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'list' }),
+      });
 
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
-    return result.addresses || [];
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erreur serveur: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      if (result.error) throw new Error(result.error);
+      return result.addresses || [];
+    } catch (error: any) {
+      if (error.message === 'Failed to fetch') {
+        throw new Error('Impossible de contacter le serveur. Verifiez votre connexion internet.');
+      }
+      throw error;
+    }
   },
 
   async create(address: AddressInput): Promise<SavedAddress> {
-    const headers = await getHeaders();
-    const response = await fetch(getApiUrl(), {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ action: 'create', address }),
-    });
+    try {
+      const headers = await getHeaders();
+      const response = await fetch(getApiUrl(), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: 'create', address }),
+      });
 
-    const result = await response.json();
-    if (result.error) throw new Error(result.error);
-    return result.address;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erreur serveur: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      if (result.error) throw new Error(result.error);
+      return result.address;
+    } catch (error: any) {
+      if (error.message === 'Failed to fetch') {
+        throw new Error('Impossible de contacter le serveur. Verifiez votre connexion internet.');
+      }
+      throw error;
+    }
   },
 
   async update(id: string, address: AddressInput): Promise<SavedAddress> {
