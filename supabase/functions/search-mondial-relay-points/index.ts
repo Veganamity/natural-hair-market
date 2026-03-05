@@ -35,53 +35,87 @@ Deno.serve(async (req: Request) => {
 
     console.log('Searching Mondial Relay points for:', { postalCode, country: countryCode, weight: weightGrams });
 
-    const searchParams = new URLSearchParams({
+    const requestBody = {
       Country: countryCode,
       PostCode: postalCode,
-      NbResults: "10",
-      SearchDelay: "0",
-      SearchRadius: "20000",
-      Weight: weightGrams.toString(),
-    });
+      NbResults: 10,
+      SearchDelay: 0,
+      SearchRadius: 20,
+      Weight: weightGrams,
+      Action: "24R"
+    };
 
-    const apiUrl = `https://connect-api.mondialrelay.com/api/parcelshop/search?${searchParams.toString()}`;
+    console.log('Request body:', JSON.stringify(requestBody));
 
-    const response = await fetch(apiUrl, {
-      method: "GET",
+    const response = await fetch("https://connect-api.mondialrelay.com/api/parcelshop/search", {
+      method: "POST",
       headers: {
         "Authorization": `Basic ${credentials}`,
+        "Content-Type": "application/json",
         "Accept": "application/json",
       },
+      body: JSON.stringify(requestBody),
     });
 
     const responseText = await response.text();
     console.log('Mondial Relay API response status:', response.status);
+    console.log('Mondial Relay API response:', responseText);
 
     if (!response.ok) {
       console.error('Mondial Relay API error:', responseText);
-      throw new Error(`Mondial Relay API error: ${responseText}`);
+      throw new Error(`Mondial Relay API error (${response.status}): ${responseText}`);
     }
 
-    const data = JSON.parse(responseText);
-
-    if (!data || !Array.isArray(data)) {
-      console.error('Unexpected response format:', data);
-      throw new Error('Invalid response format from Mondial Relay API');
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse response as JSON:', e);
+      throw new Error('Invalid JSON response from Mondial Relay API');
     }
 
-    const relayPoints = data.map((point: any) => ({
-      id: point.ID || point.Id || point.id,
-      name: point.Name || point.LgAdr1 || '',
-      address: point.Address1 || point.LgAdr3 || '',
-      postalCode: point.PostCode || point.CP || '',
-      city: point.City || point.Ville || '',
-      country: point.Country || point.Pays || countryCode,
-      latitude: point.Latitude?.toString() || '',
-      longitude: point.Longitude?.toString() || '',
-      openingHours: point.OpeningHours || point.Horaires || {},
-      distance: point.Distance?.toString() || '',
-      locationType: point.ActivityType || point.TypeActivite || '',
-    }));
+    if (!data) {
+      throw new Error('Empty response from Mondial Relay API');
+    }
+
+    if (data.error || data.Error || data.ErrorMessage) {
+      const errorMsg = data.error || data.Error || data.ErrorMessage;
+      throw new Error(`Mondial Relay API error: ${errorMsg}`);
+    }
+
+    let relayPoints = [];
+
+    if (Array.isArray(data)) {
+      relayPoints = data.map((point: any) => ({
+        id: point.ID || point.Id || point.id || point.Num || '',
+        name: point.Name || point.LgAdr1 || '',
+        address: point.Address1 || point.LgAdr3 || '',
+        postalCode: point.PostCode || point.CP || '',
+        city: point.City || point.Ville || '',
+        country: point.Country || point.Pays || countryCode,
+        latitude: point.Latitude?.toString() || '',
+        longitude: point.Longitude?.toString() || '',
+        openingHours: point.OpeningHours || point.Horaires || {},
+        distance: point.Distance?.toString() || '',
+        locationType: point.ActivityType || point.TypeActivite || '',
+      }));
+    } else if (data.ParcelShops && Array.isArray(data.ParcelShops)) {
+      relayPoints = data.ParcelShops.map((point: any) => ({
+        id: point.ID || point.Id || point.id || point.Num || '',
+        name: point.Name || point.LgAdr1 || '',
+        address: point.Address1 || point.LgAdr3 || '',
+        postalCode: point.PostCode || point.CP || '',
+        city: point.City || point.Ville || '',
+        country: point.Country || point.Pays || countryCode,
+        latitude: point.Latitude?.toString() || '',
+        longitude: point.Longitude?.toString() || '',
+        openingHours: point.OpeningHours || point.Horaires || {},
+        distance: point.Distance?.toString() || '',
+        locationType: point.ActivityType || point.TypeActivite || '',
+      }));
+    } else {
+      console.error('Unexpected response structure:', data);
+    }
 
     console.log(`Found ${relayPoints.length} Mondial Relay points`);
 
@@ -89,6 +123,11 @@ Deno.serve(async (req: Request) => {
       JSON.stringify({
         success: true,
         relayPoints,
+        debug: {
+          requestBody,
+          responseStatus: response.status,
+          responseData: data,
+        }
       }),
       {
         headers: {
