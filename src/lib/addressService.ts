@@ -26,96 +26,51 @@ export interface AddressInput {
   is_default: boolean;
 }
 
+async function callEdgeFunction(action: string, payload: any = {}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not authenticated');
+
+  const response = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-saved-addresses`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action, ...payload }),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Request failed');
+  }
+
+  return response.json();
+}
+
 export const addressService = {
   async list(): Promise<SavedAddress[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { data, error } = await supabase
-      .rpc('get_user_saved_addresses');
-
-    if (error) throw error;
-    return data || [];
+    const result = await callEdgeFunction('list');
+    return result.addresses || [];
   },
 
   async create(address: AddressInput): Promise<SavedAddress> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { data: addressId, error } = await supabase
-      .rpc('add_saved_address', {
-        p_full_name: address.full_name,
-        p_address_line1: address.address_line1,
-        p_address_line2: address.address_line2 || null,
-        p_city: address.city,
-        p_postal_code: address.postal_code,
-        p_country: address.country,
-        p_phone: address.phone,
-        p_is_default: address.is_default || false,
-      });
-
-    if (error) throw error;
-
-    const { data: newAddress, error: fetchError } = await supabase
-      .rpc('get_saved_address', { p_address_id: addressId });
-
-    if (fetchError) throw fetchError;
-    return newAddress[0];
+    const result = await callEdgeFunction('create', { address });
+    return result.address;
   },
 
   async update(id: string, address: AddressInput): Promise<SavedAddress> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { data: success, error } = await supabase
-      .rpc('update_saved_address', {
-        p_address_id: id,
-        p_full_name: address.full_name,
-        p_address_line1: address.address_line1,
-        p_address_line2: address.address_line2 || null,
-        p_city: address.city,
-        p_postal_code: address.postal_code,
-        p_country: address.country,
-        p_phone: address.phone,
-        p_is_default: address.is_default || false,
-      });
-
-    if (error) throw error;
-    if (!success) throw new Error('Failed to update address');
-
-    const { data: updatedAddress, error: fetchError } = await supabase
-      .rpc('get_saved_address', { p_address_id: id });
-
-    if (fetchError) throw fetchError;
-    return updatedAddress[0];
+    const result = await callEdgeFunction('update', { id, address });
+    return result.address;
   },
 
   async delete(id: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    const { data: success, error } = await supabase
-      .rpc('delete_saved_address', { p_address_id: id });
-
-    if (error) throw error;
-    if (!success) throw new Error('Failed to delete address');
+    await callEdgeFunction('delete', { id });
   },
 
   async setDefault(id: string): Promise<void> {
-    const addresses = await this.list();
-    const address = addresses.find(a => a.id === id);
-
-    if (!address) throw new Error('Address not found');
-
-    await this.update(id, {
-      full_name: address.full_name,
-      address_line1: address.address_line1,
-      address_line2: address.address_line2,
-      postal_code: address.postal_code,
-      city: address.city,
-      country: address.country,
-      phone: address.phone,
-      is_default: true,
-    });
+    await callEdgeFunction('set-default', { id });
   },
 };
