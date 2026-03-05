@@ -34,8 +34,10 @@ export function OffersView() {
   useEffect(() => {
     if (activeTab === 'received' && receivedOffers.length > 0) {
       markOffersAsRead();
+    } else if (activeTab === 'sent' && sentOffers.length > 0) {
+      markSentOffersAsRead();
     }
-  }, [activeTab, receivedOffers]);
+  }, [activeTab, receivedOffers, sentOffers]);
 
   const fetchFavorites = async () => {
     if (!user) return;
@@ -121,10 +123,29 @@ export function OffersView() {
     }
   };
 
+  const markSentOffersAsRead = async () => {
+    if (!user || sentOffers.length === 0) return;
+
+    const unreadOfferIds = sentOffers
+      .filter(offer => !(offer as any).buyer_read_status)
+      .map(offer => offer.id);
+
+    if (unreadOfferIds.length > 0) {
+      await supabase
+        .from('offers')
+        .update({ buyer_read_status: true })
+        .in('id', unreadOfferIds);
+    }
+  };
+
   const handleAcceptOffer = async (offerId: string) => {
     const { error } = await supabase
       .from('offers')
-      .update({ status: 'accepted', updated_at: new Date().toISOString() })
+      .update({
+        status: 'accepted',
+        updated_at: new Date().toISOString(),
+        buyer_read_status: false
+      })
       .eq('id', offerId);
 
     if (!error) {
@@ -136,7 +157,11 @@ export function OffersView() {
   const handleRejectOffer = async (offerId: string) => {
     const { error } = await supabase
       .from('offers')
-      .update({ status: 'rejected', updated_at: new Date().toISOString() })
+      .update({
+        status: 'rejected',
+        updated_at: new Date().toISOString(),
+        buyer_read_status: false
+      })
       .eq('id', offerId);
 
     if (!error) {
@@ -325,7 +350,15 @@ export function OffersView() {
 
         {activeTab === 'sent' &&
           sentOffers.map((offer) => (
-            <div key={offer.id} className="bg-white rounded-xl shadow-md p-6">
+            <div key={offer.id} className="bg-white rounded-xl shadow-md p-6 relative">
+              {!(offer as any).buyer_read_status && (
+                <div className="absolute top-4 right-4">
+                  <div className="relative">
+                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 w-3 h-3 bg-red-500 rounded-full animate-ping opacity-75"></div>
+                  </div>
+                </div>
+              )}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">

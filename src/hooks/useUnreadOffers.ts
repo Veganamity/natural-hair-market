@@ -15,29 +15,35 @@ export function useUnreadOffersCount() {
     }
 
     try {
+      let totalUnread = 0;
+
       const { data: listings } = await supabase
         .from('listings')
         .select('id')
         .eq('seller_id', user.id);
 
-      if (!listings || listings.length === 0) {
-        setUnreadCount(0);
-        setLoading(false);
-        return;
+      if (listings && listings.length > 0) {
+        const listingIds = listings.map(l => l.id);
+
+        const { count: sellerUnread } = await supabase
+          .from('offers')
+          .select('*', { count: 'exact', head: true })
+          .in('listing_id', listingIds)
+          .eq('seller_read', false)
+          .eq('status', 'pending');
+
+        totalUnread += sellerUnread || 0;
       }
 
-      const listingIds = listings.map(l => l.id);
-
-      const { count, error } = await supabase
+      const { count: buyerUnread } = await supabase
         .from('offers')
         .select('*', { count: 'exact', head: true })
-        .in('listing_id', listingIds)
-        .eq('seller_read', false)
-        .eq('status', 'pending');
+        .eq('buyer_id', user.id)
+        .eq('buyer_read_status', false);
 
-      if (error) throw error;
+      totalUnread += buyerUnread || 0;
 
-      setUnreadCount(count || 0);
+      setUnreadCount(totalUnread);
     } catch (error) {
       console.error('Error fetching unread offers count:', error);
       setUnreadCount(0);
