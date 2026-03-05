@@ -56,13 +56,13 @@ Deno.serve(async (req: Request) => {
 
       if (error) throw error;
 
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify({ addresses: data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'create') {
-      const addressData: AddressData = body;
+      const addressData: AddressData = body.address;
 
       if (addressData.is_default) {
         await supabase
@@ -90,13 +90,13 @@ Deno.serve(async (req: Request) => {
 
       if (error) throw error;
 
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify({ address: data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'update') {
-      const { id, ...addressData } = body;
+      const { id, address: addressData } = body;
 
       const { data: existing } = await supabase
         .from('saved_addresses')
@@ -138,7 +138,7 @@ Deno.serve(async (req: Request) => {
 
       if (error) throw error;
 
-      return new Response(JSON.stringify(data), {
+      return new Response(JSON.stringify({ address: data }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
