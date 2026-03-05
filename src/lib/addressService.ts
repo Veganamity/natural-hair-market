@@ -32,11 +32,7 @@ export const addressService = {
     if (!user) throw new Error('Not authenticated');
 
     const { data, error } = await supabase
-      .from('saved_addresses')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('is_default', { ascending: false })
-      .order('created_at', { ascending: false });
+      .rpc('get_user_saved_addresses');
 
     if (error) throw error;
     return data || [];
@@ -46,95 +42,80 @@ export const addressService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    if (address.is_default) {
-      await supabase
-        .from('saved_addresses')
-        .update({ is_default: false })
-        .eq('user_id', user.id);
-    }
-
-    const { data, error } = await supabase
-      .from('saved_addresses')
-      .insert([{
-        user_id: user.id,
-        full_name: address.full_name,
-        address_line1: address.address_line1,
-        address_line2: address.address_line2 || null,
-        postal_code: address.postal_code,
-        city: address.city,
-        country: address.country,
-        phone: address.phone,
-        is_default: address.is_default || false,
-      }])
-      .select()
-      .single();
+    const { data: addressId, error } = await supabase
+      .rpc('add_saved_address', {
+        p_full_name: address.full_name,
+        p_address_line1: address.address_line1,
+        p_address_line2: address.address_line2 || null,
+        p_city: address.city,
+        p_postal_code: address.postal_code,
+        p_country: address.country,
+        p_phone: address.phone,
+        p_is_default: address.is_default || false,
+      });
 
     if (error) throw error;
-    return data;
+
+    const { data: newAddress, error: fetchError } = await supabase
+      .rpc('get_saved_address', { p_address_id: addressId });
+
+    if (fetchError) throw fetchError;
+    return newAddress[0];
   },
 
   async update(id: string, address: AddressInput): Promise<SavedAddress> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    if (address.is_default) {
-      await supabase
-        .from('saved_addresses')
-        .update({ is_default: false })
-        .eq('user_id', user.id)
-        .neq('id', id);
-    }
-
-    const { data, error } = await supabase
-      .from('saved_addresses')
-      .update({
-        full_name: address.full_name,
-        address_line1: address.address_line1,
-        address_line2: address.address_line2 || null,
-        postal_code: address.postal_code,
-        city: address.city,
-        country: address.country,
-        phone: address.phone,
-        is_default: address.is_default || false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select()
-      .single();
+    const { data: success, error } = await supabase
+      .rpc('update_saved_address', {
+        p_address_id: id,
+        p_full_name: address.full_name,
+        p_address_line1: address.address_line1,
+        p_address_line2: address.address_line2 || null,
+        p_city: address.city,
+        p_postal_code: address.postal_code,
+        p_country: address.country,
+        p_phone: address.phone,
+        p_is_default: address.is_default || false,
+      });
 
     if (error) throw error;
-    return data;
+    if (!success) throw new Error('Failed to update address');
+
+    const { data: updatedAddress, error: fetchError } = await supabase
+      .rpc('get_saved_address', { p_address_id: id });
+
+    if (fetchError) throw fetchError;
+    return updatedAddress[0];
   },
 
   async delete(id: string): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { error } = await supabase
-      .from('saved_addresses')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id);
+    const { data: success, error } = await supabase
+      .rpc('delete_saved_address', { p_address_id: id });
 
     if (error) throw error;
+    if (!success) throw new Error('Failed to delete address');
   },
 
   async setDefault(id: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
+    const addresses = await this.list();
+    const address = addresses.find(a => a.id === id);
 
-    await supabase
-      .from('saved_addresses')
-      .update({ is_default: false })
-      .eq('user_id', user.id);
+    if (!address) throw new Error('Address not found');
 
-    const { error } = await supabase
-      .from('saved_addresses')
-      .update({ is_default: true, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('user_id', user.id);
-
-    if (error) throw error;
+    await this.update(id, {
+      full_name: address.full_name,
+      address_line1: address.address_line1,
+      address_line2: address.address_line2,
+      postal_code: address.postal_code,
+      city: address.city,
+      country: address.country,
+      phone: address.phone,
+      is_default: true,
+    });
   },
 };
