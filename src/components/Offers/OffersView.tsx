@@ -351,7 +351,7 @@ export function OffersView() {
         {activeTab === 'sent' &&
           sentOffers.map((offer) => (
             <div key={offer.id} className="bg-white rounded-xl shadow-md p-6 relative">
-              {!(offer as any).buyer_read_status && (
+              {!(offer as any).buyer_read_status && (offer.status === 'accepted' || offer.status === 'rejected') && (
                 <div className="absolute top-4 right-4">
                   <div className="relative">
                     <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>

@@ -39,7 +39,8 @@ export function useUnreadOffersCount() {
         .from('offers')
         .select('*', { count: 'exact', head: true })
         .eq('buyer_id', user.id)
-        .eq('buyer_read_status', false);
+        .eq('buyer_read_status', false)
+        .in('status', ['accepted', 'rejected']);
 
       totalUnread += buyerUnread || 0;
 
