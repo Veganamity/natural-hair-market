@@ -269,7 +269,6 @@ export interface Database {
         Row: {
           id: string
           user_id: string
-          label: string
           full_name: string
           address_line1: string
           address_line2: string | null
@@ -284,7 +283,6 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
-          label: string
           full_name: string
           address_line1: string
           address_line2?: string | null
@@ -299,7 +297,6 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
-          label?: string
           full_name?: string
           address_line1?: string
           address_line2?: string | null
