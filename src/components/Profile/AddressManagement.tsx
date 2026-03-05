@@ -4,7 +4,6 @@ import { MapPin, Plus, CreditCard as Edit2, Trash2, Check, X, Star } from 'lucid
 import { addressService, SavedAddress, AddressInput } from '../../lib/addressService';
 
 interface AddressFormData {
-  label: string;
   full_name: string;
   address_line1: string;
   address_line2: string;
@@ -22,7 +21,6 @@ export function AddressManagement() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<AddressFormData>({
-    label: '',
     full_name: '',
     address_line1: '',
     address_line2: '',
@@ -55,7 +53,6 @@ export function AddressManagement() {
 
     try {
       const addressInput: AddressInput = {
-        label: formData.label,
         full_name: formData.full_name,
         address_line1: formData.address_line1,
         address_line2: formData.address_line2 || undefined,
@@ -86,7 +83,6 @@ export function AddressManagement() {
 
   const handleEdit = (address: SavedAddress) => {
     setFormData({
-      label: address.label,
       full_name: address.full_name,
       address_line1: address.address_line1,
       address_line2: address.address_line2 || '',
@@ -125,7 +121,6 @@ export function AddressManagement() {
 
   const resetForm = () => {
     setFormData({
-      label: '',
       full_name: '',
       address_line1: '',
       address_line2: '',
@@ -171,19 +166,6 @@ export function AddressManagement() {
             {editingId ? 'Modifier l\'adresse' : 'Nouvelle adresse'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Label (ex: Maison, Travail)
-              </label>
-              <input
-                type="text"
-                value={formData.label}
-                onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                required
-              />
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nom complet
@@ -339,8 +321,7 @@ export function AddressManagement() {
             )}
 
             <div className="mb-4">
-              <h3 className="text-lg font-bold text-gray-800 mb-1">{address.label}</h3>
-              <p className="text-gray-700 font-medium">{address.full_name}</p>
+              <h3 className="text-lg font-bold text-gray-800 mb-1">{address.full_name}</h3>
             </div>
 
             <div className="text-sm text-gray-600 space-y-1 mb-4">
