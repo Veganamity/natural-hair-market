@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
 import { Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
+import { AddressManagement } from './AddressManagement';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -867,6 +868,8 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           </div>
         )}
       </div>
+
+      <AddressManagement />
 
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center justify-between mb-4">

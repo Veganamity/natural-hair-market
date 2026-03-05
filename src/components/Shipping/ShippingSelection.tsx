@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabaseClient';
-import { useAuth } from '../../contexts/AuthContext';
-import { Database } from '../../lib/database.types';
-import { Truck, Package, MapPin, Plus, Check } from 'lucide-react';
+import { Truck, Package, MapPin, Check } from 'lucide-react';
+import { AddressSelector } from '../Payment/AddressSelector';
+import { MondialRelaySelection } from './MondialRelaySelection';
 
-type ShippingAddress = Database['public']['Tables']['shipping_addresses']['Row'];
+interface SavedAddress {
+  id: string;
+  label: string;
+  full_name: string;
+  address_line1: string;
+  address_line2?: string;
+  postal_code: string;
+  city: string;
+  country: string;
+  phone: string;
+  is_default: boolean;
+}
 
 interface ShippingSelectionProps {
   onShippingSelected: (data: {
@@ -20,59 +30,16 @@ interface ShippingSelectionProps {
 }
 
 export function ShippingSelection({ onShippingSelected, selectedMethod, weight = 100 }: ShippingSelectionProps) {
-  const { user } = useAuth();
-  const [addresses, setAddresses] = useState<ShippingAddress[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [selectedAddress, setSelectedAddress] = useState<SavedAddress | null>(null);
   const [shippingMethod, setShippingMethod] = useState<'mondial_relay' | 'chronopost' | 'colissimo'>(selectedMethod || 'colissimo');
-  const [showAddressForm, setShowAddressForm] = useState(false);
   const [selectedRelayPoint, setSelectedRelayPoint] = useState<any>(null);
-  const [relayPoints, setRelayPoints] = useState<any[]>([]);
-  const [selectedAddressForRelay, setSelectedAddressForRelay] = useState<string>('');
-  const [loadingRelayPoints, setLoadingRelayPoints] = useState(false);
-  const [newAddress, setNewAddress] = useState({
-    full_name: '',
-    phone: '',
-    address_line1: '',
-    address_line2: '',
-    postal_code: '',
-    city: '',
-    country: 'FR',
-    is_default: false,
-  });
-
-  useEffect(() => {
-    fetchAddresses();
-  }, [user]);
 
   useEffect(() => {
     calculateShipping();
   }, [shippingMethod, selectedAddress, selectedRelayPoint]);
 
-  useEffect(() => {
-    if (shippingMethod === 'mondial_relay' && selectedAddressForRelay) {
-      const address = addresses.find(a => a.id === selectedAddressForRelay);
-      if (address && address.postal_code) {
-        fetchRelayPoints(address.postal_code);
-      }
-    }
-  }, [selectedAddressForRelay, shippingMethod, addresses]);
-
-  const fetchAddresses = async () => {
-    if (!user) return;
-
-    const { data } = await supabase
-      .from('shipping_addresses')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('is_default', { ascending: false });
-
-    if (data) {
-      setAddresses(data);
-      const defaultAddr = data.find((addr) => addr.is_default);
-      if (defaultAddr) {
-        setSelectedAddress(defaultAddr.id);
-      }
-    }
+  const handleAddressSelect = (address: SavedAddress) => {
+    setSelectedAddress(address);
   };
 
   const calculateShipping = () => {
@@ -92,7 +59,7 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
     };
 
     if ((shippingMethod === 'chronopost' || shippingMethod === 'colissimo') && selectedAddress) {
-      shippingData.addressId = selectedAddress;
+      shippingData.addressId = selectedAddress.id;
     } else if (shippingMethod === 'mondial_relay' && selectedRelayPoint) {
       shippingData.relayPointId = selectedRelayPoint.id;
       shippingData.relayPointName = selectedRelayPoint.name;
@@ -101,79 +68,6 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
 
     onShippingSelected(shippingData);
   };
-
-  const fetchRelayPoints = async (postalCode: string) => {
-    setLoadingRelayPoints(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Not authenticated');
-      }
-
-      const address = addresses.find(a => a.id === selectedAddressForRelay);
-      const country = address?.country || 'FR';
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-mondial-relay-points`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            postalCode,
-            country,
-            weight,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (result.success && result.relayPoints) {
-        setRelayPoints(result.relayPoints);
-      } else {
-        setRelayPoints([]);
-      }
-    } catch (error) {
-      console.error('Error fetching relay points:', error);
-      setRelayPoints([]);
-    } finally {
-      setLoadingRelayPoints(false);
-    }
-  };
-
-  const handleAddAddress = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('shipping_addresses')
-      .insert({
-        ...newAddress,
-        user_id: user.id,
-      })
-      .select()
-      .single();
-
-    if (!error && data) {
-      setAddresses([...addresses, data]);
-      setSelectedAddress(data.id);
-      setShowAddressForm(false);
-      setNewAddress({
-        full_name: '',
-        phone: '',
-        address_line1: '',
-        address_line2: '',
-        postal_code: '',
-        city: '',
-        country: 'FR',
-        is_default: false,
-      });
-    }
-  };
-
 
   return (
     <div className="space-y-6">
@@ -197,7 +91,7 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
                   <span className="font-bold text-emerald-600">6,99€</span>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Livraison à domicile sous 48h (International)
+                  Livraison à domicile sous 48h
                 </p>
               </div>
               {shippingMethod === 'colissimo' && (
@@ -222,7 +116,7 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
                   <span className="font-bold text-teal-600">4,99€</span>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Retrait en point relais sous 3-5 jours
+                  Retrait en point relais
                 </p>
               </div>
               {shippingMethod === 'mondial_relay' && (
@@ -247,7 +141,7 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
                   <span className="font-bold text-blue-600">8,99€</span>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Livraison express sous 24-48h
+                  Livraison express 24-48h
                 </p>
               </div>
               {shippingMethod === 'chronopost' && (
@@ -258,330 +152,21 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
         </div>
       </div>
 
-      {shippingMethod === 'mondial_relay' && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-teal-600" />
-              Choisir un point relais
-            </h4>
-            <button
-              onClick={() => setShowAddressForm(!showAddressForm)}
-              className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Ajouter une adresse
-            </button>
-          </div>
-
-          {showAddressForm && (
-            <form onSubmit={handleAddAddress} className="bg-gray-50 p-4 rounded-lg mb-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  placeholder="Nom complet"
-                  value={newAddress.full_name}
-                  onChange={(e) => setNewAddress({ ...newAddress, full_name: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                  required
-                />
-                <input
-                  type="tel"
-                  placeholder="Téléphone"
-                  value={newAddress.phone}
-                  onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                  required
-                />
-              </div>
-              <input
-                type="text"
-                placeholder="Adresse ligne 1"
-                value={newAddress.address_line1}
-                onChange={(e) => setNewAddress({ ...newAddress, address_line1: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Adresse ligne 2 (optionnel)"
-                value={newAddress.address_line2}
-                onChange={(e) => setNewAddress({ ...newAddress, address_line2: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  placeholder="Code postal"
-                  value={newAddress.postal_code}
-                  onChange={(e) => setNewAddress({ ...newAddress, postal_code: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Ville"
-                  value={newAddress.city}
-                  onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                  required
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="default-address-relay"
-                  checked={newAddress.is_default}
-                  onChange={(e) => setNewAddress({ ...newAddress, is_default: e.target.checked })}
-                  className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                />
-                <label htmlFor="default-address-relay" className="text-sm text-gray-700">
-                  Définir comme adresse par défaut
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-sm"
-                >
-                  Ajouter
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddressForm(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-sm"
-                >
-                  Annuler
-                </button>
-              </div>
-            </form>
-          )}
-
-          {addresses.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-4 mb-4">
-              Aucune adresse enregistrée. Ajoutez une adresse pour voir les points relais disponibles.
-            </p>
-          ) : (
-            <div className="space-y-2 mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sélectionnez votre adresse
-              </label>
-              {addresses.map((address) => (
-                <button
-                  key={address.id}
-                  onClick={() => setSelectedAddressForRelay(address.id)}
-                  className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
-                    selectedAddressForRelay === address.id
-                      ? 'border-teal-600 bg-teal-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-800">{address.full_name}</p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {address.address_line1}
-                        {address.address_line2 && `, ${address.address_line2}`}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {address.postal_code} {address.city}
-                      </p>
-                      {address.is_default && (
-                        <span className="inline-block mt-2 px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded">
-                          Adresse par défaut
-                        </span>
-                      )}
-                    </div>
-                    {selectedAddressForRelay === address.id && (
-                      <Check className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {loadingRelayPoints && (
-            <p className="text-center text-gray-500 py-4">Recherche des points relais...</p>
-          )}
-
-          {!loadingRelayPoints && selectedAddressForRelay && relayPoints.length === 0 && (
-            <p className="text-center text-gray-500 py-4">Aucun point relais trouvé pour cette adresse.</p>
-          )}
-
-          {!loadingRelayPoints && relayPoints.length > 0 && (
-            <div>
-              <h5 className="text-sm font-semibold text-gray-700 mb-2">Points relais disponibles</h5>
-              <div className="space-y-2">
-                {relayPoints.map((point) => (
-                  <button
-                    key={point.id}
-                    onClick={() => setSelectedRelayPoint(point)}
-                    className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
-                      selectedRelayPoint?.id === point.id
-                        ? 'border-teal-600 bg-teal-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-800">{point.name}</p>
-                        <p className="text-sm text-gray-600 mt-1">{point.address}</p>
-                        <p className="text-xs text-teal-600 mt-1">{point.distance}</p>
-                      </div>
-                      {selectedRelayPoint?.id === point.id && (
-                        <Check className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+      {shippingMethod === 'mondial_relay' && selectedAddress && (
+        <MondialRelaySelection
+          postalCode={selectedAddress.postal_code}
+          country={selectedAddress.country}
+          weight={weight}
+          onSelectPoint={setSelectedRelayPoint}
+          selectedPointId={selectedRelayPoint?.id}
+        />
       )}
 
-      {(shippingMethod === 'chronopost' || shippingMethod === 'colissimo') && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-emerald-600" />
-              Adresse de livraison
-            </h4>
-            <button
-              onClick={() => setShowAddressForm(!showAddressForm)}
-              className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Ajouter une adresse
-            </button>
-          </div>
-
-          {showAddressForm && (
-            <form onSubmit={handleAddAddress} className="bg-gray-50 p-4 rounded-lg mb-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  placeholder="Nom complet"
-                  value={newAddress.full_name}
-                  onChange={(e) => setNewAddress({ ...newAddress, full_name: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                  required
-                />
-                <input
-                  type="tel"
-                  placeholder="Téléphone"
-                  value={newAddress.phone}
-                  onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                  required
-                />
-              </div>
-              <input
-                type="text"
-                placeholder="Adresse ligne 1"
-                value={newAddress.address_line1}
-                onChange={(e) => setNewAddress({ ...newAddress, address_line1: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Adresse ligne 2 (optionnel)"
-                value={newAddress.address_line2}
-                onChange={(e) => setNewAddress({ ...newAddress, address_line2: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  placeholder="Code postal"
-                  value={newAddress.postal_code}
-                  onChange={(e) => setNewAddress({ ...newAddress, postal_code: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Ville"
-                  value={newAddress.city}
-                  onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                  required
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="default-address"
-                  checked={newAddress.is_default}
-                  onChange={(e) => setNewAddress({ ...newAddress, is_default: e.target.checked })}
-                  className="w-4 h-4 text-teal-600 focus:ring-teal-500"
-                />
-                <label htmlFor="default-address" className="text-sm text-gray-700">
-                  Définir comme adresse par défaut
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-sm"
-                >
-                  Ajouter
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddressForm(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-sm"
-                >
-                  Annuler
-                </button>
-              </div>
-            </form>
-          )}
-
-          {addresses.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center py-4">
-              Aucune adresse enregistrée. Ajoutez une adresse de livraison.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {addresses.map((address) => (
-                <button
-                  key={address.id}
-                  onClick={() => setSelectedAddress(address.id)}
-                  className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
-                    selectedAddress === address.id
-                      ? 'border-teal-600 bg-teal-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-800">{address.full_name}</p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {address.address_line1}
-                        {address.address_line2 && `, ${address.address_line2}`}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {address.postal_code} {address.city}
-                      </p>
-                      <p className="text-sm text-gray-600">{address.phone}</p>
-                      {address.is_default && (
-                        <span className="inline-block mt-2 px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded">
-                          Adresse par défaut
-                        </span>
-                      )}
-                    </div>
-                    {selectedAddress === address.id && (
-                      <Check className="w-5 h-5 text-teal-600 flex-shrink-0" />
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      {(shippingMethod === 'chronopost' || shippingMethod === 'colissimo' || shippingMethod === 'mondial_relay') && (
+        <AddressSelector
+          onSelectAddress={handleAddressSelect}
+          selectedAddressId={selectedAddress?.id}
+        />
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import { X, CreditCard, Building2, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { getStripe } from '../../lib/stripe';
 import { ShippingSelection } from '../Shipping/ShippingSelection';
+import { AddressSelector } from './AddressSelector';
 
 interface PaymentModalProps {
   listingId: string;
