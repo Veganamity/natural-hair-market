@@ -43,10 +43,10 @@ Deno.serve(async (req: Request) => {
       throw new Error('Unauthorized');
     }
 
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    const body = await req.json();
+    const action = body.action;
 
-    if (req.method === 'GET' && action === 'list') {
+    if (action === 'list') {
       const { data, error } = await supabase
         .from('saved_addresses')
         .select('*')
@@ -61,8 +61,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (req.method === 'POST' && action === 'create') {
-      const addressData: AddressData = await req.json();
+    if (action === 'create') {
+      const addressData: AddressData = body;
 
       if (addressData.is_default) {
         await supabase
@@ -95,15 +95,15 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (req.method === 'PUT' && action === 'update') {
-      const { id, ...addressData } = await req.json();
+    if (action === 'update') {
+      const { id, ...addressData } = body;
 
       const { data: existing } = await supabase
         .from('saved_addresses')
         .select('id')
         .eq('id', id)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!existing) {
         throw new Error('Address not found or unauthorized');
@@ -143,8 +143,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (req.method === 'DELETE' && action === 'delete') {
-      const { id } = await req.json();
+    if (action === 'delete') {
+      const { id } = body;
 
       const { error } = await supabase
         .from('saved_addresses')
@@ -159,15 +159,15 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    if (req.method === 'PUT' && action === 'set-default') {
-      const { id } = await req.json();
+    if (action === 'set-default') {
+      const { id } = body;
 
       const { data: existing } = await supabase
         .from('saved_addresses')
         .select('id')
         .eq('id', id)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (!existing) {
         throw new Error('Address not found or unauthorized');
@@ -191,8 +191,9 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    throw new Error('Invalid action or method');
+    throw new Error('Invalid action');
   } catch (error: any) {
+    console.error('Error in manage-saved-addresses:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

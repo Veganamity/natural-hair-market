@@ -28,89 +28,52 @@ export interface AddressInput {
   is_default: boolean;
 }
 
-const getEdgeFunctionUrl = (action: string) => {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  return `${supabaseUrl}/functions/v1/manage-saved-addresses?action=${action}`;
-};
-
-const getHeaders = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  return {
-    'Authorization': `Bearer ${session?.access_token}`,
-    'Content-Type': 'application/json',
-  };
-};
-
 export const addressService = {
   async list(): Promise<SavedAddress[]> {
-    const headers = await getHeaders();
-    const response = await fetch(getEdgeFunctionUrl('list'), { headers });
+    const { data, error } = await supabase.functions.invoke('manage-saved-addresses', {
+      method: 'GET',
+      body: { action: 'list' },
+    });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to fetch addresses');
-    }
-
-    return response.json();
+    if (error) throw error;
+    return data || [];
   },
 
   async create(address: AddressInput): Promise<SavedAddress> {
-    const headers = await getHeaders();
-    const response = await fetch(getEdgeFunctionUrl('create'), {
+    const { data, error } = await supabase.functions.invoke('manage-saved-addresses', {
       method: 'POST',
-      headers,
-      body: JSON.stringify(address),
+      body: { action: 'create', ...address },
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to create address');
-    }
-
-    return response.json();
+    if (error) throw error;
+    return data;
   },
 
   async update(id: string, address: AddressInput): Promise<SavedAddress> {
-    const headers = await getHeaders();
-    const response = await fetch(getEdgeFunctionUrl('update'), {
+    const { data, error } = await supabase.functions.invoke('manage-saved-addresses', {
       method: 'PUT',
-      headers,
-      body: JSON.stringify({ id, ...address }),
+      body: { action: 'update', id, ...address },
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to update address');
-    }
-
-    return response.json();
+    if (error) throw error;
+    return data;
   },
 
   async delete(id: string): Promise<void> {
-    const headers = await getHeaders();
-    const response = await fetch(getEdgeFunctionUrl('delete'), {
+    const { error } = await supabase.functions.invoke('manage-saved-addresses', {
       method: 'DELETE',
-      headers,
-      body: JSON.stringify({ id }),
+      body: { action: 'delete', id },
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to delete address');
-    }
+    if (error) throw error;
   },
 
   async setDefault(id: string): Promise<void> {
-    const headers = await getHeaders();
-    const response = await fetch(getEdgeFunctionUrl('set-default'), {
+    const { error } = await supabase.functions.invoke('manage-saved-addresses', {
       method: 'PUT',
-      headers,
-      body: JSON.stringify({ id }),
+      body: { action: 'set-default', id },
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to set default address');
-    }
+    if (error) throw error;
   },
 };
