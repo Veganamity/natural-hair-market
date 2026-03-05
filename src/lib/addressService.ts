@@ -30,24 +30,40 @@ async function callEdgeFunction(action: string, payload: any = {}) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Not authenticated');
 
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-saved-addresses`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ action, ...payload }),
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-saved-addresses`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ action, ...payload }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Request failed';
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.error || errorMessage;
+      } catch {
+        errorMessage = errorText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
-  );
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Request failed');
+    return response.json();
+  } catch (error: any) {
+    console.error('Edge function call failed:', error);
+    if (error.message === 'Failed to fetch') {
+      throw new Error('Unable to connect to server. Please check your internet connection.');
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 export const addressService = {
