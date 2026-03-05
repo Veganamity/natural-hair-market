@@ -1,25 +1,10 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
-
-async function generateMD5Security(params: string): Promise<string> {
-  const privateKey = Deno.env.get("MONDIAL_RELAY_PRIVATE_KEY") || "";
-  const stringToHash = params + privateKey;
-
-  const encoder = new TextEncoder();
-  const data = encoder.encode(stringToHash);
-
-  const hashBuffer = await crypto.subtle.digest('MD5', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-  return hashHex.toUpperCase();
-}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -36,50 +21,37 @@ Deno.serve(async (req: Request) => {
       throw new Error("Postal code and country are required");
     }
 
-    const enseigne = Deno.env.get("MONDIAL_RELAY_ENSEIGNE");
-    const marque = Deno.env.get("MONDIAL_RELAY_MARQUE") || "CC";
+    const apiUsername = Deno.env.get("MONDIAL_RELAY_API_USERNAME") || "CC20EUCU@business-api.mondialrelay.com";
+    const apiPassword = Deno.env.get("MONDIAL_RELAY_API_PASSWORD");
 
-    if (!enseigne) {
-      throw new Error("Mondial Relay credentials not configured");
+    if (!apiPassword) {
+      throw new Error("Mondial Relay API credentials not configured");
     }
 
     const countryCode = country.toUpperCase().substring(0, 2);
     const weightGrams = weight || 500;
-    const weightInGrams = Math.ceil(weightGrams / 100) * 100;
 
-    const paramsForSecurity = `${enseigne}${countryCode}${postalCode}${weightInGrams}`;
-    const securityHash = await generateMD5Security(paramsForSecurity);
+    const credentials = btoa(`${apiUsername}:${apiPassword}`);
 
-    const soapBody = `<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <WSI2_PointRelais_Recherche xmlns="http://www.mondialrelay.fr/webservice/">
-      <Enseigne>${enseigne}</Enseigne>
-      <Pays>${countryCode}</Pays>
-      <Ville></Ville>
-      <CP>${postalCode}</CP>
-      <Latitude></Latitude>
-      <Longitude></Longitude>
-      <Taille></Taille>
-      <Poids>${weightInGrams}</Poids>
-      <Action>REL</Action>
-      <DelaiEnvoi>0</DelaiEnvoi>
-      <RayonRecherche>20</RayonRecherche>
-      <NombreResultats>10</NombreResultats>
-      <Security>${securityHash}</Security>
-    </WSI2_PointRelais_Recherche>
-  </soap:Body>
-</soap:Envelope>`;
+    console.log('Searching Mondial Relay points for:', { postalCode, country: countryCode, weight: weightGrams });
 
-    console.log('Searching Mondial Relay points for:', { postalCode, country: countryCode, weight: weightInGrams });
+    const searchParams = new URLSearchParams({
+      Country: countryCode,
+      PostCode: postalCode,
+      NbResults: "10",
+      SearchDelay: "0",
+      SearchRadius: "20000",
+      Weight: weightGrams.toString(),
+    });
 
-    const response = await fetch("https://api.mondialrelay.com/WebService.asmx", {
-      method: "POST",
+    const apiUrl = `https://connect-api.mondialrelay.com/api/parcelshop/search?${searchParams.toString()}`;
+
+    const response = await fetch(apiUrl, {
+      method: "GET",
       headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        "SOAPAction": "http://www.mondialrelay.fr/webservice/WSI2_PointRelais_Recherche",
+        "Authorization": `Basic ${credentials}`,
+        "Accept": "application/json",
       },
-      body: soapBody,
     });
 
     const responseText = await response.text();
@@ -90,48 +62,26 @@ Deno.serve(async (req: Request) => {
       throw new Error(`Mondial Relay API error: ${responseText}`);
     }
 
-    const statMatch = responseText.match(/<STAT>(\d+)<\/STAT>/);
-    if (statMatch && statMatch[1] !== "0") {
-      const errorCode = statMatch[1];
-      console.error('Mondial Relay error code:', errorCode);
-      throw new Error(`Mondial Relay error code: ${errorCode}`);
+    const data = JSON.parse(responseText);
+
+    if (!data || !Array.isArray(data)) {
+      console.error('Unexpected response format:', data);
+      throw new Error('Invalid response format from Mondial Relay API');
     }
 
-    const pointRelaisMatches = responseText.matchAll(/<PointRelais_Details>([\s\S]*?)<\/PointRelais_Details>/g);
-    const relayPoints = [];
-
-    for (const match of pointRelaisMatches) {
-      const pointXml = match[1];
-
-      const extractField = (field: string): string => {
-        const fieldMatch = pointXml.match(new RegExp(`<${field}>(.*?)<\/${field}>`));
-        return fieldMatch ? fieldMatch[1].trim() : '';
-      };
-
-      const relayPoint = {
-        id: extractField('Num'),
-        name: extractField('LgAdr1'),
-        address: extractField('LgAdr3'),
-        postalCode: extractField('CP'),
-        city: extractField('Ville'),
-        country: extractField('Pays'),
-        latitude: extractField('Latitude'),
-        longitude: extractField('Longitude'),
-        openingHours: {
-          monday: extractField('Horaires_Lundi'),
-          tuesday: extractField('Horaires_Mardi'),
-          wednesday: extractField('Horaires_Mercredi'),
-          thursday: extractField('Horaires_Jeudi'),
-          friday: extractField('Horaires_Vendredi'),
-          saturday: extractField('Horaires_Samedi'),
-          sunday: extractField('Horaires_Dimanche'),
-        },
-        distance: extractField('Distance'),
-        locationType: extractField('TypeActivite'),
-      };
-
-      relayPoints.push(relayPoint);
-    }
+    const relayPoints = data.map((point: any) => ({
+      id: point.ID || point.Id || point.id,
+      name: point.Name || point.LgAdr1 || '',
+      address: point.Address1 || point.LgAdr3 || '',
+      postalCode: point.PostCode || point.CP || '',
+      city: point.City || point.Ville || '',
+      country: point.Country || point.Pays || countryCode,
+      latitude: point.Latitude?.toString() || '',
+      longitude: point.Longitude?.toString() || '',
+      openingHours: point.OpeningHours || point.Horaires || {},
+      distance: point.Distance?.toString() || '',
+      locationType: point.ActivityType || point.TypeActivite || '',
+    }));
 
     console.log(`Found ${relayPoints.length} Mondial Relay points`);
 

@@ -7,20 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-async function generateMD5Security(params: string): Promise<string> {
-  const privateKey = Deno.env.get("MONDIAL_RELAY_PRIVATE_KEY") || "";
-  const stringToHash = params + privateKey;
-
-  const encoder = new TextEncoder();
-  const data = encoder.encode(stringToHash);
-
-  const hashBuffer = await crypto.subtle.digest('MD5', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-  return hashHex.toUpperCase();
-}
-
 interface MondialRelayAddress {
   name: string;
   addressLine1: string;
@@ -41,12 +27,12 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const enseigne = Deno.env.get("MONDIAL_RELAY_ENSEIGNE");
-    const marque = Deno.env.get("MONDIAL_RELAY_MARQUE") || "CC";
-    const codeMarque = Deno.env.get("MONDIAL_RELAY_CODE_MARQUE") || "41";
+    const apiUsername = Deno.env.get("MONDIAL_RELAY_API_USERNAME") || "CC20EUCU@business-api.mondialrelay.com";
+    const apiPassword = Deno.env.get("MONDIAL_RELAY_API_PASSWORD");
+    const brandId = Deno.env.get("MONDIAL_RELAY_BRAND_ID") || "CC20EUCU";
 
-    if (!enseigne) {
-      throw new Error("Mondial Relay credentials not configured");
+    if (!apiPassword) {
+      throw new Error("Mondial Relay API credentials not configured");
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -93,90 +79,53 @@ Deno.serve(async (req: Request) => {
     }
 
     const weightGrams = listing.weight_grams || 100;
-    const weightInGrams = Math.ceil(weightGrams / 100) * 100;
 
-    const senderCountry = senderAddress.country.toUpperCase().substring(0, 2);
-    const senderPhone = senderAddress.phone.replace(/\D/g, '').substring(0, 10);
-    const senderName = senderAddress.name.substring(0, 32);
-    const senderLine2 = senderAddress.addressLine1.substring(0, 32);
-    const senderCity = senderAddress.city.substring(0, 26);
-    const senderPostalCode = senderAddress.postalCode.replace(/\s/g, '');
+    const credentials = btoa(`${apiUsername}:${apiPassword}`);
 
-    const recipientCountry = senderCountry;
-    const recipientPhone = senderPhone;
-    const recipientName = "Point Relais";
-    const recipientEmail = senderAddress.email?.substring(0, 70) || "";
+    const shipmentData = {
+      Brand: brandId,
+      CollectionMode: "REL",
+      DeliveryMode: "24R",
+      OrderNo: transaction.id.substring(0, 35),
+      CustomerNo: user.id.substring(0, 35),
+      ParcelCount: 1,
+      DeliveryInstruction: "",
+      Weight: weightGrams,
+      Sender: {
+        Country: senderAddress.country.toUpperCase().substring(0, 2),
+        City: senderAddress.city,
+        PostCode: senderAddress.postalCode.replace(/\s/g, ''),
+        AddressLine1: senderAddress.name,
+        AddressLine2: senderAddress.addressLine1,
+        PhoneNo: senderAddress.phone.replace(/\D/g, ''),
+        Email: senderAddress.email || "",
+      },
+      Recipient: {
+        Country: senderAddress.country.toUpperCase().substring(0, 2),
+        PhoneNo: senderAddress.phone.replace(/\D/g, ''),
+        Email: senderAddress.email || "",
+      },
+      CollectionPoint: {
+        Country: senderAddress.country.toUpperCase().substring(0, 2),
+        ID: relayPointId,
+      },
+      DeliveryPoint: {
+        Country: senderAddress.country.toUpperCase().substring(0, 2),
+        ID: relayPointId,
+      },
+    };
 
-    const reference = transaction.id.substring(0, 15);
-    const orderNumber = transaction.id.substring(0, 15);
+    console.log('Creating Mondial Relay shipment for transaction:', transactionId);
+    console.log('Relay point ID:', relayPointId, 'Weight:', weightGrams, 'g');
 
-    const paramsForSecurity = `${enseigne}${codeMarque}${senderCountry}${senderPostalCode}${senderCity}${recipientCountry}${relayPointId}${weightInGrams}`;
-    const securityHash = await generateMD5Security(paramsForSecurity);
-
-    const soapBody = `<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <soap:Body>
-    <WSI2_CreationEtiquette xmlns="http://www.mondialrelay.fr/webservice/">
-      <Enseigne>${enseigne}</Enseigne>
-      <ModeCol>REL</ModeCol>
-      <ModeLiv>24R</ModeLiv>
-      <NDossier>${reference}</NDossier>
-      <NClient>${orderNumber}</NClient>
-      <Expe_Langage>FR</Expe_Langage>
-      <Expe_Ad1>${senderName}</Expe_Ad1>
-      <Expe_Ad2></Expe_Ad2>
-      <Expe_Ad3>${senderLine2}</Expe_Ad3>
-      <Expe_Ad4></Expe_Ad4>
-      <Expe_Ville>${senderCity}</Expe_Ville>
-      <Expe_CP>${senderPostalCode}</Expe_CP>
-      <Expe_Pays>${senderCountry}</Expe_Pays>
-      <Expe_Tel1>${senderPhone}</Expe_Tel1>
-      <Expe_Tel2></Expe_Tel2>
-      <Expe_Mail>${recipientEmail}</Expe_Mail>
-      <Dest_Langage>FR</Dest_Langage>
-      <Dest_Ad1>${recipientName}</Dest_Ad1>
-      <Dest_Ad2></Dest_Ad2>
-      <Dest_Ad3></Dest_Ad3>
-      <Dest_Ad4></Dest_Ad4>
-      <Dest_Ville></Dest_Ville>
-      <Dest_CP></Dest_CP>
-      <Dest_Pays>${recipientCountry}</Dest_Pays>
-      <Dest_Tel1>${recipientPhone}</Dest_Tel1>
-      <Dest_Tel2></Dest_Tel2>
-      <Dest_Mail>${recipientEmail}</Dest_Mail>
-      <Poids>${weightInGrams}</Poids>
-      <Longueur></Longueur>
-      <Taille></Taille>
-      <NbColis>1</NbColis>
-      <CRT_Valeur>0</CRT_Valeur>
-      <CRT_Devise></CRT_Devise>
-      <Exp_Valeur></Exp_Valeur>
-      <Exp_Devise></Exp_Devise>
-      <COL_Rel_Pays>${senderCountry}</COL_Rel_Pays>
-      <COL_Rel>${relayPointId}</COL_Rel>
-      <LIV_Rel_Pays>${recipientCountry}</LIV_Rel_Pays>
-      <LIV_Rel>${relayPointId}</LIV_Rel>
-      <TAvisage></TAvisage>
-      <TReprise></TReprise>
-      <Montage></Montage>
-      <TRDV></TRDV>
-      <Assurance></Assurance>
-      <Instructions></Instructions>
-      <Security>${securityHash}</Security>
-    </WSI2_CreationEtiquette>
-  </soap:Body>
-</soap:Envelope>`;
-
-    console.log('Generating Mondial Relay label for transaction:', transactionId);
-    console.log('Relay point ID:', relayPointId, 'Weight:', weightInGrams, 'g');
-
-    const response = await fetch("https://api.mondialrelay.com/WebService.asmx", {
+    const response = await fetch("https://connect-api.mondialrelay.com/api/Shipment", {
       method: "POST",
       headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        "SOAPAction": "http://www.mondialrelay.fr/webservice/WSI2_CreationEtiquette",
+        "Authorization": `Basic ${credentials}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
       },
-      body: soapBody,
+      body: JSON.stringify(shipmentData),
     });
 
     const responseText = await response.text();
@@ -187,22 +136,15 @@ Deno.serve(async (req: Request) => {
       throw new Error(`Mondial Relay API error: ${responseText}`);
     }
 
-    const statMatch = responseText.match(/<STAT>(\d+)<\/STAT>/);
-    if (statMatch && statMatch[1] !== "0") {
-      const errorCode = statMatch[1];
-      console.error('Mondial Relay error code:', errorCode);
-      throw new Error(`Mondial Relay error code: ${errorCode}`);
+    const data = JSON.parse(responseText);
+
+    if (!data || !data.ExpeditionNum) {
+      console.error('Unexpected response format:', data);
+      throw new Error('Invalid response format from Mondial Relay API');
     }
 
-    const expeditionMatch = responseText.match(/<ExpeditionNum>(.*?)<\/ExpeditionNum>/);
-    const urlLabelMatch = responseText.match(/<URL_Etiquette>(.*?)<\/URL_Etiquette>/);
-
-    if (!expeditionMatch || !urlLabelMatch) {
-      throw new Error("Failed to parse Mondial Relay response");
-    }
-
-    const expeditionNumber = expeditionMatch[1].trim();
-    const labelUrl = urlLabelMatch[1].trim();
+    const expeditionNumber = data.ExpeditionNum;
+    const labelUrl = data.LabelUrl || data.URL_Etiquette || "";
 
     console.log('Mondial Relay label generated:', expeditionNumber);
     console.log('Label URL:', labelUrl);
