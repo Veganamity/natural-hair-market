@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 interface AddressData {
-  label: string;
   full_name: string;
   address_line1: string;
   address_line2?: string;
@@ -75,7 +74,6 @@ Deno.serve(async (req: Request) => {
         .from('saved_addresses')
         .insert([{
           user_id: user.id,
-          label: addressData.label,
           full_name: addressData.full_name,
           address_line1: addressData.address_line1,
           address_line2: addressData.address_line2 || null,
@@ -120,7 +118,6 @@ Deno.serve(async (req: Request) => {
       const { data, error } = await supabase
         .from('saved_addresses')
         .update({
-          label: addressData.label,
           full_name: addressData.full_name,
           address_line1: addressData.address_line1,
           address_line2: addressData.address_line2 || null,

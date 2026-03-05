@@ -14,7 +14,6 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
   const [loading, setLoading] = useState(true);
   const [showNewAddressForm, setShowNewAddressForm] = useState(false);
   const [formData, setFormData] = useState({
-    label: '',
     full_name: '',
     address_line1: '',
     address_line2: '',
@@ -53,7 +52,6 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
 
     try {
       const addressInput: AddressInput = {
-        label: formData.label,
         full_name: formData.full_name,
         address_line1: formData.address_line1,
         address_line2: formData.address_line2 || undefined,
@@ -69,7 +67,6 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
       alert('Adresse ajoutée avec succès');
       setShowNewAddressForm(false);
       setFormData({
-        label: '',
         full_name: '',
         address_line1: '',
         address_line2: '',
@@ -109,19 +106,6 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
         </div>
 
         <form onSubmit={handleSubmitNewAddress} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Label (ex: Maison, Travail)
-            </label>
-            <input
-              type="text"
-              value={formData.label}
-              onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              required
-            />
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nom complet
@@ -271,14 +255,13 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-bold text-gray-800">{address.label}</h4>
+                    <h4 className="font-bold text-gray-800">{address.full_name}</h4>
                     {address.is_default && (
                       <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">
                         Par défaut
                       </span>
                     )}
                   </div>
-                  <p className="text-gray-700 font-medium">{address.full_name}</p>
                   <p className="text-sm text-gray-600 mt-1">{address.address_line1}</p>
                   {address.address_line2 && (
                     <p className="text-sm text-gray-600">{address.address_line2}</p>

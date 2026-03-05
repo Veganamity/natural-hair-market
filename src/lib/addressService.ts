@@ -3,7 +3,6 @@ import { supabase } from './supabaseClient';
 export interface SavedAddress {
   id: string;
   user_id: string;
-  label: string;
   full_name: string;
   address_line1: string;
   address_line2?: string;
@@ -17,7 +16,6 @@ export interface SavedAddress {
 }
 
 export interface AddressInput {
-  label: string;
   full_name: string;
   address_line1: string;
   address_line2?: string;
@@ -31,19 +29,19 @@ export interface AddressInput {
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-async function callEdgeFunction(method: string, action: string, body?: any) {
+async function callEdgeFunction(action: string, body?: any) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Not authenticated');
 
   const url = `${SUPABASE_URL}/functions/v1/manage-saved-addresses`;
   const response = await fetch(url, {
-    method,
+    method: 'POST',
     headers: {
       'Authorization': `Bearer ${session.access_token}`,
       'Content-Type': 'application/json',
       'apikey': SUPABASE_ANON_KEY,
     },
-    body: body ? JSON.stringify({ action, ...body }) : JSON.stringify({ action }),
+    body: JSON.stringify({ action, ...body }),
   });
 
   if (!response.ok) {
@@ -56,25 +54,25 @@ async function callEdgeFunction(method: string, action: string, body?: any) {
 
 export const addressService = {
   async list(): Promise<SavedAddress[]> {
-    const result = await callEdgeFunction('GET', 'list');
+    const result = await callEdgeFunction('list');
     return result.addresses || [];
   },
 
   async create(address: AddressInput): Promise<SavedAddress> {
-    const result = await callEdgeFunction('POST', 'create', { address });
+    const result = await callEdgeFunction('create', { address });
     return result.address;
   },
 
   async update(id: string, address: AddressInput): Promise<SavedAddress> {
-    const result = await callEdgeFunction('PUT', 'update', { id, address });
+    const result = await callEdgeFunction('update', { id, address });
     return result.address;
   },
 
   async delete(id: string): Promise<void> {
-    await callEdgeFunction('DELETE', 'delete', { id });
+    await callEdgeFunction('delete', { id });
   },
 
   async setDefault(id: string): Promise<void> {
-    await callEdgeFunction('POST', 'set-default', { id });
+    await callEdgeFunction('set-default', { id });
   },
 };
