@@ -30,25 +30,35 @@ async function callEdgeFunction(action: string, data: Record<string, unknown> = 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Non authentifie');
 
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
   const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-saved-addresses`,
+    `${supabaseUrl}/functions/v1/manage-saved-addresses`,
     {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${session.access_token}`,
         'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
       },
       body: JSON.stringify({ action, ...data }),
     }
   );
 
-  const result = await response.json();
-
   if (!response.ok) {
-    throw new Error(result.error || 'Erreur lors de la requete');
+    const text = await response.text();
+    let errorMessage = 'Erreur lors de la requete';
+    try {
+      const result = JSON.parse(text);
+      errorMessage = result.error || errorMessage;
+    } catch {
+      errorMessage = text || errorMessage;
+    }
+    throw new Error(errorMessage);
   }
 
-  return result;
+  return response.json();
 }
 
 export const addressService = {
