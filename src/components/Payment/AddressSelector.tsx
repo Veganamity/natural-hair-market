@@ -1,19 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { MapPin, Plus, Check } from 'lucide-react';
-import { addressService, SavedAddress, AddressInput } from '../../lib/addressService';
+import { supabase } from '../../lib/supabaseClient';
+import { MapPin, Check, AlertCircle } from 'lucide-react';
 
-interface AddressSelectorProps {
-  onSelectAddress: (address: SavedAddress) => void;
-  selectedAddressId?: string;
+export interface ShippingAddress {
+  full_name: string;
+  address_line1: string;
+  address_line2?: string;
+  postal_code: string;
+  city: string;
+  country: string;
+  phone: string;
 }
 
-export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressSelectorProps) {
+interface AddressSelectorProps {
+  onSelectAddress: (address: ShippingAddress) => void;
+  selectedAddress?: ShippingAddress | null;
+}
+
+export function AddressSelector({ onSelectAddress, selectedAddress }: AddressSelectorProps) {
   const { user } = useAuth();
-  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [profileAddress, setProfileAddress] = useState<ShippingAddress | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showNewAddressForm, setShowNewAddressForm] = useState(false);
-  const [formData, setFormData] = useState({
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState<ShippingAddress>({
     full_name: '',
     address_line1: '',
     address_line2: '',
@@ -21,67 +31,84 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
     city: '',
     country: 'FR',
     phone: '',
-    is_default: false,
   });
 
   useEffect(() => {
     if (user) {
-      fetchAddresses();
+      fetchProfileAddress();
     }
   }, [user]);
 
-  const fetchAddresses = async () => {
+  const fetchProfileAddress = async () => {
     try {
-      const data = await addressService.list();
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('full_name, phone, address_line1, address_line2, postal_code, city, country')
+        .eq('id', user!.id)
+        .maybeSingle();
 
-      setAddresses(data || []);
+      if (error) throw error;
 
-      if (data && data.length > 0 && !selectedAddressId) {
-        const defaultAddress = data.find(addr => addr.is_default) || data[0];
-        onSelectAddress(defaultAddress);
+      if (profile && profile.address_line1 && profile.postal_code && profile.city) {
+        const address: ShippingAddress = {
+          full_name: profile.full_name || '',
+          address_line1: profile.address_line1,
+          address_line2: profile.address_line2 || '',
+          postal_code: profile.postal_code,
+          city: profile.city,
+          country: profile.country || 'FR',
+          phone: profile.phone || '',
+        };
+        setProfileAddress(address);
+        setFormData(address);
+        onSelectAddress(address);
+      } else {
+        setFormData({
+          full_name: profile?.full_name || '',
+          address_line1: '',
+          address_line2: '',
+          postal_code: '',
+          city: '',
+          country: 'FR',
+          phone: profile?.phone || '',
+        });
+        setEditMode(true);
       }
     } catch (error) {
-      console.error('Error fetching addresses:', error);
+      console.error('Error fetching profile address:', error);
+      setEditMode(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmitNewAddress = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.full_name || !formData.address_line1 || !formData.postal_code || !formData.city || !formData.phone) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
     try {
-      const addressInput: AddressInput = {
-        full_name: formData.full_name,
-        address_line1: formData.address_line1,
-        address_line2: formData.address_line2 || undefined,
-        postal_code: formData.postal_code,
-        city: formData.city,
-        country: formData.country,
-        phone: formData.phone,
-        is_default: formData.is_default,
-      };
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.full_name,
+          phone: formData.phone,
+          address_line1: formData.address_line1,
+          address_line2: formData.address_line2 || null,
+          postal_code: formData.postal_code,
+          city: formData.city,
+          country: formData.country,
+        })
+        .eq('id', user!.id);
 
-      const newAddress = await addressService.create(addressInput);
+      if (error) throw error;
 
-      alert('Adresse ajoutée avec succès');
-      setShowNewAddressForm(false);
-      setFormData({
-        full_name: '',
-        address_line1: '',
-        address_line2: '',
-        postal_code: '',
-        city: '',
-        country: 'FR',
-        phone: '',
-        is_default: false,
-      });
-
-      await fetchAddresses();
-
-      if (newAddress) {
-        onSelectAddress(newAddress);
-      }
+      setProfileAddress(formData);
+      onSelectAddress(formData);
+      setEditMode(false);
     } catch (error: any) {
       console.error('Error saving address:', error);
       alert(`Erreur: ${error.message}`);
@@ -89,98 +116,114 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
   };
 
   if (loading) {
-    return <div className="text-center py-4">Chargement des adresses...</div>;
+    return <div className="text-center py-4 text-sm text-gray-500">Chargement...</div>;
   }
 
-  if (showNewAddressForm) {
+  if (editMode || !profileAddress) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-gray-800">Nouvelle adresse</h3>
-          <button
-            onClick={() => setShowNewAddressForm(false)}
-            className="text-xs text-gray-600 hover:text-gray-800"
-          >
-            Retour
-          </button>
+          <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-teal-600" />
+            Adresse de livraison
+          </h3>
+          {profileAddress && (
+            <button
+              onClick={() => setEditMode(false)}
+              className="text-xs text-gray-600 hover:text-gray-800"
+            >
+              Annuler
+            </button>
+          )}
         </div>
 
-        <form onSubmit={handleSubmitNewAddress} className="space-y-2">
+        {!profileAddress && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-800">
+              Veuillez renseigner votre adresse de livraison. Elle sera sauvegardee dans votre profil.
+            </p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-0.5">
-              Nom complet
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Nom complet *
             </label>
             <input
               type="text"
               value={formData.full_name}
               onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-0.5">
-              Adresse
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Adresse *
             </label>
             <input
               type="text"
               value={formData.address_line1}
               onChange={(e) => setFormData({ ...formData, address_line1: e.target.value })}
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              placeholder="Numero et nom de rue"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-0.5">
-              Complement (optionnel)
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Complement d'adresse
             </label>
             <input
               type="text"
               value={formData.address_line2}
               onChange={(e) => setFormData({ ...formData, address_line2: e.target.value })}
-              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              placeholder="Batiment, etage, etc."
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                Code postal
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Code postal *
               </label>
               <input
                 type="text"
                 value={formData.postal_code}
                 onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                Ville
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Ville *
               </label>
               <input
                 type="text"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 required
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                Pays
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Pays *
               </label>
               <select
                 value={formData.country}
                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 required
               >
                 <option value="FR">France</option>
@@ -191,14 +234,15 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-0.5">
-                Telephone
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Telephone *
               </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                placeholder="06 12 34 56 78"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 required
               />
             </div>
@@ -206,9 +250,9 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
 
           <button
             type="submit"
-            className="w-full px-3 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-sm"
+            className="w-full px-4 py-2.5 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-sm"
           >
-            Ajouter l'adresse
+            Confirmer l'adresse
           </button>
         </form>
       </div>
@@ -218,67 +262,38 @@ export function AddressSelector({ onSelectAddress, selectedAddressId }: AddressS
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold text-gray-800">Adresse de livraison</h3>
+        <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-teal-600" />
+          Adresse de livraison
+        </h3>
         <button
-          onClick={() => setShowNewAddressForm(true)}
-          className="text-xs text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+          onClick={() => setEditMode(true)}
+          className="text-xs text-teal-600 hover:text-teal-700 font-medium"
         >
-          <Plus className="w-3 h-3" />
-          Nouvelle
+          Modifier
         </button>
       </div>
 
-      {addresses.length === 0 ? (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-          <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-xs text-gray-600 mb-2">Aucune adresse</p>
-          <button
-            onClick={() => setShowNewAddressForm(true)}
-            className="px-3 py-1.5 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors inline-flex items-center gap-1 text-xs"
-          >
-            <Plus className="w-3 h-3" />
-            Ajouter
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-1.5 max-h-32 overflow-y-auto">
-          {addresses.map((address) => (
-            <div
-              key={address.id}
-              onClick={() => onSelectAddress(address)}
-              className={`border rounded-lg p-2 cursor-pointer transition-all ${
-                selectedAddressId === address.id
-                  ? 'border-teal-500 bg-teal-50'
-                  : 'border-gray-200 hover:border-teal-300'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <h4 className="font-semibold text-gray-800 text-xs truncate">{address.full_name}</h4>
-                    {address.is_default && (
-                      <span className="px-1 py-0.5 bg-yellow-100 text-yellow-800 text-[9px] font-semibold rounded flex-shrink-0">
-                        Defaut
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-gray-600 truncate">{address.address_line1}</p>
-                  <p className="text-[10px] text-gray-600">
-                    {address.postal_code} {address.city}
-                  </p>
-                </div>
-                {selectedAddressId === address.id && (
-                  <div className="ml-2 flex-shrink-0">
-                    <div className="w-4 h-4 bg-teal-600 rounded-full flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </div>
-                  </div>
-                )}
-              </div>
+      <div className="border border-teal-500 bg-teal-50 rounded-lg p-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-gray-800 text-sm">{profileAddress.full_name}</h4>
+            <p className="text-xs text-gray-600 mt-1">{profileAddress.address_line1}</p>
+            {profileAddress.address_line2 && (
+              <p className="text-xs text-gray-600">{profileAddress.address_line2}</p>
+            )}
+            <p className="text-xs text-gray-600">
+              {profileAddress.postal_code} {profileAddress.city}
+            </p>
+            <p className="text-xs text-gray-600">{profileAddress.phone}</p>
+          </div>
+          <div className="ml-2 flex-shrink-0">
+            <div className="w-5 h-5 bg-teal-600 rounded-full flex items-center justify-center">
+              <Check className="w-3 h-3 text-white" />
             </div>
-          ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

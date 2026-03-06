@@ -34,8 +34,8 @@ export function PaymentModal({
 
   const handlePayment = async () => {
     if (shippingData) {
-      if (shippingData.method === 'chronopost' && !shippingData.addressId) {
-        setError('Veuillez sélectionner une adresse de livraison');
+      if ((shippingData.method === 'chronopost' || shippingData.method === 'colissimo') && !shippingData.address) {
+        setError('Veuillez renseigner une adresse de livraison');
         return;
       }
 
