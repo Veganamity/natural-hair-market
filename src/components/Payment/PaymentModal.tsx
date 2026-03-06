@@ -29,8 +29,8 @@ export function PaymentModal({
 
   const marketplaceCommissionRate = 0.10;
   const marketplaceCommission = amount * marketplaceCommissionRate;
-  const totalAmount = amount + sellerShippingFee;
-  const sellerReceives = amount - marketplaceCommission + sellerShippingFee;
+  const totalAmount = amount + marketplaceCommission + sellerShippingFee;
+  const sellerReceives = amount + sellerShippingFee;
 
   const handlePayment = async () => {
     if (shippingData) {
@@ -136,12 +136,12 @@ export function PaymentModal({
                 <span className="font-semibold">{sellerShippingFee.toFixed(2)}€</span>
               </div>
             )}
-            <div className="flex justify-between text-red-600">
-              <span>Commission marketplace ({(marketplaceCommissionRate * 100).toFixed(0)}%):</span>
-              <span className="font-semibold">-{marketplaceCommission.toFixed(2)}€</span>
+            <div className="flex justify-between text-gray-600">
+              <span>Commission acheteur ({(marketplaceCommissionRate * 100).toFixed(0)}%):</span>
+              <span className="font-semibold">+{marketplaceCommission.toFixed(2)}€</span>
             </div>
             <div className="border-t border-gray-200 pt-1 flex justify-between">
-              <span className="text-gray-600">Vendeur recevra:</span>
+              <span className="text-gray-600">Le vendeur recevra:</span>
               <span className="font-semibold text-emerald-600">{sellerReceives.toFixed(2)}€</span>
             </div>
             <div className="border-t-2 border-gray-300 pt-1 flex justify-between text-xs">
