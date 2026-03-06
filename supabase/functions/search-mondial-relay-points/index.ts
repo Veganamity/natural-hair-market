@@ -139,12 +139,22 @@ Deno.serve(async (req: Request) => {
             let latNum = '';
             let lngNum = '';
             if (lat) {
-              const latVal = parseFloat(lat.replace(',', '.'));
-              latNum = (latVal / 100000).toFixed(6);
+              const latStr = lat.replace(',', '.');
+              if (latStr.includes('.')) {
+                latNum = latStr;
+              } else {
+                const latVal = parseFloat(latStr);
+                latNum = (latVal / 1000000).toFixed(6);
+              }
             }
             if (lng) {
-              const lngVal = parseFloat(lng.replace(',', '.'));
-              lngNum = (lngVal / 100000).toFixed(6);
+              const lngStr = lng.replace(',', '.');
+              if (lngStr.includes('.')) {
+                lngNum = lngStr;
+              } else {
+                const lngVal = parseFloat(lngStr);
+                lngNum = (lngVal / 1000000).toFixed(6);
+              }
             }
 
             const getHours = (day: string): string => {
