@@ -31,7 +31,6 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
     condition: 'excellent',
     country: 'France',
     certification_accepted: false,
-    seller_shipping_fee: '4.99',
   });
 
   const cmToInches = (cm: number) => Math.round(cm / 2.54);
@@ -160,7 +159,6 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           images: uploadedImages,
           country: formData.country,
           certification_accepted: formData.certification_accepted,
-          seller_shipping_fee: parseFloat(formData.seller_shipping_fee),
         });
 
       if (insertError) throw insertError;
@@ -271,23 +269,6 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 placeholder="150.00"
               />
               <p className="text-xs text-gray-500 mt-1">Commission marketplace: 10%</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Frais de livraison (€) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.seller_shipping_fee}
-                onChange={(e) => setFormData({ ...formData, seller_shipping_fee: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                required
-                placeholder="4.99"
-              />
-              <p className="text-xs text-gray-500 mt-1">Vous gérez l'expédition</p>
             </div>
           </div>
 

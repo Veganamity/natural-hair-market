@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { MapPin, Clock, Package, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { MapPin, Clock, Package, Loader2, Map, List, RefreshCw } from 'lucide-react';
 
 interface RelayPoint {
   id: string;
@@ -31,91 +31,10 @@ interface MondialRelaySelectionProps {
   selectedPointId?: string;
 }
 
-const RELAY_POINTS_DATABASE: Record<string, RelayPoint[]> = {
-  '75001': [
-    { id: 'MR75001A', name: 'Tabac Le Louvre', address: '15 Rue de Rivoli', postalCode: '75001', city: 'Paris', country: 'FR', latitude: '48.8606', longitude: '2.3376', distance: '0.2', locationType: '24R', openingHours: { monday: '0800-2000', tuesday: '0800-2000', wednesday: '0800-2000', thursday: '0800-2000', friday: '0800-2000', saturday: '0900-1900', sunday: '0000-0000' } },
-    { id: 'MR75001B', name: 'Relay Palais Royal', address: '42 Rue Saint-Honore', postalCode: '75001', city: 'Paris', country: 'FR', latitude: '48.8612', longitude: '2.3388', distance: '0.4', locationType: '24R', openingHours: { monday: '0830-1930', tuesday: '0830-1930', wednesday: '0830-1930', thursday: '0830-1930', friday: '0830-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-    { id: 'MR75001C', name: 'Presse des Halles', address: '8 Rue Berger', postalCode: '75001', city: 'Paris', country: 'FR', latitude: '48.8619', longitude: '2.3475', distance: '0.6', locationType: '24R', openingHours: { monday: '0700-2100', tuesday: '0700-2100', wednesday: '0700-2100', thursday: '0700-2100', friday: '0700-2100', saturday: '0800-2000', sunday: '1000-1800' } },
-  ],
-  '75002': [
-    { id: 'MR75002A', name: 'Tabac Bourse', address: '28 Rue Vivienne', postalCode: '75002', city: 'Paris', country: 'FR', latitude: '48.8693', longitude: '2.3408', distance: '0.3', locationType: '24R', openingHours: { monday: '0800-1930', tuesday: '0800-1930', wednesday: '0800-1930', thursday: '0800-1930', friday: '0800-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-    { id: 'MR75002B', name: 'Relay Sentier', address: '15 Rue du Sentier', postalCode: '75002', city: 'Paris', country: 'FR', latitude: '48.8685', longitude: '2.3472', distance: '0.5', locationType: '24R', openingHours: { monday: '0830-1900', tuesday: '0830-1900', wednesday: '0830-1900', thursday: '0830-1900', friday: '0830-1900', saturday: '0900-1700', sunday: '0000-0000' } },
-  ],
-  '69001': [
-    { id: 'MR69001A', name: 'Tabac Terreaux', address: '5 Place des Terreaux', postalCode: '69001', city: 'Lyon', country: 'FR', latitude: '45.7676', longitude: '4.8344', distance: '0.2', locationType: '24R', openingHours: { monday: '0800-1930', tuesday: '0800-1930', wednesday: '0800-1930', thursday: '0800-1930', friday: '0800-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-    { id: 'MR69001B', name: 'Relay Opera', address: '12 Rue de la Republique', postalCode: '69001', city: 'Lyon', country: 'FR', latitude: '45.7640', longitude: '4.8357', distance: '0.4', locationType: '24R', openingHours: { monday: '0830-1900', tuesday: '0830-1900', wednesday: '0830-1900', thursday: '0830-1900', friday: '0830-1900', saturday: '0900-1700', sunday: '0000-0000' } },
-  ],
-  '13001': [
-    { id: 'MR13001A', name: 'Tabac Vieux Port', address: '25 Quai des Belges', postalCode: '13001', city: 'Marseille', country: 'FR', latitude: '43.2951', longitude: '5.3739', distance: '0.3', locationType: '24R', openingHours: { monday: '0800-2000', tuesday: '0800-2000', wednesday: '0800-2000', thursday: '0800-2000', friday: '0800-2000', saturday: '0900-1900', sunday: '1000-1300' } },
-    { id: 'MR13001B', name: 'Relay Canebiere', address: '45 La Canebiere', postalCode: '13001', city: 'Marseille', country: 'FR', latitude: '43.2965', longitude: '5.3762', distance: '0.5', locationType: '24R', openingHours: { monday: '0830-1930', tuesday: '0830-1930', wednesday: '0830-1930', thursday: '0830-1930', friday: '0830-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-  ],
-  '31000': [
-    { id: 'MR31000A', name: 'Tabac Capitol', address: '8 Place du Capitole', postalCode: '31000', city: 'Toulouse', country: 'FR', latitude: '43.6047', longitude: '1.4442', distance: '0.2', locationType: '24R', openingHours: { monday: '0800-1930', tuesday: '0800-1930', wednesday: '0800-1930', thursday: '0800-1930', friday: '0800-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-    { id: 'MR31000B', name: 'Relay Wilson', address: '22 Place Wilson', postalCode: '31000', city: 'Toulouse', country: 'FR', latitude: '43.6082', longitude: '1.4498', distance: '0.5', locationType: '24R', openingHours: { monday: '0830-1900', tuesday: '0830-1900', wednesday: '0830-1900', thursday: '0830-1900', friday: '0830-1900', saturday: '0900-1700', sunday: '0000-0000' } },
-  ],
-  '33000': [
-    { id: 'MR33000A', name: 'Tabac Grand Theatre', address: '15 Place de la Comedie', postalCode: '33000', city: 'Bordeaux', country: 'FR', latitude: '44.8428', longitude: '-0.5742', distance: '0.2', locationType: '24R', openingHours: { monday: '0800-1930', tuesday: '0800-1930', wednesday: '0800-1930', thursday: '0800-1930', friday: '0800-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-    { id: 'MR33000B', name: 'Relay Sainte-Catherine', address: '85 Rue Sainte-Catherine', postalCode: '33000', city: 'Bordeaux', country: 'FR', latitude: '44.8392', longitude: '-0.5735', distance: '0.4', locationType: '24R', openingHours: { monday: '0830-1900', tuesday: '0830-1900', wednesday: '0830-1900', thursday: '0830-1900', friday: '0830-1900', saturday: '0900-1700', sunday: '0000-0000' } },
-  ],
-  '44000': [
-    { id: 'MR44000A', name: 'Tabac Commerce', address: '3 Place du Commerce', postalCode: '44000', city: 'Nantes', country: 'FR', latitude: '47.2133', longitude: '-1.5533', distance: '0.2', locationType: '24R', openingHours: { monday: '0800-1930', tuesday: '0800-1930', wednesday: '0800-1930', thursday: '0800-1930', friday: '0800-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-    { id: 'MR44000B', name: 'Relay Graslin', address: '18 Place Graslin', postalCode: '44000', city: 'Nantes', country: 'FR', latitude: '47.2128', longitude: '-1.5598', distance: '0.4', locationType: '24R', openingHours: { monday: '0830-1900', tuesday: '0830-1900', wednesday: '0830-1900', thursday: '0830-1900', friday: '0830-1900', saturday: '0900-1700', sunday: '0000-0000' } },
-  ],
-  '59000': [
-    { id: 'MR59000A', name: 'Tabac Grand Place', address: '12 Place du General de Gaulle', postalCode: '59000', city: 'Lille', country: 'FR', latitude: '50.6365', longitude: '3.0635', distance: '0.2', locationType: '24R', openingHours: { monday: '0800-1930', tuesday: '0800-1930', wednesday: '0800-1930', thursday: '0800-1930', friday: '0800-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-    { id: 'MR59000B', name: 'Relay Rihour', address: '28 Place Rihour', postalCode: '59000', city: 'Lille', country: 'FR', latitude: '50.6358', longitude: '3.0608', distance: '0.3', locationType: '24R', openingHours: { monday: '0830-1900', tuesday: '0830-1900', wednesday: '0830-1900', thursday: '0830-1900', friday: '0830-1900', saturday: '0900-1700', sunday: '0000-0000' } },
-  ],
-  '67000': [
-    { id: 'MR67000A', name: 'Tabac Kleber', address: '5 Place Kleber', postalCode: '67000', city: 'Strasbourg', country: 'FR', latitude: '48.5839', longitude: '7.7455', distance: '0.2', locationType: '24R', openingHours: { monday: '0800-1930', tuesday: '0800-1930', wednesday: '0800-1930', thursday: '0800-1930', friday: '0800-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-    { id: 'MR67000B', name: 'Relay Cathedrale', address: '15 Place de la Cathedrale', postalCode: '67000', city: 'Strasbourg', country: 'FR', latitude: '48.5818', longitude: '7.7509', distance: '0.4', locationType: '24R', openingHours: { monday: '0830-1900', tuesday: '0830-1900', wednesday: '0830-1900', thursday: '0830-1900', friday: '0830-1900', saturday: '0900-1700', sunday: '0000-0000' } },
-  ],
-  '06000': [
-    { id: 'MR06000A', name: 'Tabac Massena', address: '8 Place Massena', postalCode: '06000', city: 'Nice', country: 'FR', latitude: '43.6961', longitude: '7.2700', distance: '0.2', locationType: '24R', openingHours: { monday: '0800-2000', tuesday: '0800-2000', wednesday: '0800-2000', thursday: '0800-2000', friday: '0800-2000', saturday: '0900-1900', sunday: '1000-1300' } },
-    { id: 'MR06000B', name: 'Relay Jean Medecin', address: '45 Avenue Jean Medecin', postalCode: '06000', city: 'Nice', country: 'FR', latitude: '43.7012', longitude: '7.2688', distance: '0.4', locationType: '24R', openingHours: { monday: '0830-1930', tuesday: '0830-1930', wednesday: '0830-1930', thursday: '0830-1930', friday: '0830-1930', saturday: '0900-1800', sunday: '0000-0000' } },
-  ],
-};
-
-function generateRelayPointsForPostalCode(postalCode: string, city?: string): RelayPoint[] {
-  const cityNames: Record<string, string> = {
-    '75': 'Paris', '69': 'Lyon', '13': 'Marseille', '31': 'Toulouse',
-    '33': 'Bordeaux', '44': 'Nantes', '59': 'Lille', '67': 'Strasbourg',
-    '06': 'Nice', '34': 'Montpellier', '35': 'Rennes', '54': 'Nancy',
-    '57': 'Metz', '76': 'Rouen', '51': 'Reims', '21': 'Dijon',
-    '37': 'Tours', '45': 'Orleans', '63': 'Clermont-Ferrand', '38': 'Grenoble',
-  };
-
-  const dept = postalCode.substring(0, 2);
-  const cityName = city || cityNames[dept] || 'Ville';
-
-  const basePoints = [
-    { suffix: 'A', name: `Tabac Presse Central`, address: `12 Rue du Commerce` },
-    { suffix: 'B', name: `Relay Express`, address: `45 Avenue de la Republique` },
-    { suffix: 'C', name: `Point Relais Mairie`, address: `8 Place de la Mairie` },
-    { suffix: 'D', name: `Pressing du Centre`, address: `23 Boulevard Victor Hugo` },
-    { suffix: 'E', name: `Superette Proxy`, address: `156 Rue Jean Jaures` },
-  ];
-
-  return basePoints.map((point, index) => ({
-    id: `MR${postalCode}${point.suffix}`,
-    name: point.name,
-    address: point.address,
-    postalCode: postalCode,
-    city: cityName,
-    country: 'FR',
-    latitude: '48.8566',
-    longitude: '2.3522',
-    distance: ((index + 1) * 0.3).toFixed(1),
-    locationType: '24R',
-    openingHours: {
-      monday: '0800-1930',
-      tuesday: '0800-1930',
-      wednesday: '0800-1930',
-      thursday: '0800-1930',
-      friday: '0800-1930',
-      saturday: '0900-1800',
-      sunday: '0000-0000',
-    },
-  }));
+declare global {
+  interface Window {
+    L: any;
+  }
 }
 
 export function MondialRelaySelection({
@@ -126,28 +45,190 @@ export function MondialRelaySelection({
   selectedPointId,
 }: MondialRelaySelectionProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [relayPoints, setRelayPoints] = useState<RelayPoint[]>([]);
   const [expandedPointId, setExpandedPointId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
 
   useEffect(() => {
     if (postalCode && country) {
-      loadRelayPoints();
+      searchRelayPoints();
     }
   }, [postalCode, country, weight]);
 
-  const loadRelayPoints = () => {
+  useEffect(() => {
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+
+    if (!document.getElementById('leaflet-js')) {
+      const script = document.createElement('script');
+      script.id = 'leaflet-js';
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.onload = () => setMapLoaded(true);
+      document.head.appendChild(script);
+    } else if (window.L) {
+      setMapLoaded(true);
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (viewMode === 'map' && mapLoaded && relayPoints.length > 0 && mapContainerRef.current) {
+      initializeMap();
+    }
+  }, [viewMode, mapLoaded, relayPoints]);
+
+  const initializeMap = () => {
+    if (!window.L || !mapContainerRef.current) return;
+
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+    }
+
+    const validPoints = relayPoints.filter(p => p.latitude && p.longitude);
+    if (validPoints.length === 0) return;
+
+    const firstPoint = validPoints[0];
+    const centerLat = parseFloat(firstPoint.latitude);
+    const centerLng = parseFloat(firstPoint.longitude);
+
+    const map = window.L.map(mapContainerRef.current).setView([centerLat, centerLng], 13);
+    mapInstanceRef.current = map;
+
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    const selectedIcon = window.L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="background-color: #059669; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    });
+
+    const defaultIcon = window.L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="background-color: #0ea5e9; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.25);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>`,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+
+    validPoints.forEach((point) => {
+      const lat = parseFloat(point.latitude);
+      const lng = parseFloat(point.longitude);
+
+      if (isNaN(lat) || isNaN(lng)) return;
+
+      const isSelected = point.id === selectedPointId;
+      const icon = isSelected ? selectedIcon : defaultIcon;
+
+      const marker = window.L.marker([lat, lng], { icon }).addTo(map);
+
+      marker.bindPopup(`
+        <div style="min-width: 180px; font-family: system-ui, sans-serif;">
+          <h4 style="font-weight: 600; margin: 0 0 4px 0; font-size: 13px; color: #111;">${point.name}</h4>
+          <p style="margin: 0 0 2px 0; font-size: 11px; color: #666;">${point.address}</p>
+          <p style="margin: 0 0 8px 0; font-size: 11px; color: #666;">${point.postalCode} ${point.city}</p>
+          <button onclick="window.selectRelayPoint('${point.id}')" style="
+            width: 100%;
+            padding: 6px 12px;
+            background: #059669;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+          ">
+            ${isSelected ? 'Selectionne' : 'Selectionner ce point'}
+          </button>
+        </div>
+      `);
+
+      marker.on('click', () => {
+        onSelectPoint(point);
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    const bounds = window.L.latLngBounds(validPoints.map(p => [parseFloat(p.latitude), parseFloat(p.longitude)]));
+    map.fitBounds(bounds, { padding: [30, 30] });
+
+    (window as any).selectRelayPoint = (pointId: string) => {
+      const point = relayPoints.find(p => p.id === pointId);
+      if (point) {
+        onSelectPoint(point);
+      }
+    };
+  };
+
+  const searchRelayPoints = async () => {
     setLoading(true);
+    setError('');
 
-    setTimeout(() => {
-      let points = RELAY_POINTS_DATABASE[postalCode];
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-mondial-relay-points`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            postalCode,
+            country,
+            weight,
+          }),
+        }
+      );
 
-      if (!points || points.length === 0) {
-        points = generateRelayPointsForPostalCode(postalCode);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erreur de recherche des points relais');
       }
 
-      setRelayPoints(points);
+      const data = await response.json();
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erreur de recherche des points relais');
+      }
+
+      setRelayPoints(data.relayPoints || []);
+    } catch (err) {
+      console.error('Error searching relay points:', err);
+      setError((err as Error).message || 'Service temporairement indisponible');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   const formatOpeningHours = (hours: string): string => {
@@ -175,9 +256,24 @@ export function MondialRelaySelection({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-4">
+      <div className="flex items-center justify-center py-6">
         <Loader2 className="w-5 h-5 animate-spin text-emerald-600" />
         <span className="ml-2 text-gray-600 text-sm">Recherche des points relais...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+        <p className="text-red-600 text-xs">{error}</p>
+        <button
+          onClick={searchRelayPoints}
+          className="mt-2 text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+        >
+          <RefreshCw className="w-3 h-3" />
+          Reessayer
+        </button>
       </div>
     );
   }
@@ -189,9 +285,10 @@ export function MondialRelaySelection({
           Aucun point relais trouve pour ce code postal.
         </p>
         <button
-          onClick={loadRelayPoints}
-          className="mt-2 text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+          onClick={searchRelayPoints}
+          className="mt-2 text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
         >
+          <RefreshCw className="w-3 h-3" />
           Rechercher a nouveau
         </button>
       </div>
@@ -204,85 +301,139 @@ export function MondialRelaySelection({
         <h3 className="font-semibold text-gray-900 text-xs">
           Points relais ({relayPoints.length})
         </h3>
-        <button
-          onClick={loadRelayPoints}
-          className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
-        >
-          Actualiser
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1 rounded transition-colors ${
+                viewMode === 'list' ? 'bg-white shadow text-emerald-600' : 'text-gray-500 hover:text-gray-700'
+              }`}
+              title="Vue liste"
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`p-1 rounded transition-colors ${
+                viewMode === 'map' ? 'bg-white shadow text-emerald-600' : 'text-gray-500 hover:text-gray-700'
+              }`}
+              title="Vue carte"
+            >
+              <Map className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <button
+            onClick={searchRelayPoints}
+            className="text-xs text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Actualiser
+          </button>
+        </div>
       </div>
 
-      <div className="max-h-48 overflow-y-auto space-y-1.5">
-        {relayPoints.map((point) => (
+      {viewMode === 'map' ? (
+        <div className="rounded-lg overflow-hidden border border-gray-200">
           <div
-            key={point.id}
-            className={`border rounded-lg p-2 cursor-pointer transition-all ${
-              selectedPointId === point.id
-                ? 'border-emerald-500 bg-emerald-50'
-                : 'border-gray-200 hover:border-emerald-300'
-            }`}
-            onClick={() => onSelectPoint(point)}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <Package className="w-3 h-3 text-emerald-600" />
-                  <h4 className="font-semibold text-gray-900 text-[10px]">{point.name}</h4>
-                  {point.distance && (
-                    <span className="text-[9px] text-gray-500">
-                      ({point.distance} km)
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-start gap-1.5 text-[10px] text-gray-600">
-                  <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <div>{point.address}</div>
-                    <div>{point.postalCode} {point.city}</div>
+            ref={mapContainerRef}
+            style={{ height: '280px', width: '100%' }}
+            className="bg-gray-100"
+          />
+          {selectedPointId && (
+            <div className="p-2 bg-emerald-50 border-t border-emerald-200">
+              {(() => {
+                const selected = relayPoints.find(p => p.id === selectedPointId);
+                if (!selected) return null;
+                return (
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 text-[11px] truncate">{selected.name}</p>
+                      <p className="text-[10px] text-gray-600 truncate">{selected.address}, {selected.postalCode} {selected.city}</p>
+                    </div>
                   </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="max-h-48 overflow-y-auto space-y-1.5">
+          {relayPoints.map((point) => (
+            <div
+              key={point.id}
+              className={`border rounded-lg p-2 cursor-pointer transition-all ${
+                selectedPointId === point.id
+                  ? 'border-emerald-500 bg-emerald-50'
+                  : 'border-gray-200 hover:border-emerald-300'
+              }`}
+              onClick={() => onSelectPoint(point)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <Package className="w-3 h-3 text-emerald-600" />
+                    <h4 className="font-semibold text-gray-900 text-[10px]">{point.name}</h4>
+                    {point.distance && (
+                      <span className="text-[9px] text-gray-500">
+                        ({point.distance} km)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-start gap-1.5 text-[10px] text-gray-600">
+                    <MapPin className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div>{point.address}</div>
+                      <div>{point.postalCode} {point.city}</div>
+                    </div>
+                  </div>
+
+                  {expandedPointId === point.id && point.openingHours && (
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <div className="flex items-start gap-1.5">
+                        <Clock className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <div className="text-[9px] text-gray-600 space-y-0.5">
+                          {(Object.keys(point.openingHours) as Array<keyof RelayPoint['openingHours']>).map((day) => (
+                            <div key={day} className="flex justify-between gap-3">
+                              <span className="font-medium">{getDayName(day)}:</span>
+                              <span>{formatOpeningHours(point.openingHours[day])}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedPointId(expandedPointId === point.id ? null : point.id);
+                    }}
+                    className="text-[9px] text-emerald-600 hover:text-emerald-700 font-medium mt-1"
+                  >
+                    {expandedPointId === point.id ? 'Masquer les horaires' : 'Voir les horaires'}
+                  </button>
                 </div>
 
-                {expandedPointId === point.id && point.openingHours && (
-                  <div className="mt-2 pt-2 border-t border-gray-200">
-                    <div className="flex items-start gap-1.5">
-                      <Clock className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div className="text-[9px] text-gray-600 space-y-0.5">
-                        {(Object.keys(point.openingHours) as Array<keyof RelayPoint['openingHours']>).map((day) => (
-                          <div key={day} className="flex justify-between gap-3">
-                            <span className="font-medium">{getDayName(day)}:</span>
-                            <span>{formatOpeningHours(point.openingHours[day])}</span>
-                          </div>
-                        ))}
-                      </div>
+                {selectedPointId === point.id && (
+                  <div className="ml-2">
+                    <div className="w-4 h-4 bg-emerald-600 rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                     </div>
                   </div>
                 )}
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setExpandedPointId(expandedPointId === point.id ? null : point.id);
-                  }}
-                  className="text-[9px] text-emerald-600 hover:text-emerald-700 font-medium mt-1"
-                >
-                  {expandedPointId === point.id ? 'Masquer les horaires' : 'Voir les horaires'}
-                </button>
               </div>
-
-              {selectedPointId === point.id && (
-                <div className="ml-2">
-                  <div className="w-4 h-4 bg-emerald-600 rounded-full flex items-center justify-center">
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                </div>
-              )}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

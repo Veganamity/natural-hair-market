@@ -8,7 +8,6 @@ interface PaymentModalProps {
   listingId: string;
   listingTitle: string;
   amount: number;
-  sellerShippingFee: number;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -17,7 +16,6 @@ export function PaymentModal({
   listingId,
   listingTitle,
   amount,
-  sellerShippingFee,
   onClose,
   onSuccess,
 }: PaymentModalProps) {
@@ -29,8 +27,8 @@ export function PaymentModal({
   const marketplaceCommissionRate = 0.10;
   const marketplaceCommission = amount * marketplaceCommissionRate;
   const shippingCost = shippingData?.cost || 0;
-  const totalAmount = amount + marketplaceCommission + sellerShippingFee + shippingCost;
-  const sellerReceives = amount + sellerShippingFee;
+  const totalAmount = amount + marketplaceCommission + shippingCost;
+  const sellerReceives = amount;
 
   const handlePayment = async () => {
     if (shippingData) {
@@ -137,12 +135,6 @@ export function PaymentModal({
                 <span className="text-gray-600">Prix de l'article:</span>
                 <span className="font-semibold">{amount.toFixed(2)} EUR</span>
               </div>
-              {sellerShippingFee > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Frais vendeur:</span>
-                  <span className="font-semibold">{sellerShippingFee.toFixed(2)} EUR</span>
-                </div>
-              )}
               {shippingCost > 0 && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Frais de livraison ({shippingData?.method}):</span>
