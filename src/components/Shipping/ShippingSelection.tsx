@@ -70,83 +70,56 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Choisir le mode de livraison</h3>
+        <h3 className="text-xs font-bold text-gray-800 mb-1.5">Mode de livraison</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-1.5">
           <button
             onClick={() => setShippingMethod('colissimo')}
-            className={`p-4 border-2 rounded-xl transition-all ${
+            className={`p-2 border rounded-lg transition-all ${
               shippingMethod === 'colissimo'
                 ? 'border-emerald-600 bg-emerald-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
-            <div className="flex items-start gap-3">
-              <Package className="w-6 h-6 text-emerald-600 flex-shrink-0" />
-              <div className="flex-1 text-left">
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-bold text-gray-800">Colissimo</h4>
-                  <span className="font-bold text-emerald-600">6,99€</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Livraison à domicile sous 48h
-                </p>
-              </div>
-              {shippingMethod === 'colissimo' && (
-                <Check className="w-5 h-5 text-emerald-600" />
-              )}
+            <div className="flex flex-col items-center text-center">
+              <Package className={`w-4 h-4 mb-1 ${shippingMethod === 'colissimo' ? 'text-emerald-600' : 'text-gray-400'}`} />
+              <h4 className="font-semibold text-gray-800 text-[10px]">Colissimo</h4>
+              <span className="font-bold text-emerald-600 text-xs">6,99€</span>
+              <p className="text-[9px] text-gray-500">48h</p>
             </div>
           </button>
 
           <button
             onClick={() => setShippingMethod('mondial_relay')}
-            className={`p-4 border-2 rounded-xl transition-all ${
+            className={`p-2 border rounded-lg transition-all ${
               shippingMethod === 'mondial_relay'
                 ? 'border-teal-600 bg-teal-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
-            <div className="flex items-start gap-3">
-              <MapPin className="w-6 h-6 text-teal-600 flex-shrink-0" />
-              <div className="flex-1 text-left">
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-bold text-gray-800">Mondial Relay</h4>
-                  <span className="font-bold text-teal-600">4,99€</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Retrait en point relais
-                </p>
-              </div>
-              {shippingMethod === 'mondial_relay' && (
-                <Check className="w-5 h-5 text-teal-600" />
-              )}
+            <div className="flex flex-col items-center text-center">
+              <MapPin className={`w-4 h-4 mb-1 ${shippingMethod === 'mondial_relay' ? 'text-teal-600' : 'text-gray-400'}`} />
+              <h4 className="font-semibold text-gray-800 text-[10px]">Mondial Relay</h4>
+              <span className="font-bold text-teal-600 text-xs">4,99€</span>
+              <p className="text-[9px] text-gray-500">Point relais</p>
             </div>
           </button>
 
           <button
             onClick={() => setShippingMethod('chronopost')}
-            className={`p-4 border-2 rounded-xl transition-all ${
+            className={`p-2 border rounded-lg transition-all ${
               shippingMethod === 'chronopost'
                 ? 'border-blue-600 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
           >
-            <div className="flex items-start gap-3">
-              <Truck className="w-6 h-6 text-blue-600 flex-shrink-0" />
-              <div className="flex-1 text-left">
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-bold text-gray-800">Chronopost</h4>
-                  <span className="font-bold text-blue-600">8,99€</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Livraison express 24-48h
-                </p>
-              </div>
-              {shippingMethod === 'chronopost' && (
-                <Check className="w-5 h-5 text-blue-600" />
-              )}
+            <div className="flex flex-col items-center text-center">
+              <Truck className={`w-4 h-4 mb-1 ${shippingMethod === 'chronopost' ? 'text-blue-600' : 'text-gray-400'}`} />
+              <h4 className="font-semibold text-gray-800 text-[10px]">Chronopost</h4>
+              <span className="font-bold text-blue-600 text-xs">8,99€</span>
+              <p className="text-[9px] text-gray-500">Express</p>
             </div>
           </button>
         </div>
