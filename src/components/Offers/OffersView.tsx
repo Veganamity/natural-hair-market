@@ -428,13 +428,12 @@ export function OffersView() {
           listingId={selectedOfferForPayment.listing.id}
           listingTitle={selectedOfferForPayment.listing.title}
           amount={selectedOfferForPayment.amount}
+          sellerShippingFee={selectedOfferForPayment.listing.seller_shipping_fee || 0}
           onClose={() => {
             setShowPaymentModal(false);
             setSelectedOfferForPayment(null);
           }}
           onSuccess={handlePaymentSuccess}
-          listingWeight={selectedOfferForPayment.listing.hair_weight || undefined}
-          listingCountry={selectedOfferForPayment.listing.country || undefined}
         />
       )}
     </div>
