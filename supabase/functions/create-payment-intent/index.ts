@@ -40,10 +40,13 @@ Deno.serve(async (req: Request) => {
       throw new Error("Unauthorized");
     }
 
-    const { listingId, shippingData } = await req.json();
+    const body = await req.json();
+    const { listingId, shippingData } = body;
+
+    console.log("Received payment request:", { listingId, shippingData });
 
     if (!listingId) {
-      throw new Error("Invalid parameters");
+      throw new Error("listingId is required");
     }
 
     const { data: listing, error: listingError } = await supabase
@@ -80,10 +83,19 @@ Deno.serve(async (req: Request) => {
 
     const itemPrice = listing.price;
     const sellerShippingFee = listing.seller_shipping_fee || 0;
-    const totalAmount = itemPrice + sellerShippingFee;
-
+    const buyerShippingCost = shippingData?.cost || 0;
     const marketplaceCommission = Math.round(itemPrice * MARKETPLACE_COMMISSION_RATE * 100) / 100;
-    const sellerReceives = itemPrice - marketplaceCommission + sellerShippingFee;
+    const totalAmount = itemPrice + sellerShippingFee + buyerShippingCost + marketplaceCommission;
+    const sellerReceives = itemPrice + sellerShippingFee;
+
+    console.log("Payment calculation:", {
+      itemPrice,
+      sellerShippingFee,
+      buyerShippingCost,
+      marketplaceCommission,
+      totalAmount,
+      sellerReceives
+    });
 
     if (sellerReceives < 0) {
       throw new Error("Invalid pricing calculation");
@@ -95,9 +107,11 @@ Deno.serve(async (req: Request) => {
       sellerId: listing.seller_id,
       itemPrice: itemPrice.toString(),
       sellerShippingFee: sellerShippingFee.toString(),
+      buyerShippingCost: buyerShippingCost.toString(),
       marketplaceCommission: marketplaceCommission.toString(),
       sellerReceives: sellerReceives.toString(),
       sellerStripeAccountId: sellerProfile.stripe_account_id,
+      shippingMethod: shippingData?.method || "colissimo",
     };
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -114,7 +128,7 @@ Deno.serve(async (req: Request) => {
       seller_id: listing.seller_id,
       amount: totalAmount,
       seller_amount: sellerReceives,
-      platform_fee: marketplaceCommission,
+      platform_fee: marketplaceCommission + buyerShippingCost,
       marketplace_commission_rate: MARKETPLACE_COMMISSION_RATE,
       marketplace_commission_amount: marketplaceCommission,
       seller_shipping_fee: sellerShippingFee,
@@ -127,10 +141,12 @@ Deno.serve(async (req: Request) => {
 
     if (shippingData) {
       transactionData.shipping_method = shippingData.method;
-      transactionData.shipping_cost = sellerShippingFee;
-      if (shippingData.addressId) {
-        transactionData.shipping_address_id = shippingData.addressId;
+      transactionData.shipping_cost = buyerShippingCost;
+
+      if (shippingData.address) {
+        transactionData.shipping_address = JSON.stringify(shippingData.address);
       }
+
       if (shippingData.relayPointId) {
         transactionData.relay_point_id = shippingData.relayPointId;
         transactionData.relay_point_name = shippingData.relayPointName;
