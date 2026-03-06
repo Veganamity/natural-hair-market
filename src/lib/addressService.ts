@@ -33,13 +33,17 @@ const callFunction = async (body: Record<string, unknown>) => {
     throw new Error('Non authentifie');
   }
 
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
   const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-saved-addresses`,
+    `${supabaseUrl}/functions/v1/manage-saved-addresses`,
     {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${session.access_token}`,
         'Content-Type': 'application/json',
+        'apikey': supabaseAnonKey,
       },
       body: JSON.stringify(body),
     }
