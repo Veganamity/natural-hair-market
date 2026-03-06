@@ -194,26 +194,37 @@ export function MondialRelaySelection({
     setLoading(true);
     setError('');
 
+    const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-mondial-relay-points`;
+
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-mondial-relay-points`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            postalCode,
-            country,
-            weight,
-          }),
-        }
-      );
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          postalCode,
+          country,
+          weight,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Erreur de recherche des points relais');
+        let errorMessage = `Erreur ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = `Erreur HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -224,8 +235,23 @@ export function MondialRelaySelection({
 
       setRelayPoints(data.relayPoints || []);
     } catch (err) {
-      console.error('Error searching relay points:', err);
-      setError((err as Error).message || 'Service temporairement indisponible');
+      console.error('Mondial Relay error:', err);
+
+      let errorMessage = 'Service temporairement indisponible';
+
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          errorMessage = 'Delai depasse. Le service Mondial Relay ne repond pas.';
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMessage = `Impossible de contacter le serveur. Verifiez votre connexion. (URL: ${apiUrl})`;
+        } else if (err.message.includes('NetworkError')) {
+          errorMessage = 'Erreur reseau. Verifiez votre connexion internet.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
