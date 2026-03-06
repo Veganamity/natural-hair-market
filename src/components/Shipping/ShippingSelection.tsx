@@ -50,8 +50,10 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
     } else if (shippingMethod === 'mondial_relay' && selectedRelayPoint) {
       shippingData.relayPointId = selectedRelayPoint.id;
       shippingData.relayPointName = selectedRelayPoint.name;
-      shippingData.relayPointAddress = selectedRelayPoint.address;
-      shippingData.address = selectedAddress;
+      shippingData.relayPointAddress = `${selectedRelayPoint.address}, ${selectedRelayPoint.postalCode} ${selectedRelayPoint.city}`;
+      if (selectedAddress) {
+        shippingData.address = selectedAddress;
+      }
     }
 
     onShippingSelected(shippingData);

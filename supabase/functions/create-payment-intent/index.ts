@@ -51,7 +51,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: listing, error: listingError } = await supabase
       .from("listings")
-      .select("id, seller_id, price, status, seller_shipping_fee")
+      .select("id, seller_id, price, status")
       .eq("id", listingId)
       .maybeSingle();
 
@@ -82,15 +82,13 @@ Deno.serve(async (req: Request) => {
     }
 
     const itemPrice = listing.price;
-    const sellerShippingFee = listing.seller_shipping_fee || 0;
     const buyerShippingCost = shippingData?.cost || 0;
     const marketplaceCommission = Math.round(itemPrice * MARKETPLACE_COMMISSION_RATE * 100) / 100;
-    const totalAmount = itemPrice + sellerShippingFee + buyerShippingCost + marketplaceCommission;
-    const sellerReceives = itemPrice + sellerShippingFee;
+    const totalAmount = itemPrice + buyerShippingCost + marketplaceCommission;
+    const sellerReceives = itemPrice;
 
     console.log("Payment calculation:", {
       itemPrice,
-      sellerShippingFee,
       buyerShippingCost,
       marketplaceCommission,
       totalAmount,
@@ -106,7 +104,6 @@ Deno.serve(async (req: Request) => {
       buyerId: user.id,
       sellerId: listing.seller_id,
       itemPrice: itemPrice.toString(),
-      sellerShippingFee: sellerShippingFee.toString(),
       buyerShippingCost: buyerShippingCost.toString(),
       marketplaceCommission: marketplaceCommission.toString(),
       sellerReceives: sellerReceives.toString(),
@@ -131,7 +128,6 @@ Deno.serve(async (req: Request) => {
       platform_fee: marketplaceCommission + buyerShippingCost,
       marketplace_commission_rate: MARKETPLACE_COMMISSION_RATE,
       marketplace_commission_amount: marketplaceCommission,
-      seller_shipping_fee: sellerShippingFee,
       stripe_payment_intent_id: paymentIntent.id,
       status: "pending",
       payment_method: "sepa_debit",

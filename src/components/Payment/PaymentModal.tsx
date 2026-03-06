@@ -215,7 +215,7 @@ export function PaymentModal({
             </button>
             <button
               onClick={handlePayment}
-              disabled={loading || !shippingData || !shippingData.address}
+              disabled={loading || !shippingData || (shippingData?.method === 'mondial_relay' ? !shippingData?.relayPointId : !shippingData?.address)}
               className="flex-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
             >
               {loading ? 'Traitement...' : `Payer ${totalAmount.toFixed(2)} EUR`}
