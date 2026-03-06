@@ -26,62 +26,115 @@ export interface AddressInput {
   is_default: boolean;
 }
 
-async function callEdgeFunction(action: string, data: Record<string, unknown> = {}): Promise<any> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Non authentifie');
-
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  const response = await fetch(
-    `${supabaseUrl}/functions/v1/manage-saved-addresses`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-        'apikey': supabaseAnonKey,
-      },
-      body: JSON.stringify({ action, ...data }),
-    }
-  );
-
-  if (!response.ok) {
-    const text = await response.text();
-    let errorMessage = 'Erreur lors de la requete';
-    try {
-      const result = JSON.parse(text);
-      errorMessage = result.error || errorMessage;
-    } catch {
-      errorMessage = text || errorMessage;
-    }
-    throw new Error(errorMessage);
-  }
-
-  return response.json();
-}
-
 export const addressService = {
   async list(): Promise<SavedAddress[]> {
-    const result = await callEdgeFunction('list');
-    return result.addresses || [];
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Non authentifie');
+
+    const { data, error } = await supabase
+      .from('saved_addresses')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   },
 
   async create(address: AddressInput): Promise<SavedAddress> {
-    const result = await callEdgeFunction('create', { address });
-    return result.address;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Non authentifie');
+
+    if (address.is_default) {
+      await supabase
+        .from('saved_addresses')
+        .update({ is_default: false })
+        .eq('user_id', user.id);
+    }
+
+    const { data, error } = await supabase
+      .from('saved_addresses')
+      .insert([{
+        user_id: user.id,
+        full_name: address.full_name,
+        address_line1: address.address_line1,
+        address_line2: address.address_line2 || null,
+        postal_code: address.postal_code,
+        city: address.city,
+        country: address.country,
+        phone: address.phone,
+        is_default: address.is_default || false,
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   },
 
   async update(id: string, address: AddressInput): Promise<SavedAddress> {
-    const result = await callEdgeFunction('update', { id, address });
-    return result.address;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Non authentifie');
+
+    if (address.is_default) {
+      await supabase
+        .from('saved_addresses')
+        .update({ is_default: false })
+        .eq('user_id', user.id)
+        .neq('id', id);
+    }
+
+    const { data, error } = await supabase
+      .from('saved_addresses')
+      .update({
+        full_name: address.full_name,
+        address_line1: address.address_line1,
+        address_line2: address.address_line2 || null,
+        postal_code: address.postal_code,
+        city: address.city,
+        country: address.country,
+        phone: address.phone,
+        is_default: address.is_default || false,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   },
 
   async delete(id: string): Promise<void> {
-    await callEdgeFunction('delete', { id });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Non authentifie');
+
+    const { error } = await supabase
+      .from('saved_addresses')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
   },
 
   async setDefault(id: string): Promise<void> {
-    await callEdgeFunction('set-default', { id });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Non authentifie');
+
+    await supabase
+      .from('saved_addresses')
+      .update({ is_default: false })
+      .eq('user_id', user.id);
+
+    const { error } = await supabase
+      .from('saved_addresses')
+      .update({ is_default: true, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
   },
 };
