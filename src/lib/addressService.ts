@@ -27,17 +27,30 @@ export interface AddressInput {
 }
 
 const callFunction = async (body: Record<string, unknown>) => {
-  const { data, error } = await supabase.functions.invoke('manage-saved-addresses', {
-    body,
-  });
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (error) {
-    console.error('Edge function error:', error);
-    if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
-      throw new Error('Impossible de contacter le serveur. Verifiez votre connexion internet.');
-    }
-    throw new Error(error.message || 'Erreur serveur');
+  if (!session) {
+    throw new Error('Non authentifie');
   }
+
+  const response = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-saved-addresses`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Erreur serveur');
+  }
+
+  const data = await response.json();
 
   if (data?.error) {
     throw new Error(data.error);
