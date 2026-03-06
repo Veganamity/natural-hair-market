@@ -28,12 +28,8 @@ Deno.serve(async (req: Request) => {
 
   try {
     const apiUsername = Deno.env.get("MONDIAL_RELAY_API_USERNAME") || "CC20EUCU@business-api.mondialrelay.com";
-    const apiPassword = Deno.env.get("MONDIAL_RELAY_API_PASSWORD");
+    const apiPassword = Deno.env.get("MONDIAL_RELAY_API_PASSWORD") || "\\zYDC=g<kj3WBiQ[6QKF";
     const brandId = Deno.env.get("MONDIAL_RELAY_BRAND_ID") || "CC20EUCU";
-
-    if (!apiPassword) {
-      throw new Error("Mondial Relay API credentials not configured");
-    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

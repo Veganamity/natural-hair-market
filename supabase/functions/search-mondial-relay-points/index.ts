@@ -94,7 +94,7 @@ Deno.serve(async (req: Request) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-      const response = await fetch("https://api.mondialrelay.com/Web_Services.asmx", {
+      const response = await fetch("https://api.mondialrelay.com/WebService.asmx", {
         method: "POST",
         headers: {
           "Content-Type": "text/xml; charset=utf-8",
