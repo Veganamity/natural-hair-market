@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,15 +29,12 @@ interface RelayPoint {
   };
 }
 
-function createSecurityKey(enseigne: string, pays: string, cp: string, privateKey: string): string {
-  const toHash = `${enseigne}${pays}${cp}${privateKey}`;
-  let hash = 0;
-  for (let i = 0; i < toHash.length; i++) {
-    const char = toHash.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16).toUpperCase().padStart(32, '0');
+async function md5Hash(text: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest("MD5", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
 }
 
 Deno.serve(async (req: Request) => {
@@ -69,8 +67,14 @@ Deno.serve(async (req: Request) => {
 
     const relayPoints: RelayPoint[] = [];
 
-    const enseigne = Deno.env.get("MONDIAL_RELAY_BRAND_ID") || "BDTEST13";
-    const privateKey = Deno.env.get("MONDIAL_RELAY_API_PASSWORD") || "PrivateK";
+    const enseigne = Deno.env.get("MONDIAL_RELAY_BRAND_ID") || "CC20EUCU";
+    const privateKey = Deno.env.get("MONDIAL_RELAY_PRIVATE_KEY") || "Nvhs3RMN";
+
+    const securityString = `${enseigne}${countryCode}${postalCode}${privateKey}`;
+    const security = await md5Hash(securityString);
+
+    console.log('Security string parts:', { enseigne, countryCode, postalCode, privateKeyLength: privateKey.length });
+    console.log('Generated security hash:', security);
 
     const soapEnvelope = `<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.mondialrelay.fr/webservice/">
@@ -80,7 +84,7 @@ Deno.serve(async (req: Request) => {
       <web:Pays>${countryCode}</web:Pays>
       <web:CP>${postalCode}</web:CP>
       <web:NombreResultats>20</web:NombreResultats>
-      <web:Security>${privateKey}</web:Security>
+      <web:Security>${security}</web:Security>
     </web:WSI4_PointRelais_Recherche>
   </soap:Body>
 </soap:Envelope>`;
@@ -104,7 +108,12 @@ Deno.serve(async (req: Request) => {
 
       const responseText = await response.text();
       console.log('SOAP response status:', response.status);
-      console.log('SOAP response preview:', responseText.substring(0, 1000));
+      console.log('SOAP response preview:', responseText.substring(0, 2000));
+
+      const statMatch = responseText.match(/<STAT>([^<]*)<\/STAT>/);
+      if (statMatch) {
+        console.log('Mondial Relay API STAT code:', statMatch[1]);
+      }
 
       if (response.ok && responseText.includes("PointRelais_Details")) {
         const pointsMatch = responseText.match(/<PointRelais_Details>([\s\S]*?)<\/PointRelais_Details>/g);
@@ -140,29 +149,22 @@ Deno.serve(async (req: Request) => {
 
             const getHours = (day: string): string => {
               const h1 = getValue(`Horaires_${day}`);
-              if (!h1 || h1.length < 8) return "0900-1900";
-              const parts = h1.match(/(\d{4})(\d{4})(\d{4})?(\d{4})?/);
-              if (!parts) return "0900-1900";
-              const [, open1, close1, open2, close2] = parts;
-              if (open1 === "0000" && close1 === "0000") return "Ferme";
-              let result = `${open1}-${close1}`;
-              if (open2 && close2 && open2 !== "0000" && close2 !== "0000") {
-                result += ` ${open2}-${close2}`;
-              }
-              return result;
+              if (!h1 || h1.length < 8) return "09:00-19:00";
+              const formatted = h1.replace(/(\d{2})(\d{2})/g, '$1:$2');
+              return formatted || "09:00-19:00";
             };
 
             if (num && lgAdr1) {
               relayPoints.push({
                 id: num,
                 name: lgAdr1,
-                address: lgAdr3,
+                address: lgAdr3 || lgAdr1,
                 postalCode: cp,
                 city: ville,
                 country: pays || countryCode,
                 latitude: latNum,
                 longitude: lngNum,
-                distance: '',
+                distance: getValue('Distance') || '',
                 locationType: '24R',
                 openingHours: {
                   monday: getHours('Lundi'),
@@ -208,8 +210,6 @@ Deno.serve(async (req: Request) => {
                 node["operator"="Mondial Relay"](around:15000,${lat},${lon});
                 node["amenity"="parcel_locker"](around:10000,${lat},${lon});
                 node["amenity"="post_office"](around:8000,${lat},${lon});
-                node["shop"="newsagent"]["delivery"="yes"](around:5000,${lat},${lon});
-                node["shop"="convenience"]["parcel_pickup"="yes"](around:5000,${lat},${lon});
               );
               out body 25;
             `;
@@ -253,12 +253,12 @@ Deno.serve(async (req: Request) => {
                   distance: `${distance}`,
                   locationType: 'OSM',
                   openingHours: {
-                    monday: element.tags?.["opening_hours"]?.includes("Mo") ? '0900-1900' : '0900-1900',
-                    tuesday: '0900-1900',
-                    wednesday: '0900-1900',
-                    thursday: '0900-1900',
-                    friday: '0900-1900',
-                    saturday: '0900-1300',
+                    monday: '09:00-19:00',
+                    tuesday: '09:00-19:00',
+                    wednesday: '09:00-19:00',
+                    thursday: '09:00-19:00',
+                    friday: '09:00-19:00',
+                    saturday: '09:00-13:00',
                     sunday: 'Ferme',
                   },
                 });
@@ -314,12 +314,12 @@ Deno.serve(async (req: Request) => {
                 distance: `${distance}`,
                 locationType: 'SAMPLE',
                 openingHours: {
-                  monday: '0900-1900',
-                  tuesday: '0900-1900',
-                  wednesday: '0900-1900',
-                  thursday: '0900-1900',
-                  friday: '0900-1900',
-                  saturday: '0900-1300',
+                  monday: '09:00-19:00',
+                  tuesday: '09:00-19:00',
+                  wednesday: '09:00-19:00',
+                  thursday: '09:00-19:00',
+                  friday: '09:00-19:00',
+                  saturday: '09:00-13:00',
                   sunday: 'Ferme',
                 },
               });
