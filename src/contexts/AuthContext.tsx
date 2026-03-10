@@ -66,10 +66,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      (() => {
+      (async () => {
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
+        } else if (event === 'SIGNED_IN' && session?.user) {
+          setUser(session.user);
+
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', session.user.id)
+            .maybeSingle();
+
+          if (!existingProfile) {
+            await supabase.from('profiles').insert({
+              id: session.user.id,
+              email: session.user.email!,
+              full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
+            });
+          }
+
+          fetchProfile(session.user.id);
         } else {
           setUser(session?.user ?? null);
           if (session?.user) {
