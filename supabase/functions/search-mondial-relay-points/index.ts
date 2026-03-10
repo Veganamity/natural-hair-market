@@ -165,6 +165,15 @@ Deno.serve(async (req: Request) => {
             };
 
             if (num && lgAdr1) {
+              const distanceMeters = getValue('Distance');
+              let distanceKm = '';
+              if (distanceMeters) {
+                const meters = parseInt(distanceMeters, 10);
+                if (!isNaN(meters)) {
+                  distanceKm = (meters / 1000).toFixed(1);
+                }
+              }
+
               relayPoints.push({
                 id: num,
                 name: lgAdr1,
@@ -174,7 +183,7 @@ Deno.serve(async (req: Request) => {
                 country: pays || countryCode,
                 latitude: latNum,
                 longitude: lngNum,
-                distance: getValue('Distance') || '',
+                distance: distanceKm,
                 locationType: '24R',
                 openingHours: {
                   monday: getHours('Lundi'),
@@ -188,6 +197,8 @@ Deno.serve(async (req: Request) => {
               });
             }
           });
+
+          relayPoints.sort((a, b) => parseFloat(a.distance || '999') - parseFloat(b.distance || '999'));
         }
       }
       console.log(`SOAP API returned ${relayPoints.length} points`);
@@ -244,12 +255,15 @@ Deno.serve(async (req: Request) => {
                 const houseNumber = element.tags?.["addr:housenumber"] || "";
                 const address = houseNumber ? `${houseNumber} ${street}` : street || "Voir sur la carte";
 
-                const distance = Math.round(
-                  Math.sqrt(
-                    Math.pow((element.lat - lat) * 111, 2) +
-                    Math.pow((element.lon - lon) * 111 * Math.cos(lat * Math.PI / 180), 2)
-                  ) * 10
-                ) / 10;
+                const toRad = (deg: number) => deg * Math.PI / 180;
+                const R = 6371;
+                const dLat = toRad(element.lat - lat);
+                const dLon = toRad(element.lon - lon);
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                          Math.cos(toRad(lat)) * Math.cos(toRad(element.lat)) *
+                          Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                const distance = Math.round(R * c * 10) / 10;
 
                 relayPoints.push({
                   id: `MR${element.id}`,
@@ -310,7 +324,16 @@ Deno.serve(async (req: Request) => {
             samplePoints.forEach((point, index) => {
               const lat = baseLat + point.offset[0];
               const lon = baseLon + point.offset[1];
-              const distance = Math.round(Math.sqrt(point.offset[0]**2 + point.offset[1]**2) * 111 * 10) / 10;
+
+              const toRad = (deg: number) => deg * Math.PI / 180;
+              const R = 6371;
+              const dLat = toRad(point.offset[0]);
+              const dLon = toRad(point.offset[1]);
+              const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(toRad(baseLat)) * Math.cos(toRad(lat)) *
+                        Math.sin(dLon/2) * Math.sin(dLon/2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              const distance = Math.round(R * c * 10) / 10;
 
               relayPoints.push({
                 id: `SAMPLE${index + 1}`,
@@ -334,6 +357,8 @@ Deno.serve(async (req: Request) => {
                 },
               });
             });
+
+            relayPoints.sort((a, b) => parseFloat(a.distance || '999') - parseFloat(b.distance || '999'));
           }
         }
       } catch (e) {
