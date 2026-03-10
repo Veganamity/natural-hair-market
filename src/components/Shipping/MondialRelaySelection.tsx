@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, Clock, Package, Loader2, Map, List, RefreshCw } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient';
 
 interface RelayPoint {
   id: string;
@@ -200,11 +201,14 @@ export function MondialRelaySelection({
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
+      const { data: { session } } = await supabase.auth.getSession();
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
           postalCode,
