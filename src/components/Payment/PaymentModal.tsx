@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { X, CreditCard, Building2, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, CreditCard, Building2, AlertCircle, Loader2 } from 'lucide-react';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from '../../lib/supabaseClient';
 import { getStripe } from '../../lib/stripe';
 import { ShippingSelection } from '../Shipping/ShippingSelection';
@@ -12,6 +13,73 @@ interface PaymentModalProps {
   onSuccess: () => void;
 }
 
+interface PaymentFormProps {
+  onSuccess: () => void;
+  onError: (message: string) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+}
+
+function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const handleSubmit = async () => {
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}#orders`,
+        },
+      });
+
+      if (error) {
+        if (error.type === 'card_error' || error.type === 'validation_error') {
+          onError(error.message || 'Erreur de validation');
+        } else {
+          onError('Une erreur inattendue est survenue.');
+        }
+        setLoading(false);
+      } else {
+        onSuccess();
+      }
+    } catch (err: any) {
+      onError(err.message || 'Erreur lors du paiement');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <PaymentElement
+        options={{
+          layout: 'tabs',
+        }}
+      />
+      <button
+        onClick={handleSubmit}
+        disabled={!stripe || loading}
+        className="w-full px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Traitement en cours...
+          </>
+        ) : (
+          'Confirmer le paiement'
+        )}
+      </button>
+    </div>
+  );
+}
+
 export function PaymentModal({
   listingId,
   listingTitle,
@@ -21,8 +89,9 @@ export function PaymentModal({
 }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'sepa_debit' | 'card'>('sepa_debit');
   const [shippingData, setShippingData] = useState<any>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [creatingIntent, setCreatingIntent] = useState(false);
 
   const marketplaceCommissionRate = 0.10;
   const marketplaceCommission = amount * marketplaceCommissionRate;
@@ -30,7 +99,9 @@ export function PaymentModal({
   const totalAmount = amount + marketplaceCommission + shippingCost;
   const sellerReceives = amount;
 
-  const handlePayment = async () => {
+  const stripePromise = getStripe();
+
+  const createPaymentIntent = async () => {
     if (shippingData) {
       if ((shippingData.method === 'chronopost' || shippingData.method === 'colissimo') && !shippingData.address) {
         setError('Veuillez renseigner une adresse de livraison');
@@ -38,18 +109,18 @@ export function PaymentModal({
       }
 
       if (shippingData.method === 'mondial_relay' && !shippingData.relayPointId) {
-        setError('Veuillez sélectionner un point relais');
+        setError('Veuillez selectionner un point relais');
         return;
       }
     }
 
-    setLoading(true);
+    setCreatingIntent(true);
     setError(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error('Non authentifié');
+        throw new Error('Non authentifie');
       }
 
       const paymentData: any = {
@@ -71,46 +142,28 @@ export function PaymentModal({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la création du paiement');
+        throw new Error(errorData.error || 'Erreur lors de la creation du paiement');
       }
 
-      const { clientSecret } = await response.json();
-
-      const stripe = await getStripe();
-      if (!stripe) {
-        throw new Error('Stripe non disponible');
-      }
-
-      const { error: stripeError } = await stripe.confirmPayment({
-        clientSecret,
-        confirmParams: {
-          return_url: `${window.location.origin}`,
-          payment_method_data: {
-            type: paymentMethod,
-          },
-        },
-        redirect: 'if_required',
-      });
-
-      if (stripeError) {
-        throw new Error(stripeError.message);
-      }
-
-      alert('Paiement initié avec succes! Le vendeur recevra le paiement dans 1-3 jours ouvrables.');
-      onSuccess();
-      onClose();
+      const { clientSecret: secret } = await response.json();
+      setClientSecret(secret);
     } catch (err: any) {
-      console.error('Payment error:', err);
-      setError(err.message || 'Erreur lors du paiement');
+      console.error('Payment intent error:', err);
+      setError(err.message || 'Erreur lors de la creation du paiement');
     } finally {
-      setLoading(false);
+      setCreatingIntent(false);
     }
   };
+
+  const isShippingValid = shippingData && (
+    (shippingData.method === 'mondial_relay' && shippingData.relayPointId) ||
+    ((shippingData.method === 'chronopost' || shippingData.method === 'colissimo') && shippingData.address)
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-3">
       <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[95vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-3 py-1.5 flex items-center justify-between z-10 rounded-t-xl">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-3 py-2 flex items-center justify-between z-10 rounded-t-xl">
           <h3 className="text-sm font-bold text-gray-800">Paiement</h3>
           <button
             onClick={onClose}
@@ -120,107 +173,127 @@ export function PaymentModal({
           </button>
         </div>
 
-        <div className="p-3 space-y-2">
-          <div>
-            <ShippingSelection
-              onShippingSelected={setShippingData}
-              selectedMethod={shippingData?.method}
-            />
-          </div>
-
-          <div className="p-2 bg-gray-50 rounded-lg">
-            <h4 className="font-semibold text-gray-800 mb-1 text-xs">{listingTitle}</h4>
-            <div className="space-y-1 text-[10px]">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Prix de l'article:</span>
-                <span className="font-semibold">{amount.toFixed(2)} EUR</span>
+        <div className="p-3 space-y-3">
+          {!clientSecret ? (
+            <>
+              <div>
+                <ShippingSelection
+                  onShippingSelected={setShippingData}
+                  selectedMethod={shippingData?.method}
+                />
               </div>
-              {shippingCost > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Frais de livraison ({shippingData?.method}):</span>
-                  <span className="font-semibold">{shippingCost.toFixed(2)} EUR</span>
+
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold text-gray-800 mb-1 text-xs">{listingTitle}</h4>
+                <div className="space-y-1 text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Prix de l'article:</span>
+                    <span className="font-semibold">{amount.toFixed(2)} EUR</span>
+                  </div>
+                  {shippingCost > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Frais de livraison ({shippingData?.method}):</span>
+                      <span className="font-semibold">{shippingCost.toFixed(2)} EUR</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-gray-600">
+                    <span>Commission ({(marketplaceCommissionRate * 100).toFixed(0)}%):</span>
+                    <span className="font-semibold">+{marketplaceCommission.toFixed(2)} EUR</span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-1 flex justify-between">
+                    <span className="text-gray-600">Le vendeur recevra:</span>
+                    <span className="font-semibold text-emerald-600">{sellerReceives.toFixed(2)} EUR</span>
+                  </div>
+                  <div className="border-t-2 border-gray-300 pt-1 flex justify-between text-xs">
+                    <span className="font-bold text-gray-800">Total a payer:</span>
+                    <span className="font-bold text-teal-600">{totalAmount.toFixed(2)} EUR</span>
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-800">{error}</p>
                 </div>
               )}
-              <div className="flex justify-between text-gray-600">
-                <span>Commission ({(marketplaceCommissionRate * 100).toFixed(0)}%):</span>
-                <span className="font-semibold">+{marketplaceCommission.toFixed(2)} EUR</span>
-              </div>
-              <div className="border-t border-gray-200 pt-1 flex justify-between">
-                <span className="text-gray-600">Le vendeur recevra:</span>
-                <span className="font-semibold text-emerald-600">{sellerReceives.toFixed(2)} EUR</span>
-              </div>
-              <div className="border-t-2 border-gray-300 pt-1 flex justify-between text-xs">
-                <span className="font-bold text-gray-800">Total a payer:</span>
-                <span className="font-bold text-teal-600">{totalAmount.toFixed(2)} EUR</span>
-              </div>
-            </div>
-          </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Paiement
-            </label>
-            <div className="space-y-1.5">
-              <button
-                onClick={() => setPaymentMethod('sepa_debit')}
-                className={`w-full p-2 rounded-lg border-2 transition-all flex items-center gap-1.5 ${
-                  paymentMethod === 'sepa_debit'
-                    ? 'border-emerald-600 bg-emerald-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <Building2 className={`w-4 h-4 ${paymentMethod === 'sepa_debit' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                <div className="text-left flex-1">
-                  <div className="font-semibold text-gray-800 text-xs">SEPA</div>
-                  <div className="text-[10px] text-gray-600">1-3 jours</div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={onClose}
+                  disabled={creatingIntent}
+                  className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 text-sm"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={createPaymentIntent}
+                  disabled={creatingIntent || !isShippingValid}
+                  className="flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
+                >
+                  {creatingIntent ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Chargement...
+                    </>
+                  ) : (
+                    `Continuer - ${totalAmount.toFixed(2)} EUR`
+                  )}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="p-2 bg-gray-50 rounded-lg mb-3">
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium text-gray-700">Total a payer:</span>
+                  <span className="font-bold text-teal-600">{totalAmount.toFixed(2)} EUR</span>
                 </div>
-              </button>
-              <button
-                onClick={() => setPaymentMethod('card')}
-                className={`w-full p-2 rounded-lg border-2 transition-all flex items-center gap-1.5 ${
-                  paymentMethod === 'card'
-                    ? 'border-emerald-600 bg-emerald-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <CreditCard className={`w-4 h-4 ${paymentMethod === 'card' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                <div className="text-left flex-1">
-                  <div className="font-semibold text-gray-800 text-xs">Carte</div>
-                  <div className="text-[10px] text-gray-600">Immediat</div>
-                </div>
-              </button>
-            </div>
-          </div>
+              </div>
 
-          {error && (
-            <div className="p-1.5 bg-red-50 border border-red-200 rounded-lg flex items-start gap-1.5">
-              <AlertCircle className="w-3 h-3 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-[10px] text-red-800">{error}</p>
-            </div>
+              {error && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 mb-3">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-800">{error}</p>
+                </div>
+              )}
+
+              <Elements
+                stripe={stripePromise}
+                options={{
+                  clientSecret,
+                  appearance: {
+                    theme: 'stripe',
+                    variables: {
+                      colorPrimary: '#059669',
+                      borderRadius: '8px',
+                    },
+                  },
+                }}
+              >
+                <PaymentForm
+                  onSuccess={onSuccess}
+                  onError={setError}
+                  loading={loading}
+                  setLoading={setLoading}
+                />
+              </Elements>
+
+              <button
+                onClick={() => setClientSecret(null)}
+                disabled={loading}
+                className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 text-sm mt-2"
+              >
+                Retour
+              </button>
+
+              <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg mt-2">
+                <p className="text-[11px] text-blue-800">
+                  Paiement securise par Stripe. Vos informations bancaires ne sont jamais stockees sur notre plateforme.
+                </p>
+              </div>
+            </>
           )}
-
-          <div className="p-1.5 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-[10px] text-blue-800">
-              Paiement Stripe Connect securise. Le vendeur expedie directement et recoit le paiement sous 1-3 jours.
-            </p>
-          </div>
-
-          <div className="flex gap-2 sticky bottom-0 bg-white pt-2 pb-1 border-t border-gray-200 -mx-3 px-3">
-            <button
-              onClick={onClose}
-              disabled={loading}
-              className="flex-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 text-xs"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handlePayment}
-              disabled={loading || !shippingData || (shippingData?.method === 'mondial_relay' ? !shippingData?.relayPointId : !shippingData?.address)}
-              className="flex-1 px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs"
-            >
-              {loading ? 'Traitement...' : `Payer ${totalAmount.toFixed(2)} EUR`}
-            </button>
-          </div>
         </div>
       </div>
     </div>
