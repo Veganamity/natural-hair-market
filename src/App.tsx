@@ -63,13 +63,26 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
+    const validViews = ['landing', 'marketplace', 'profile', 'favorites', 'offers', 'transactions', 'orders', 'privacy', 'terms', 'sales', 'refund', 'safety', 'seller-rules', 'buyer-rules', 'faq', 'about', 'admin-salons', 'admin-listings', 'salon-certifie'];
+
+    const parseHash = (hash: string): typeof currentView | null => {
+      const cleanHash = hash.slice(1).split('?')[0].split('&')[0];
+      if (cleanHash.includes('access_token') || cleanHash.includes('error')) {
+        return null;
+      }
+      if (validViews.includes(cleanHash)) {
+        return cleanHash as typeof currentView;
+      }
+      return null;
+    };
+
     const handlePopState = (event: PopStateEvent) => {
       if (event.state && event.state.view) {
         setCurrentView(event.state.view);
       } else {
-        const hash = window.location.hash.slice(1);
-        if (hash) {
-          setCurrentView(hash as any);
+        const view = parseHash(window.location.hash);
+        if (view) {
+          setCurrentView(view);
         } else {
           setCurrentView('landing');
         }
@@ -78,9 +91,12 @@ function AppContent() {
 
     window.addEventListener('popstate', handlePopState);
 
-    const hash = window.location.hash.slice(1);
-    if (hash) {
-      setCurrentView(hash as any);
+    const hash = window.location.hash;
+    if (hash && !hash.includes('access_token') && !hash.includes('error')) {
+      const view = parseHash(hash);
+      if (view) {
+        setCurrentView(view);
+      }
     }
 
     return () => {
