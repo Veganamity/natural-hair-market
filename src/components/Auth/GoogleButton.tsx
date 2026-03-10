@@ -11,26 +11,18 @@ export function GoogleButton({ text = 'Continuer avec Google' }: GoogleButtonPro
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      console.log('Attempting Google login...');
-      console.log('Redirect URL:', window.location.origin);
+      const redirectUrl = `${window.location.origin}/auth/callback`;
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://www.naturalhairmarket.com/auth/callback',
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
+          redirectTo: redirectUrl,
         },
       });
 
       if (error) {
-        console.error('OAuth error:', error);
         throw error;
       }
-
-      console.log('OAuth response:', data);
     } catch (error: any) {
       console.error('Error with Google login:', error);
       alert(`Erreur de connexion Google: ${error.message || 'Erreur inconnue'}`);
