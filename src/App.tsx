@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { LanguageSelector } from './components/LanguageSelector';
-import { LoginForm } from './components/Auth/LoginForm';
-import { SignUpForm } from './components/Auth/SignUpForm';
+import { AuthPage } from './components/Auth/AuthPage';
 import { ForgotPasswordForm } from './components/Auth/ForgotPasswordForm';
 import { ResetPasswordForm } from './components/Auth/ResetPasswordForm';
 import { MarketplaceView } from './components/Marketplace/MarketplaceView';
@@ -212,25 +211,23 @@ function AppContent() {
       );
     }
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/20 to-teal-100/20" />
-        <div className="relative z-10">
-          {authMode === 'login' ? (
-            <LoginForm
-              onToggleMode={() => setAuthMode('signup')}
-              onForgotPassword={() => setAuthMode('forgot-password')}
-            />
-          ) : authMode === 'signup' ? (
-            <SignUpForm onToggleMode={() => setAuthMode('login')} />
-          ) : authMode === 'forgot-password' ? (
-            <ForgotPasswordForm onBack={() => setAuthMode('login')} />
-          ) : (
-            <ResetPasswordForm />
-          )}
+    if (authMode === 'forgot-password') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-4">
+          <ForgotPasswordForm onBack={() => setAuthMode('login')} />
         </div>
-      </div>
-    );
+      );
+    }
+
+    if (authMode === 'reset-password') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-4">
+          <ResetPasswordForm />
+        </div>
+      );
+    }
+
+    return <AuthPage />;
   }
 
   return (
