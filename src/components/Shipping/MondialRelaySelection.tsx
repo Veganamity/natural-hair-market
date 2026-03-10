@@ -30,6 +30,8 @@ interface MondialRelaySelectionProps {
   weight: number;
   onSelectPoint: (point: RelayPoint) => void;
   selectedPointId?: string;
+  street?: string;
+  city?: string;
 }
 
 declare global {
@@ -44,6 +46,8 @@ export function MondialRelaySelection({
   weight,
   onSelectPoint,
   selectedPointId,
+  street,
+  city,
 }: MondialRelaySelectionProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -214,6 +218,8 @@ export function MondialRelaySelection({
           postalCode,
           country,
           weight,
+          street,
+          city,
         }),
         signal: controller.signal,
       });

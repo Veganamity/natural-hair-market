@@ -56,14 +56,42 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { postalCode, country } = body;
+    const { postalCode, country, street, city } = body;
 
     if (!postalCode || !country) {
       throw new Error("Postal code and country are required");
     }
 
     const countryCode = country.toUpperCase().substring(0, 2);
-    console.log('Searching Mondial Relay points for:', { postalCode, country: countryCode });
+    console.log('Searching Mondial Relay points for:', { postalCode, country: countryCode, street, city });
+
+    let userLat: number | null = null;
+    let userLon: number | null = null;
+
+    if (street || city) {
+      try {
+        const addressParts = [street, postalCode, city, countryCode].filter(Boolean);
+        const addressQuery = encodeURIComponent(addressParts.join(', '));
+        const geoUrl = `https://nominatim.openstreetmap.org/search?q=${addressQuery}&format=json&limit=1`;
+
+        console.log('Geocoding user address:', addressParts.join(', '));
+
+        const geoResponse = await fetch(geoUrl, {
+          headers: { "User-Agent": "HairMarketplace/1.0" }
+        });
+
+        if (geoResponse.ok) {
+          const geoData = await geoResponse.json();
+          if (geoData.length > 0) {
+            userLat = parseFloat(geoData[0].lat);
+            userLon = parseFloat(geoData[0].lon);
+            console.log('User location geocoded:', { userLat, userLon });
+          }
+        }
+      } catch (geoError) {
+        console.log('Failed to geocode user address:', geoError);
+      }
+    }
 
     const relayPoints: RelayPoint[] = [];
 
@@ -165,12 +193,29 @@ Deno.serve(async (req: Request) => {
             };
 
             if (num && lgAdr1) {
-              const distanceMeters = getValue('Distance');
               let distanceKm = '';
-              if (distanceMeters) {
-                const meters = parseInt(distanceMeters, 10);
-                if (!isNaN(meters)) {
-                  distanceKm = (meters / 1000).toFixed(1);
+
+              if (userLat !== null && userLon !== null && latNum && lngNum) {
+                const pointLat = parseFloat(latNum);
+                const pointLon = parseFloat(lngNum);
+                if (!isNaN(pointLat) && !isNaN(pointLon)) {
+                  const toRad = (deg: number) => deg * Math.PI / 180;
+                  const R = 6371;
+                  const dLat = toRad(pointLat - userLat);
+                  const dLon = toRad(pointLon - userLon);
+                  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                            Math.cos(toRad(userLat)) * Math.cos(toRad(pointLat)) *
+                            Math.sin(dLon/2) * Math.sin(dLon/2);
+                  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                  distanceKm = (R * c).toFixed(1);
+                }
+              } else {
+                const distanceMeters = getValue('Distance');
+                if (distanceMeters) {
+                  const meters = parseInt(distanceMeters, 10);
+                  if (!isNaN(meters)) {
+                    distanceKm = (meters / 1000).toFixed(1);
+                  }
                 }
               }
 
@@ -249,18 +294,21 @@ Deno.serve(async (req: Request) => {
                 el.tags?.name || el.tags?.operator || el.tags?.brand
               ) || [];
 
+              const refLat = userLat !== null ? userLat : lat;
+              const refLon = userLon !== null ? userLon : lon;
+
               filteredElements.slice(0, 20).forEach((element: any, index: number) => {
                 const name = element.tags?.name || element.tags?.operator || element.tags?.brand || `Point Relais ${index + 1}`;
-                const street = element.tags?.["addr:street"] || "";
+                const elStreet = element.tags?.["addr:street"] || "";
                 const houseNumber = element.tags?.["addr:housenumber"] || "";
-                const address = houseNumber ? `${houseNumber} ${street}` : street || "Voir sur la carte";
+                const address = houseNumber ? `${houseNumber} ${elStreet}` : elStreet || "Voir sur la carte";
 
                 const toRad = (deg: number) => deg * Math.PI / 180;
                 const R = 6371;
-                const dLat = toRad(element.lat - lat);
-                const dLon = toRad(element.lon - lon);
+                const dLat = toRad(element.lat - refLat);
+                const dLon = toRad(element.lon - refLon);
                 const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                          Math.cos(toRad(lat)) * Math.cos(toRad(element.lat)) *
+                          Math.cos(toRad(refLat)) * Math.cos(toRad(element.lat)) *
                           Math.sin(dLon/2) * Math.sin(dLon/2);
                 const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
                 const distance = Math.round(R * c * 10) / 10;
@@ -321,16 +369,19 @@ Deno.serve(async (req: Request) => {
               { name: "Pressing du Centre", offset: [0.004, 0.003] },
             ];
 
+            const refLat = userLat !== null ? userLat : baseLat;
+            const refLon = userLon !== null ? userLon : baseLon;
+
             samplePoints.forEach((point, index) => {
               const lat = baseLat + point.offset[0];
               const lon = baseLon + point.offset[1];
 
               const toRad = (deg: number) => deg * Math.PI / 180;
               const R = 6371;
-              const dLat = toRad(point.offset[0]);
-              const dLon = toRad(point.offset[1]);
+              const dLat = toRad(lat - refLat);
+              const dLon = toRad(lon - refLon);
               const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                        Math.cos(toRad(baseLat)) * Math.cos(toRad(lat)) *
+                        Math.cos(toRad(refLat)) * Math.cos(toRad(lat)) *
                         Math.sin(dLon/2) * Math.sin(dLon/2);
               const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
               const distance = Math.round(R * c * 10) / 10;

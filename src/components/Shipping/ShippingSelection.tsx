@@ -127,6 +127,8 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
           weight={weight}
           onSelectPoint={setSelectedRelayPoint}
           selectedPointId={selectedRelayPoint?.id}
+          street={selectedAddress.street}
+          city={selectedAddress.city}
         />
       )}
     </div>
