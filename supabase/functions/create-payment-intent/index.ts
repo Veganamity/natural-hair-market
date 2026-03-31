@@ -114,7 +114,7 @@ Deno.serve(async (req: Request) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalAmount * 100),
       currency: "eur",
-      payment_method_types: ["sepa_debit", "card"],
+      payment_method_types: ["card"],
       capture_method: "manual",
       metadata,
     });
