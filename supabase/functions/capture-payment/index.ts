@@ -1,5 +1,4 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import Stripe from "npm:stripe@17.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
 
 const corsHeaders = {
@@ -17,15 +16,6 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeSecretKey) {
-      throw new Error("STRIPE_SECRET_KEY not configured");
-    }
-
-    const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2024-12-18.acacia",
-    });
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -46,7 +36,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: transaction, error: transactionError } = await supabase
       .from("transactions")
-      .select("*, listing:listings(*)")
+      .select("*")
       .eq("id", transactionId)
       .maybeSingle();
 
@@ -54,51 +44,17 @@ Deno.serve(async (req: Request) => {
       throw new Error("Transaction not found");
     }
 
-    if (transaction.buyer_id !== user.id && transaction.seller_id !== user.id) {
-      throw new Error("Unauthorized to capture this transaction");
+    if (transaction.buyer_id !== user.id) {
+      throw new Error("Seul l'acheteur peut confirmer la réception");
     }
 
-    if (transaction.status !== "pending" && transaction.status !== "processing") {
-      throw new Error("Transaction cannot be captured");
+    if (!["pending", "processing"].includes(transaction.status)) {
+      throw new Error("Cette transaction ne peut pas être confirmée");
     }
 
     if (transaction.delivery_status === "cancelled") {
-      throw new Error("Transaction has been cancelled");
+      throw new Error("Cette transaction a été annulée");
     }
-
-    const paymentIntent = await stripe.paymentIntents.capture(
-      transaction.stripe_payment_intent_id
-    );
-
-    const { data: sellerProfile } = await supabase
-      .from("profiles")
-      .select("stripe_account_id")
-      .eq("id", transaction.seller_id)
-      .maybeSingle();
-
-    if (!sellerProfile?.stripe_account_id) {
-      throw new Error("Seller Stripe account not found");
-    }
-
-    const sellerAmount = transaction.seller_amount || (
-      transaction.amount -
-      (transaction.marketplace_commission_amount || transaction.platform_fee || 0)
-    );
-
-    const transfer = await stripe.transfers.create({
-      amount: Math.round(sellerAmount * 100),
-      currency: "eur",
-      destination: sellerProfile.stripe_account_id,
-      transfer_group: transaction.id,
-      metadata: {
-        transactionId: transaction.id,
-        listingId: transaction.listing_id,
-        sellerId: transaction.seller_id,
-        buyerId: transaction.buyer_id,
-        marketplaceCommission: (transaction.marketplace_commission_amount || transaction.platform_fee || 0).toString(),
-        sellerShippingFee: (transaction.seller_shipping_fee || 0).toString(),
-      },
-    });
 
     const { error: updateError } = await supabase
       .from("transactions")
@@ -107,7 +63,6 @@ Deno.serve(async (req: Request) => {
         delivery_status: "delivered",
         delivery_confirmed_at: new Date().toISOString(),
         captured_at: new Date().toISOString(),
-        transfer_id: transfer.id,
         updated_at: new Date().toISOString(),
       })
       .eq("id", transactionId);
@@ -125,11 +80,7 @@ Deno.serve(async (req: Request) => {
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        paymentIntent: paymentIntent.id,
-        transfer: transfer.id,
-      }),
+      JSON.stringify({ success: true }),
       {
         headers: {
           ...corsHeaders,
@@ -137,10 +88,11 @@ Deno.serve(async (req: Request) => {
         },
       }
     );
-  } catch (error) {
-    console.error("Error:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error:", message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       {
         status: 400,
         headers: {

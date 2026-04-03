@@ -43,8 +43,6 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const { listingId, shippingData } = body;
 
-    console.log("Received payment request:", { listingId, shippingData });
-
     if (!listingId) {
       throw new Error("listingId is required");
     }
@@ -73,40 +71,24 @@ Deno.serve(async (req: Request) => {
       .eq("id", listing.seller_id)
       .maybeSingle();
 
-    if (!sellerProfile?.stripe_account_id) {
-      throw new Error("Seller has not set up their Stripe account");
-    }
-
-    if (sellerProfile.stripe_account_status !== "active") {
-      throw new Error("Seller's Stripe account is not active");
+    if (!sellerProfile?.stripe_account_id || sellerProfile.stripe_account_status !== "active") {
+      throw new Error("SELLER_NOT_CONFIGURED");
     }
 
     const itemPrice = listing.price;
     const buyerShippingCost = shippingData?.cost || 0;
-    const marketplaceCommission = Math.round(itemPrice * MARKETPLACE_COMMISSION_RATE * 100) / 100;
-    const totalAmount = itemPrice + buyerShippingCost + marketplaceCommission;
-    const sellerReceives = itemPrice;
+    const totalAmount = itemPrice + buyerShippingCost;
+    const commissionAmount = Math.round(totalAmount * MARKETPLACE_COMMISSION_RATE * 100);
+    const sellerReceivesAmount = Math.round(totalAmount * 100) - commissionAmount;
 
-    console.log("Payment calculation:", {
-      itemPrice,
-      buyerShippingCost,
-      marketplaceCommission,
-      totalAmount,
-      sellerReceives
-    });
-
-    if (sellerReceives < 0) {
-      throw new Error("Invalid pricing calculation");
-    }
-
-    const metadata: any = {
+    const metadata: Record<string, string> = {
       listingId,
       buyerId: user.id,
       sellerId: listing.seller_id,
       itemPrice: itemPrice.toString(),
       buyerShippingCost: buyerShippingCost.toString(),
-      marketplaceCommission: marketplaceCommission.toString(),
-      sellerReceives: sellerReceives.toString(),
+      marketplaceCommission: (commissionAmount / 100).toFixed(2),
+      sellerReceives: (sellerReceivesAmount / 100).toFixed(2),
       sellerStripeAccountId: sellerProfile.stripe_account_id,
       shippingMethod: shippingData?.method || "colissimo",
     };
@@ -115,23 +97,27 @@ Deno.serve(async (req: Request) => {
       amount: Math.round(totalAmount * 100),
       currency: "eur",
       payment_method_types: ["card"],
-      capture_method: "manual",
+      capture_method: "automatic",
+      application_fee_amount: commissionAmount,
+      transfer_data: {
+        destination: sellerProfile.stripe_account_id,
+      },
       metadata,
     });
 
-    const transactionData: any = {
+    const transactionData: Record<string, unknown> = {
       listing_id: listingId,
       buyer_id: user.id,
       seller_id: listing.seller_id,
       amount: totalAmount,
-      seller_amount: sellerReceives,
-      platform_fee: marketplaceCommission + buyerShippingCost,
+      seller_amount: sellerReceivesAmount / 100,
+      platform_fee: commissionAmount / 100,
       marketplace_commission_rate: MARKETPLACE_COMMISSION_RATE,
-      marketplace_commission_amount: marketplaceCommission,
+      marketplace_commission_amount: commissionAmount / 100,
       stripe_payment_intent_id: paymentIntent.id,
       status: "pending",
-      payment_method: "sepa_debit",
-      capture_method: "manual",
+      payment_method: "card",
+      capture_method: "automatic",
       delivery_status: "pending",
     };
 
@@ -170,10 +156,11 @@ Deno.serve(async (req: Request) => {
         },
       }
     );
-  } catch (error) {
-    console.error("Error:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error:", message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: message }),
       {
         status: 400,
         headers: {

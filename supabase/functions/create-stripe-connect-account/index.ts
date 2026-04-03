@@ -36,9 +36,7 @@ Deno.serve(async (req: Request) => {
       }
     );
 
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
+    const { data: { user } } = await supabaseClient.auth.getUser();
 
     if (!user) {
       throw new Error("Non authentifié");
@@ -58,13 +56,9 @@ Deno.serve(async (req: Request) => {
 
     if (!accountId) {
       const account = await stripe.accounts.create({
-        type: "express",
+        type: "standard",
         country: "FR",
         email: user.email,
-        capabilities: {
-          transfers: { requested: true },
-        },
-        business_type: "individual",
       });
 
       accountId = account.id;
@@ -78,10 +72,12 @@ Deno.serve(async (req: Request) => {
         .eq("id", user.id);
     }
 
+    const origin = req.headers.get("origin") || "https://localhost:5173";
+
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${req.headers.get("origin")}/profile`,
-      return_url: `${req.headers.get("origin")}/profile?stripe_onboarding=success`,
+      refresh_url: `${origin}/profile`,
+      return_url: `${origin}/profile?stripe_onboarding=success`,
       type: "account_onboarding",
     });
 
@@ -94,10 +90,11 @@ Deno.serve(async (req: Request) => {
         },
       }
     );
-  } catch (err: any) {
-    console.error("Stripe Connect error:", err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("Stripe Connect error:", message);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: message }),
       {
         status: 400,
         headers: {
