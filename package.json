@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
+    "@stripe/connect-js": "^3.3.35",
+    "@stripe/react-connect-js": "^3.3.34",
     "@stripe/react-stripe-js": "^5.6.1",
     "@stripe/stripe-js": "^8.4.0",
     "@supabase/supabase-js": "^2.57.4",

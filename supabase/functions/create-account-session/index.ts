@@ -44,9 +44,9 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile } = await supabaseClient
       .from("profiles")
-      .select("*")
+      .select("stripe_account_id, stripe_account_status")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (!profile) {
       throw new Error("Profil introuvable");
@@ -64,6 +64,14 @@ Deno.serve(async (req: Request) => {
           transfers: { requested: true },
         },
         business_type: "individual",
+        settings: {
+          payouts: {
+            schedule: {
+              interval: "weekly",
+              weekly_anchor: "monday",
+            },
+          },
+        },
       });
 
       accountId = account.id;
@@ -78,20 +86,56 @@ Deno.serve(async (req: Request) => {
         .eq("id", user.id);
     }
 
+    const body = await req.json().catch(() => ({}));
+    const { component = "account_onboarding" } = body;
+
     const accountSession = await stripe.accountSessions.create({
       account: accountId,
       components: {
         account_onboarding: {
-          enabled: true,
+          enabled: component === "account_onboarding" || component === "all",
           features: {
             external_account_collection: true,
+          },
+        },
+        account_management: {
+          enabled: component === "account_management" || component === "all",
+          features: {
+            external_account_collection: true,
+          },
+        },
+        balances: {
+          enabled: component === "balances" || component === "all",
+          features: {
+            instant_payouts: false,
+            standard_payouts: true,
+            edit_payout_schedule: false,
+          },
+        },
+        payments: {
+          enabled: component === "payments" || component === "all",
+          features: {
+            refund_management: false,
+            dispute_management: false,
+            capture_payments: false,
+          },
+        },
+        payouts: {
+          enabled: component === "payouts" || component === "all",
+          features: {
+            instant_payouts: false,
+            standard_payouts: true,
+            edit_payout_schedule: false,
           },
         },
       },
     });
 
     return new Response(
-      JSON.stringify({ clientSecret: accountSession.client_secret, accountId }),
+      JSON.stringify({
+        clientSecret: accountSession.client_secret,
+        accountId,
+      }),
       {
         headers: {
           ...corsHeaders,
@@ -101,7 +145,7 @@ Deno.serve(async (req: Request) => {
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("Stripe Connect error:", message);
+    console.error("Account session error:", message);
     return new Response(
       JSON.stringify({ error: message }),
       {

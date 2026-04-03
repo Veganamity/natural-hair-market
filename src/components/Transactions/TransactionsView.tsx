@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart } from 'lucide-react';
+import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart, Wallet, BarChart2, ChevronDown, ChevronUp } from 'lucide-react';
+import { StripeConnectEmbedded } from '../Stripe/StripeConnectEmbedded';
 
 type Transaction = Database['public']['Tables']['transactions']['Row'];
 type Listing = Database['public']['Tables']['listings']['Row'];
@@ -19,7 +20,11 @@ export function TransactionsView() {
   const [purchases, setPurchases] = useState<TransactionWithDetails[]>([]);
   const [sales, setSales] = useState<TransactionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'purchases' | 'sales'>('purchases');
+  const [activeTab, setActiveTab] = useState<'purchases' | 'sales' | 'dashboard'>('purchases');
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [stripeOnboardingCompleted, setStripeOnboardingCompleted] = useState(false);
+  const [showBalances, setShowBalances] = useState(false);
+  const [showPayments, setShowPayments] = useState(false);
 
   useEffect(() => {
     fetchTransactions();
@@ -30,20 +35,30 @@ export function TransactionsView() {
 
     setLoading(true);
 
-    const { data: purchasesData } = await supabase
-      .from('transactions')
-      .select('*, listing:listings(*), buyer:profiles!transactions_buyer_id_fkey(*), seller:profiles!transactions_seller_id_fkey(*)')
-      .eq('buyer_id', user.id)
-      .order('created_at', { ascending: false });
+    const [purchasesRes, salesRes, profileRes] = await Promise.all([
+      supabase
+        .from('transactions')
+        .select('*, listing:listings(*), buyer:profiles!transactions_buyer_id_fkey(*), seller:profiles!transactions_seller_id_fkey(*)')
+        .eq('buyer_id', user.id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('transactions')
+        .select('*, listing:listings(*), buyer:profiles!transactions_buyer_id_fkey(*), seller:profiles!transactions_seller_id_fkey(*)')
+        .eq('seller_id', user.id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('profiles')
+        .select('stripe_account_id, stripe_onboarding_completed')
+        .eq('id', user.id)
+        .maybeSingle(),
+    ]);
 
-    const { data: salesData } = await supabase
-      .from('transactions')
-      .select('*, listing:listings(*), buyer:profiles!transactions_buyer_id_fkey(*), seller:profiles!transactions_seller_id_fkey(*)')
-      .eq('seller_id', user.id)
-      .order('created_at', { ascending: false });
-
-    setPurchases((purchasesData as any) || []);
-    setSales((salesData as any) || []);
+    setPurchases((purchasesRes.data as any) || []);
+    setSales((salesRes.data as any) || []);
+    if (profileRes.data) {
+      setStripeAccountId(profileRes.data.stripe_account_id);
+      setStripeOnboardingCompleted(profileRes.data.stripe_onboarding_completed ?? false);
+    }
     setLoading(false);
   };
 
@@ -120,7 +135,7 @@ export function TransactionsView() {
           </div>
         </div>
 
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 flex-wrap">
           <button
             onClick={() => setActiveTab('purchases')}
             className={`px-6 py-2 rounded-lg font-medium transition-colors ${
@@ -141,10 +156,73 @@ export function TransactionsView() {
           >
             Ventes ({sales.length})
           </button>
+          {stripeAccountId && stripeOnboardingCompleted && (
+            <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                activeTab === 'dashboard'
+                  ? 'bg-teal-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Wallet className="w-4 h-4" />
+              Mon Tableau de bord
+            </button>
+          )}
         </div>
       </div>
 
       <div className="space-y-4">
+        {activeTab === 'dashboard' && stripeAccountId && stripeOnboardingCompleted && (
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <button
+                onClick={() => setShowBalances(!showBalances)}
+                className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-gray-800">Mon Solde & Virements</p>
+                    <p className="text-xs text-gray-500">Consultez votre solde disponible et vos virements</p>
+                  </div>
+                </div>
+                {showBalances ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+              </button>
+              {showBalances && (
+                <div className="border-t border-gray-100 p-4">
+                  <StripeConnectEmbedded component="balances" />
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <button
+                onClick={() => setShowPayments(!showPayments)}
+                className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                    <BarChart2 className="w-5 h-5 text-teal-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold text-gray-800">Mes Paiements reçus</p>
+                    <p className="text-xs text-gray-500">Détail de tous les paiements sur votre compte</p>
+                  </div>
+                </div>
+                {showPayments ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+              </button>
+              {showPayments && (
+                <div className="border-t border-gray-100 p-4">
+                  <StripeConnectEmbedded component="payments" />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'purchases' && purchases.length === 0 && (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
             <p className="text-gray-500">Aucun achat</p>

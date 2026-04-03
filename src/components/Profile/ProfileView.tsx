@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
 import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
+import { StripeOnboardingModal, StripeConnectEmbedded } from '../Stripe/StripeConnectEmbedded';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -32,8 +33,9 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     country: 'FR',
     siret: '',
   });
-  const [loadingStripe, setLoadingStripe] = useState(false);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [showAccountManagement, setShowAccountManagement] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -208,45 +210,9 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     }
   };
 
-  const handleStripeConnect = async () => {
-    setLoadingStripe(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        alert('Non authentifié');
-        return;
-      }
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-connect-account`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error('Stripe Connect API error:', data);
-        alert(`Erreur: ${data.error || 'Erreur lors de la création du compte Stripe'}`);
-        return;
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('URL de redirection manquante');
-      }
-    } catch (error: any) {
-      console.error('Stripe Connect error:', error);
-      alert(`Erreur lors de la connexion à Stripe: ${error.message}`);
-    } finally {
-      setLoadingStripe(false);
-    }
+  const handleOnboardingComplete = async () => {
+    await fetchProfile();
+    setShowOnboardingModal(false);
   };
 
   const handleLogout = async () => {
@@ -353,6 +319,12 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             fetchUserListings();
             setEditingListing(null);
           }}
+        />
+      )}
+      {showOnboardingModal && (
+        <StripeOnboardingModal
+          onComplete={handleOnboardingComplete}
+          onClose={() => setShowOnboardingModal(false)}
         />
       )}
       <div className="space-y-6">
@@ -734,34 +706,38 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               Votre compte bancaire est configuré. Vous pouvez recevoir des paiements pour vos ventes.
             </p>
             <button
-              onClick={handleStripeConnect}
-              disabled={loadingStripe}
-              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
+              onClick={() => setShowAccountManagement(!showAccountManagement)}
+              className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
             >
-              {loadingStripe ? 'Chargement...' : 'Gérer mes informations bancaires'}
+              {showAccountManagement ? 'Masquer les informations bancaires' : 'Gérer mes informations bancaires'}
             </button>
+            {showAccountManagement && (
+              <div className="mt-4 border border-gray-200 rounded-xl overflow-hidden">
+                <StripeConnectEmbedded component="account_management" />
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-gray-600">
-              Pour recevoir des paiements de vos ventes, vous devez configurer votre compte bancaire via Stripe.
+              Pour recevoir des paiements de vos ventes, configurez votre compte bancaire directement ici.
             </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                <strong>Informations requises:</strong>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <p className="text-sm text-emerald-800">
+                <strong>Informations requises :</strong>
               </p>
-              <ul className="list-disc list-inside text-sm text-blue-800 mt-2 space-y-1">
+              <ul className="list-disc list-inside text-sm text-emerald-800 mt-2 space-y-1">
                 <li>Pièce d'identité (carte d'identité ou passeport)</li>
                 <li>Coordonnées bancaires (RIB/IBAN)</li>
                 <li>Informations personnelles</li>
               </ul>
             </div>
             <button
-              onClick={handleStripeConnect}
-              disabled={loadingStripe}
-              className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+              onClick={() => setShowOnboardingModal(true)}
+              className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
             >
-              {loadingStripe ? 'Chargement...' : 'Configurer mon compte bancaire'}
+              <CreditCard className="w-5 h-5" />
+              Configurer mon compte bancaire
             </button>
           </div>
         )}
