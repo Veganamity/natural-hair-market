@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
 import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
-import { StripeOnboardingModal, StripeConnectEmbedded } from '../Stripe/StripeConnectEmbedded';
+import { StripeOnboardingModal } from '../Stripe/StripeConnectEmbedded';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -35,7 +35,6 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   });
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
-  const [showAccountManagement, setShowAccountManagement] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -213,6 +212,31 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const handleOnboardingComplete = async () => {
     await fetchProfile();
     setShowOnboardingModal(false);
+  };
+
+  const handleOpenStripeManagement = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Session expirée');
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-login-link`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type: 'account_update' }),
+      });
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      if (data.url) window.open(data.url, '_blank');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(`Impossible d'ouvrir la gestion Stripe: ${message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -707,16 +731,17 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 Votre compte bancaire est configuré. Vous pouvez recevoir des paiements pour vos ventes.
               </p>
               <button
-                onClick={() => setShowAccountManagement(!showAccountManagement)}
-                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                onClick={handleOpenStripeManagement}
+                disabled={loading}
+                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
-                {showAccountManagement ? 'Masquer les informations bancaires' : 'Gérer mes informations bancaires'}
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <CreditCard className="w-5 h-5" />
+                )}
+                Gérer mes informations bancaires
               </button>
-              {showAccountManagement && (
-                <div className="mt-4 border border-gray-200 rounded-xl overflow-hidden">
-                  <StripeConnectEmbedded component="account_management" />
-                </div>
-              )}
             </div>
           ) : (
             <div className="space-y-4">
