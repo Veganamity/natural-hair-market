@@ -56,21 +56,23 @@ Deno.serve(async (req: Request) => {
 
     if (!accountId) {
       const account = await stripe.accounts.create({
-        type: "express",
         country: "FR",
         email: user.email,
+        controller: {
+          stripe_dashboard: {
+            type: "none",
+          },
+          fees: {
+            payer: "application",
+          },
+          losses: {
+            payments: "application",
+          },
+          requirement_collection: "application",
+        },
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
-        },
-        business_type: "individual",
-        settings: {
-          payouts: {
-            schedule: {
-              interval: "weekly",
-              weekly_anchor: "monday",
-            },
-          },
         },
       });
 
@@ -89,46 +91,55 @@ Deno.serve(async (req: Request) => {
     const body = await req.json().catch(() => ({}));
     const { component = "account_onboarding" } = body;
 
+    const componentsConfig: Record<string, unknown> = {};
+
+    if (component === "account_onboarding") {
+      componentsConfig.account_onboarding = {
+        enabled: true,
+        features: { external_account_collection: true },
+      };
+    } else if (component === "account_management") {
+      componentsConfig.account_management = {
+        enabled: true,
+        features: { external_account_collection: true },
+      };
+    } else if (component === "balances") {
+      componentsConfig.balances = {
+        enabled: true,
+        features: {
+          instant_payouts: false,
+          standard_payouts: true,
+          edit_payout_schedule: false,
+        },
+      };
+    } else if (component === "payments") {
+      componentsConfig.payments = {
+        enabled: true,
+        features: {
+          refund_management: false,
+          dispute_management: false,
+          capture_payments: false,
+        },
+      };
+    } else if (component === "payouts") {
+      componentsConfig.payouts = {
+        enabled: true,
+        features: {
+          instant_payouts: false,
+          standard_payouts: true,
+          edit_payout_schedule: false,
+        },
+      };
+    } else {
+      componentsConfig.account_onboarding = {
+        enabled: true,
+        features: { external_account_collection: true },
+      };
+    }
+
     const accountSession = await stripe.accountSessions.create({
       account: accountId,
-      components: {
-        account_onboarding: {
-          enabled: component === "account_onboarding" || component === "all",
-          features: {
-            external_account_collection: true,
-          },
-        },
-        account_management: {
-          enabled: component === "account_management" || component === "all",
-          features: {
-            external_account_collection: true,
-          },
-        },
-        balances: {
-          enabled: component === "balances" || component === "all",
-          features: {
-            instant_payouts: false,
-            standard_payouts: true,
-            edit_payout_schedule: false,
-          },
-        },
-        payments: {
-          enabled: component === "payments" || component === "all",
-          features: {
-            refund_management: false,
-            dispute_management: false,
-            capture_payments: false,
-          },
-        },
-        payouts: {
-          enabled: component === "payouts" || component === "all",
-          features: {
-            instant_payouts: false,
-            standard_payouts: true,
-            edit_payout_schedule: false,
-          },
-        },
-      },
+      components: componentsConfig as Parameters<typeof stripe.accountSessions.create>[0]["components"],
     });
 
     return new Response(
