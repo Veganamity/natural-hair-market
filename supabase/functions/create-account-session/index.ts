@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       {
         global: {
           headers: { Authorization: req.headers.get("Authorization")! },
@@ -36,7 +36,9 @@ Deno.serve(async (req: Request) => {
       }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const authHeader = req.headers.get("Authorization")!;
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user } } = await supabaseClient.auth.getUser(token);
 
     if (!user) {
       throw new Error("Non authentifié");
@@ -44,7 +46,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile } = await supabaseClient
       .from("profiles")
-      .select("stripe_account_id, stripe_account_status")
+      .select("stripe_account_id, stripe_account_status, stripe_onboarding_completed")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -56,10 +58,7 @@ Deno.serve(async (req: Request) => {
 
     if (accountId) {
       try {
-        const existingAccount = await stripe.accounts.retrieve(accountId);
-        if (existingAccount.controller?.requirement_collection !== "application") {
-          accountId = null;
-        }
+        await stripe.accounts.retrieve(accountId);
       } catch (_err) {
         accountId = null;
       }
