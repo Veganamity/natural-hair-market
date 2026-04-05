@@ -44,6 +44,7 @@ function AppContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [preselectedListingId, setPreselectedListingId] = useState<string | null>(null);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
@@ -118,7 +119,10 @@ function AppContent() {
     };
   }, [accountMenuOpen]);
 
-  const navigateToView = (view: typeof currentView) => {
+  const navigateToView = (view: typeof currentView, listingId?: string | null) => {
+    if (view === 'marketplace' && listingId === undefined) {
+      setPreselectedListingId(null);
+    }
     setCurrentView(view);
     window.history.pushState({ view }, '', `#${view}`);
   };
@@ -542,14 +546,27 @@ function AppContent() {
       </nav>
 
       <main className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
-        {currentView === 'marketplace' && <MarketplaceView isGuest={false} />}
+        {currentView === 'marketplace' && (
+          <MarketplaceView
+            isGuest={false}
+            initialListingId={preselectedListingId}
+            key={preselectedListingId || 'marketplace'}
+          />
+        )}
         {currentView === 'favorites' && <FavoritesView />}
         {currentView === 'offers' && <OffersView />}
         {currentView === 'orders' && <OrderManagement />}
         {currentView === 'transactions' && <TransactionsView />}
         {currentView === 'profile' && <ProfileView onNavigate={(view) => navigateToView(view as any)} />}
         {currentView === 'admin-salons' && <SalonVerificationAdmin />}
-        {currentView === 'admin-listings' && <ListingAdmin />}
+        {currentView === 'admin-listings' && (
+          <ListingAdmin
+            onViewListing={(listingId) => {
+              setPreselectedListingId(listingId);
+              navigateToView('marketplace');
+            }}
+          />
+        )}
         {currentView === 'salon-certifie' && <SalonCertificationForm />}
         {currentView === 'privacy' && <PrivacyPolicy />}
         {currentView === 'terms' && <TermsOfService />}

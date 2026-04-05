@@ -6,7 +6,7 @@ import { ListingCard } from '../Listings/ListingCard';
 import { ListingListItem } from '../Listings/ListingListItem';
 import { ListingDetails } from '../Listings/ListingDetails';
 import { Database } from '../../lib/database.types';
-import { Search, SlidersHorizontal, ArrowUpDown, Grid, List } from 'lucide-react';
+import { Search, SlidersHorizontal, ArrowUpDown, Grid2x2 as Grid, List } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -14,9 +14,10 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 interface MarketplaceViewProps {
   onListingClick?: () => void;
   isGuest?: boolean;
+  initialListingId?: string | null;
 }
 
-export function MarketplaceView({ onListingClick, isGuest = false }: MarketplaceViewProps) {
+export function MarketplaceView({ onListingClick, isGuest = false, initialListingId }: MarketplaceViewProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [listings, setListings] = useState<Listing[]>([]);
@@ -67,6 +68,10 @@ export function MarketplaceView({ onListingClick, isGuest = false }: Marketplace
     if (data) {
       console.log('Fetched listings with profiles:', data);
       setListings(data);
+      if (initialListingId) {
+        const target = data.find((l) => l.id === initialListingId);
+        if (target) setSelectedListing(target);
+      }
     }
     setLoading(false);
   };

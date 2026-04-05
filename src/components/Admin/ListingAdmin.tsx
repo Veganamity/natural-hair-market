@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import { Package, Trash2, AlertCircle, Eye, Search, Filter, ExternalLink, Hash } from 'lucide-react';
+import { Package, Trash2, AlertCircle, Eye, Search, ExternalLink, Hash } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
@@ -15,11 +15,15 @@ interface ListingWithSeller extends Listing {
   };
 }
 
+interface ListingAdminProps {
+  onViewListing?: (listingId: string) => void;
+}
+
 const getListingNumber = (id: string): string => {
   return id.substring(0, 8).toUpperCase();
 };
 
-export default function ListingAdmin() {
+export default function ListingAdmin({ onViewListing }: ListingAdminProps) {
   const { user, profile } = useAuth();
   const [listings, setListings] = useState<ListingWithSeller[]>([]);
   const [loading, setLoading] = useState(true);
@@ -262,11 +266,23 @@ export default function ListingAdmin() {
                       </td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={mainImage}
-                            alt={listing.title}
-                            className="w-16 h-16 object-cover rounded-lg"
-                          />
+                          <button
+                            onClick={() => onViewListing && onViewListing(listing.id)}
+                            className="flex-shrink-0 group relative"
+                            title="Voir l'annonce"
+                            disabled={!onViewListing}
+                          >
+                            <img
+                              src={mainImage}
+                              alt={listing.title}
+                              className={`w-16 h-16 object-cover rounded-lg transition-opacity ${onViewListing ? 'group-hover:opacity-75 cursor-pointer' : ''}`}
+                            />
+                            {onViewListing && (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ExternalLink className="w-5 h-5 text-white drop-shadow-lg" />
+                              </div>
+                            )}
+                          </button>
                           <div>
                             <p className="font-semibold text-gray-900 line-clamp-1">{listing.title}</p>
                             <p className="text-sm text-gray-600 line-clamp-1">{listing.description}</p>
