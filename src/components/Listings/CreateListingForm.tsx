@@ -43,13 +43,13 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('is_verified_salon')
+          .select('is_verified_salon, is_certified_salon')
           .eq('id', user.id)
           .single();
 
         if (error) throw error;
 
-        setIsVerifiedSalon(data.is_verified_salon || false);
+        setIsVerifiedSalon(data.is_verified_salon || data.is_certified_salon || false);
       } catch (err) {
         console.error('Error checking salon verification:', err);
         setIsVerifiedSalon(false);
