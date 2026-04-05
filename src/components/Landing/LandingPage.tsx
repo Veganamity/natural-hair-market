@@ -175,7 +175,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
               Pour les acheteurs
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-              Achetez des cheveux humains naturels dès 0,99€ de frais
+              Achetez des cheveux humains naturels avec seulement 10% de commission
             </h2>
             <p className="text-base md:text-lg text-gray-600">
               Parcourez des centaines de mèches disponibles, mises en ligne chaque jour
@@ -245,15 +245,15 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
               <div className="bg-white p-4 rounded-lg shadow-sm border border-teal-200">
                 <div className="flex items-center gap-2 mb-2">
                   <Euro className="w-5 h-5 text-teal-600" />
-                  <h4 className="font-bold text-gray-800 text-sm">Frais acheteur : 0,99€</h4>
+                  <h4 className="font-bold text-gray-800 text-sm">Commission acheteur : 10%</h4>
                 </div>
                 <p className="text-gray-700 text-sm mb-2">
-                  Appliqué uniquement au moment de l'achat
+                  Appliquée uniquement au moment de l'achat
                 </p>
                 <p className="text-gray-600 text-sm">
                   ✓ Aucun abonnement<br />
                   ✓ Aucun coût caché<br />
-                  ✓ Prix de la mèche + 0,99€ de frais
+                  ✓ 10% de commission sur le prix de la mèche
                 </p>
               </div>
             </div>
@@ -316,8 +316,8 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
                       <CheckCircle className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-800">Aucune commission</p>
-                      <p className="text-gray-600 text-sm">Gardez 100% de vos revenus</p>
+                      <p className="font-semibold text-gray-800">Aucun frais vendeur</p>
+                      <p className="text-gray-600 text-sm">La commission est payée par l'acheteur</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
@@ -325,8 +325,8 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
                       <CheckCircle className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-800">Vous gagnez 100% du prix</p>
-                      <p className="text-gray-600 text-sm">C'est l'acheteur qui paie 0,99€</p>
+                      <p className="font-semibold text-gray-800">Vous recevez votre prix affiché</p>
+                      <p className="text-gray-600 text-sm">C'est l'acheteur qui paie 10% de commission</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-3">
@@ -427,8 +427,8 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
               <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
                 <Euro className="w-6 h-6 text-emerald-600" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">0,99€ pour les acheteurs</h3>
-              <p className="text-gray-600">Un frais fixe, transparent, appliqué au paiement.</p>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">10% de commission pour les acheteurs</h3>
+              <p className="text-gray-600">Une commission transparente, appliquée au paiement.</p>
             </div>
 
             <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:border-emerald-300 transition-colors">
@@ -511,7 +511,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
                 </li>
                 <li className="flex gap-3">
                   <span className="font-bold text-teal-600">3.</span>
-                  <span className="text-gray-700">Payez la mèche + 0,99€</span>
+                  <span className="text-gray-700">Payez la mèche + 10% de commission</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="font-bold text-teal-600">4.</span>

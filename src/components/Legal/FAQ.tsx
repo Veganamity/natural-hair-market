@@ -81,7 +81,7 @@ export function FAQ({ onClose }: FAQProps) {
                 <h4 className="font-bold text-gray-800 mb-2">NaturalHairMarket prend-il une commission sur la vente ?</h4>
                 <p className="text-gray-600">
                   Non. Le vendeur reçoit l'intégralité du montant de sa vente.
-                  Les frais de 0,99 € sont payés uniquement par l'acheteur, au moment de l'achat.
+                  Une commission de 10% est payée uniquement par l'acheteur, au moment de l'achat.
                 </p>
               </div>
 
@@ -130,8 +130,8 @@ export function FAQ({ onClose }: FAQProps) {
 
             <div className="space-y-4">
               <div>
-                <h4 className="font-bold text-gray-800 mb-2">Pourquoi payer 0,99 € ?</h4>
-                <p className="text-gray-600 mb-2">Ce frais fixe couvre :</p>
+                <h4 className="font-bold text-gray-800 mb-2">Pourquoi payer 10% de commission ?</h4>
+                <p className="text-gray-600 mb-2">Cette commission couvre :</p>
                 <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">
                   <li>la sécurisation de la transaction</li>
                   <li>la vérification des annonces</li>
@@ -145,7 +145,7 @@ export function FAQ({ onClose }: FAQProps) {
                 <h4 className="font-bold text-gray-800 mb-2">Comment se déroule l'achat ?</h4>
                 <ol className="list-decimal list-inside text-gray-600 space-y-1 ml-4">
                   <li>Vous choisissez une mèche.</li>
-                  <li>Vous la payez + 0,99 € de frais.</li>
+                  <li>Vous la payez + 10% de commission.</li>
                   <li>NaturalHairMarket contacte le vendeur.</li>
                   <li>Le vendeur envoie la mèche selon vos instructions.</li>
                   <li>Vous recevez votre colis.</li>
@@ -188,7 +188,7 @@ export function FAQ({ onClose }: FAQProps) {
                 <h4 className="font-bold text-gray-800 mb-2">Comment se passe le paiement ?</h4>
                 <ul className="list-disc list-inside text-gray-600 space-y-1 ml-4">
                   <li>L'acheteur paie NaturalHairMarket</li>
-                  <li>Les frais de 0,99 € sont ajoutés</li>
+                  <li>Une commission de 10% est ajoutée</li>
                   <li>Le vendeur est ensuite payé en totalité par la plateforme</li>
                 </ul>
                 <p className="text-gray-600 mt-2 font-semibold">

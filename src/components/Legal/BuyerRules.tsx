@@ -289,7 +289,7 @@ export function BuyerRules() {
                 </div>
                 <div className="bg-white border-2 border-emerald-400 rounded-lg p-4">
                   <p className="text-emerald-800 font-bold">
-                    Dans ces cas : ➡️ l'acheteur est remboursé du produit + livraison + commission 0,99 €
+                    Dans ces cas : ➡️ l'acheteur est remboursé du produit + livraison + commission 10%
                   </p>
                 </div>
               </div>

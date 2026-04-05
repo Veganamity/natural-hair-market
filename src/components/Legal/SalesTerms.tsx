@@ -33,7 +33,7 @@ export function SalesTerms() {
                   <ul className="list-disc list-inside text-gray-700 space-y-1">
                     <li>met en relation vendeurs (salons ou particuliers) et acheteurs</li>
                     <li>assure la mise à disposition d'un système sécurisé de paiement</li>
-                    <li>perçoit une commission fixe de 0,99 € payée par l'acheteur pour chaque transaction</li>
+                    <li>perçoit une commission de 10% payée par l'acheteur pour chaque transaction</li>
                   </ul>
                 </div>
                 <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mt-4">
@@ -58,7 +58,7 @@ export function SalesTerms() {
                   <p className="text-gray-700 mb-3">Pour chaque transaction réussie :</p>
                   <div className="bg-emerald-600 text-white rounded-lg p-4 mb-4">
                     <p className="text-center text-xl font-bold">
-                      ➡️ L'acheteur paie une commission de 0,99 € TTC
+                      ➡️ L'acheteur paie une commission de 10% TTC
                     </p>
                   </div>
                   <p className="text-gray-700 mb-2">Cette commission correspond :</p>

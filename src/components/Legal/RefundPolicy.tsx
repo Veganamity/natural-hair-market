@@ -95,7 +95,7 @@ export function RefundPolicy() {
                   </p>
                   <div className="bg-white rounded-lg p-3 border border-blue-200 mt-3">
                     <p className="text-gray-800 font-semibold">
-                      ➡️ L'acheteur est remboursé intégralement (produit + livraison + commission de 0,99 €).
+                      ➡️ L'acheteur est remboursé intégralement (produit + livraison + commission de 10%).
                     </p>
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export function RefundPolicy() {
                   <ul className="list-disc list-inside text-gray-700 space-y-1">
                     <li>prix des cheveux</li>
                     <li>frais de livraison</li>
-                    <li>commission de 0,99 €</li>
+                    <li>commission de 10%</li>
                   </ul>
                 </div>
               </div>

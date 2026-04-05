@@ -80,7 +80,7 @@ export function AboutUs({ onClose }: AboutUsProps) {
                   <h4 className="font-bold text-gray-800 mb-1">plus équitable</h4>
                   <p className="text-gray-600">
                     Le vendeur touche 100 % du montant de sa vente.
-                    L'acheteur paie uniquement 0,99 € de frais de transaction.
+                    L'acheteur paie uniquement 10% de commission sur la transaction.
                   </p>
                 </div>
               </div>
@@ -188,7 +188,7 @@ export function AboutUs({ onClose }: AboutUsProps) {
               <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <h4 className="font-bold text-gray-800 mb-2">3. Accessibilité</h4>
                 <p className="text-gray-600">
-                  Les vendeurs ne paient rien. Les acheteurs paient seulement 0,99 €.
+                  Les vendeurs ne paient rien. Les acheteurs paient seulement 10% de commission.
                 </p>
               </div>
 
