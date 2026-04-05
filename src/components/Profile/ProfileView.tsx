@@ -681,67 +681,69 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-emerald-600" />
-            <h2 className="text-2xl font-bold text-gray-800">Informations bancaires</h2>
-          </div>
-          {profile.stripe_onboarding_completed ? (
-            <div className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-semibold">Compte vérifié</span>
+      {(profile.stripe_account_id || listings.length > 0) && (
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-6 h-6 text-emerald-600" />
+              <h2 className="text-2xl font-bold text-gray-800">Informations bancaires</h2>
             </div>
-          ) : (
-            <div className="flex items-center gap-2 text-yellow-600">
-              <AlertCircle className="w-5 h-5" />
-              <span className="font-semibold">Configuration requise</span>
-            </div>
-          )}
-        </div>
-
-        {profile.stripe_onboarding_completed ? (
-          <div className="space-y-4">
-            <p className="text-gray-600">
-              Votre compte bancaire est configuré. Vous pouvez recevoir des paiements pour vos ventes.
-            </p>
-            <button
-              onClick={() => setShowAccountManagement(!showAccountManagement)}
-              className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
-            >
-              {showAccountManagement ? 'Masquer les informations bancaires' : 'Gérer mes informations bancaires'}
-            </button>
-            {showAccountManagement && (
-              <div className="mt-4 border border-gray-200 rounded-xl overflow-hidden">
-                <StripeConnectEmbedded component="account_management" />
+            {profile.stripe_onboarding_completed ? (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-semibold">Compte vérifié</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-yellow-600">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-semibold">Configuration requise</span>
               </div>
             )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-gray-600">
-              Pour recevoir des paiements de vos ventes, configurez votre compte bancaire directement ici.
-            </p>
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-              <p className="text-sm text-emerald-800">
-                <strong>Informations requises :</strong>
+
+          {profile.stripe_onboarding_completed && profile.stripe_account_id ? (
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                Votre compte bancaire est configuré. Vous pouvez recevoir des paiements pour vos ventes.
               </p>
-              <ul className="list-disc list-inside text-sm text-emerald-800 mt-2 space-y-1">
-                <li>Pièce d'identité (carte d'identité ou passeport)</li>
-                <li>Coordonnées bancaires (RIB/IBAN)</li>
-                <li>Informations personnelles</li>
-              </ul>
+              <button
+                onClick={() => setShowAccountManagement(!showAccountManagement)}
+                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+              >
+                {showAccountManagement ? 'Masquer les informations bancaires' : 'Gérer mes informations bancaires'}
+              </button>
+              {showAccountManagement && (
+                <div className="mt-4 border border-gray-200 rounded-xl overflow-hidden">
+                  <StripeConnectEmbedded component="account_management" />
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => setShowOnboardingModal(true)}
-              className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
-            >
-              <CreditCard className="w-5 h-5" />
-              Configurer mon compte bancaire
-            </button>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                Pour recevoir des paiements de vos ventes, configurez votre compte bancaire directement ici.
+              </p>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                <p className="text-sm text-emerald-800">
+                  <strong>Informations requises :</strong>
+                </p>
+                <ul className="list-disc list-inside text-sm text-emerald-800 mt-2 space-y-1">
+                  <li>Pièce d'identité (carte d'identité ou passeport)</li>
+                  <li>Coordonnées bancaires (RIB/IBAN)</li>
+                  <li>Informations personnelles</li>
+                </ul>
+              </div>
+              <button
+                onClick={() => setShowOnboardingModal(true)}
+                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+              >
+                <CreditCard className="w-5 h-5" />
+                Configurer mon compte bancaire
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center gap-2 mb-6">

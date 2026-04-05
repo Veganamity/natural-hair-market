@@ -113,15 +113,22 @@ export function StripeConnectEmbedded({
 
   if (error) {
     return (
-      <div className={`p-4 bg-red-50 border border-red-200 rounded-lg ${className}`}>
+      <div className={`p-5 bg-amber-50 border border-amber-200 rounded-xl ${className}`}>
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-red-800 font-semibold text-sm">Impossible de charger le module bancaire</p>
-            <p className="text-red-700 text-xs mt-1">
-              Une erreur est survenue lors de l'initialisation. Veuillez fermer et réessayer. Si le problème persiste, contactez le support.
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="text-amber-900 font-semibold text-sm">Le module bancaire n'a pas pu se charger</p>
+            <p className="text-amber-800 text-xs">
+              Vous pouvez gérer vos informations directement sur le tableau de bord Stripe en cliquant sur le bouton ci-dessous.
             </p>
-            <p className="text-red-500 text-xs mt-1 font-mono">{error}</p>
+            <a
+              href="https://dashboard.stripe.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 transition-colors font-semibold"
+            >
+              Ouvrir mon tableau de bord Stripe
+            </a>
           </div>
         </div>
       </div>
