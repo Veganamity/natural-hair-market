@@ -9,7 +9,7 @@ import {
 } from '@stripe/react-connect-js';
 import { loadConnectAndInitialize } from '@stripe/connect-js';
 import { supabase } from '../../lib/supabaseClient';
-import { Loader2, AlertCircle, CheckCircle, ExternalLink } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, X } from 'lucide-react';
 
 type ComponentType = 'onboarding' | 'account_management' | 'payments' | 'payouts' | 'balances';
 
@@ -117,8 +117,11 @@ export function StripeConnectEmbedded({
         <div className="flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-red-800 font-semibold text-sm">Erreur de chargement</p>
-            <p className="text-red-700 text-xs mt-1">{error}</p>
+            <p className="text-red-800 font-semibold text-sm">Impossible de charger le module bancaire</p>
+            <p className="text-red-700 text-xs mt-1">
+              Une erreur est survenue lors de l'initialisation. Veuillez fermer et réessayer. Si le problème persiste, contactez le support.
+            </p>
+            <p className="text-red-500 text-xs mt-1 font-mono">{error}</p>
           </div>
         </div>
       </div>
@@ -194,7 +197,7 @@ export function StripeOnboardingModal({ onComplete, onClose }: StripeOnboardingM
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <ExternalLink className="w-4 h-4" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 

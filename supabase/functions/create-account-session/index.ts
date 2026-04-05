@@ -54,6 +54,17 @@ Deno.serve(async (req: Request) => {
 
     let accountId = profile.stripe_account_id;
 
+    if (accountId) {
+      try {
+        const existingAccount = await stripe.accounts.retrieve(accountId);
+        if (existingAccount.controller?.requirement_collection !== "application") {
+          accountId = null;
+        }
+      } catch (_err) {
+        accountId = null;
+      }
+    }
+
     if (!accountId) {
       const account = await stripe.accounts.create({
         country: "FR",
