@@ -58,7 +58,18 @@ Deno.serve(async (req: Request) => {
 
     if (accountId) {
       try {
-        await stripe.accounts.retrieve(accountId);
+        const existingAccount = await stripe.accounts.retrieve(accountId);
+        if (existingAccount.controller?.requirement_collection !== "application") {
+          accountId = null;
+          await supabaseClient
+            .from("profiles")
+            .update({
+              stripe_account_id: null,
+              stripe_account_status: "pending",
+              stripe_onboarding_completed: false,
+            })
+            .eq("id", user.id);
+        }
       } catch (_err) {
         accountId = null;
       }
