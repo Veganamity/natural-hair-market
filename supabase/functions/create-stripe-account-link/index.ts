@@ -19,16 +19,17 @@ Deno.serve(async (req: Request) => {
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2024-12-18.acacia" });
 
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const authHeader = req.headers.get("Authorization")!;
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user } } = await supabase.auth.getUser(token);
     if (!user) throw new Error("Non authentifié");
 
-    const { data: profile } = await supabaseClient
+    const { data: profile } = await supabase
       .from("profiles")
       .select("stripe_account_id")
       .eq("id", user.id)
@@ -38,21 +39,33 @@ Deno.serve(async (req: Request) => {
 
     let accountId = profile.stripe_account_id;
 
+    if (accountId) {
+      try {
+        await stripe.accounts.retrieve(accountId);
+      } catch (_err) {
+        accountId = null;
+      }
+    }
+
     if (!accountId) {
       const account = await stripe.accounts.create({
-        type: "express",
         country: "FR",
         email: user.email,
+        controller: {
+          stripe_dashboard: { type: "none" },
+          fees: { payer: "application" },
+          losses: { payments: "application" },
+          requirement_collection: "application",
+        },
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
         },
-        business_type: "individual",
       });
 
       accountId = account.id;
 
-      await supabaseClient
+      await supabase
         .from("profiles")
         .update({
           stripe_account_id: accountId,
