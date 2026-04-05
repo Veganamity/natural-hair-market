@@ -142,7 +142,11 @@ export function PaymentModal({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la creation du paiement');
+        const rawError = errorData.error || 'Erreur lors de la creation du paiement';
+        if (rawError === 'SELLER_NOT_CONFIGURED') {
+          throw new Error('Le vendeur n\'a pas encore configuré son compte de paiement. Veuillez le contacter ou réessayer plus tard.');
+        }
+        throw new Error(rawError);
       }
 
       const { clientSecret: secret } = await response.json();
