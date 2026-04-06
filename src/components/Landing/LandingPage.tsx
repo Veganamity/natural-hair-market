@@ -1,10 +1,12 @@
-import { Search, Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield } from 'lucide-react';
+import { Search, Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield, ShoppingCart, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Database } from '../../lib/database.types';
 import { ListingCard } from '../Listings/ListingCard';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { LanguageSelector } from '../LanguageSelector';
+
+const CHECKOUT_PRICE_ID = 'price_1THiZYREq6ZfjXVX9RHfAA0v';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 
@@ -18,10 +20,44 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
 
   useEffect(() => {
     fetchFeaturedListings();
   }, []);
+
+  const handleCheckout = async () => {
+    setCheckoutLoading(true);
+    setCheckoutError('');
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Apikey': supabaseAnonKey,
+        },
+        body: JSON.stringify({
+          priceId: CHECKOUT_PRICE_ID,
+          successUrl: `${window.location.origin}/?checkout=success`,
+          cancelUrl: `${window.location.origin}/?checkout=cancel`,
+        }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setCheckoutError(data.error || 'Une erreur est survenue. Veuillez réessayer.');
+      }
+    } catch {
+      setCheckoutError('Impossible de démarrer le paiement. Vérifiez votre connexion.');
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   const fetchFeaturedListings = async () => {
     try {
@@ -74,12 +110,29 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
               <span className="text-xs sm:text-sm md:text-sm font-semibold">{t('landing.buyersFee')}</span>
             </div>
           </div>
-          <button
-            onClick={onGetStarted}
-            className="bg-white text-emerald-700 px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition-all transform hover:scale-105 shadow-lg"
-          >
-            {t('landing.getStarted')}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <button
+              onClick={onGetStarted}
+              className="bg-white text-emerald-700 px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition-all transform hover:scale-105 shadow-lg"
+            >
+              {t('landing.getStarted')}
+            </button>
+            <button
+              onClick={handleCheckout}
+              disabled={checkoutLoading}
+              className="bg-emerald-800 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-emerald-900 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {checkoutLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ShoppingCart className="w-4 h-4" />
+              )}
+              Acheter maintenant
+            </button>
+          </div>
+          {checkoutError && (
+            <p className="text-red-200 text-xs mt-2 font-medium">{checkoutError}</p>
+          )}
         </div>
       </header>
 
