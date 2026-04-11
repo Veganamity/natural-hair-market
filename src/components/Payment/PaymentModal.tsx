@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X, CreditCard, Building2, AlertCircle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { X, AlertCircle, Loader2 } from 'lucide-react';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from '../../lib/supabaseClient';
 import { getStripe } from '../../lib/stripe';
@@ -24,6 +24,7 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
   const stripe = useStripe();
   const elements = useElements();
   const [elementReady, setElementReady] = useState(false);
+  const [elementLoadError, setElementLoadError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!stripe || !elements || !elementReady) {
@@ -41,11 +42,7 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
       });
 
       if (error) {
-        if (error.type === 'card_error' || error.type === 'validation_error') {
-          onError(error.message || 'Erreur de validation');
-        } else {
-          onError('Une erreur inattendue est survenue.');
-        }
+        onError(`Erreur Stripe (${error.type}): ${error.message || 'Erreur inattendue'}`);
         setLoading(false);
       } else {
         onSuccess();
@@ -58,7 +55,16 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
 
   return (
     <div className="space-y-3">
-      {!elementReady && (
+      {elementLoadError && (
+        <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-semibold text-red-800">Impossible de charger le formulaire de paiement</p>
+            <p className="text-xs text-red-700 mt-0.5 font-mono break-all">{elementLoadError}</p>
+          </div>
+        </div>
+      )}
+      {!elementReady && !elementLoadError && (
         <div className="flex items-center justify-center py-6 gap-2 text-gray-500">
           <Loader2 className="w-5 h-5 animate-spin" />
           <span className="text-sm">Chargement du formulaire de paiement...</span>
@@ -68,6 +74,10 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
         <PaymentElement
           options={{ layout: 'tabs' }}
           onReady={() => setElementReady(true)}
+          onLoadError={(e) => {
+            const msg = (e as any)?.error?.message || (e as any)?.message || JSON.stringify(e);
+            setElementLoadError(msg);
+          }}
         />
       </div>
       {elementReady && (
@@ -99,17 +109,18 @@ export function PaymentModal({
 }: PaymentModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const [shippingData, setShippingData] = useState<any>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
+
+  const stripePromise = getStripe();
 
   const marketplaceCommissionRate = 0.10;
   const marketplaceCommission = amount * marketplaceCommissionRate;
   const shippingCost = shippingData?.cost || 0;
   const totalAmount = amount + marketplaceCommission + shippingCost;
   const sellerReceives = amount;
-
-  const stripePromise = getStripe();
 
   const createPaymentIntent = async () => {
     if (shippingData) {
@@ -126,17 +137,13 @@ export function PaymentModal({
 
     setCreatingIntent(true);
     setError(null);
+    setDebugInfo(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error('Non authentifie');
+        throw new Error('Non authentifie - veuillez vous reconnecter');
       }
-
-      const paymentData: any = {
-        listingId,
-        shippingData: shippingData || {},
-      };
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent`,
@@ -146,23 +153,26 @@ export function PaymentModal({
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(paymentData),
+          body: JSON.stringify({ listingId, shippingData: shippingData || {} }),
         }
       );
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        const rawError = errorData.error || 'Erreur lors de la creation du paiement';
-        if (rawError === 'SELLER_NOT_CONFIGURED') {
-          throw new Error('Le vendeur n\'a pas encore configuré son compte de paiement. Veuillez le contacter ou réessayer plus tard.');
-        }
-        throw new Error(rawError);
+        const errMsg = responseData.error || `Erreur serveur (HTTP ${response.status})`;
+        throw new Error(errMsg);
       }
 
-      const { clientSecret: secret } = await response.json();
+      const { clientSecret: secret } = responseData;
+
+      if (!secret || typeof secret !== 'string' || !secret.startsWith('pi_')) {
+        setDebugInfo(`Valeur recue pour clientSecret: "${secret}"`);
+        throw new Error('Le serveur n\'a pas retourne une cle de paiement valide.');
+      }
+
       setClientSecret(secret);
     } catch (err: any) {
-      console.error('Payment intent error:', err);
       setError(err.message || 'Erreur lors de la creation du paiement');
     } finally {
       setCreatingIntent(false);
@@ -228,7 +238,12 @@ export function PaymentModal({
               {error && (
                 <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-red-800">{error}</p>
+                  <div>
+                    <p className="text-xs text-red-800">{error}</p>
+                    {debugInfo && (
+                      <p className="text-[10px] text-red-600 mt-1 font-mono break-all">{debugInfo}</p>
+                    )}
+                  </div>
                 </div>
               )}
 

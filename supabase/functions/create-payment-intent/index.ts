@@ -71,8 +71,12 @@ Deno.serve(async (req: Request) => {
       .eq("id", listing.seller_id)
       .maybeSingle();
 
-    if (!sellerProfile?.stripe_account_id || sellerProfile.stripe_account_status !== "active") {
-      throw new Error("SELLER_NOT_CONFIGURED");
+    if (!sellerProfile?.stripe_account_id) {
+      throw new Error("SELLER_NO_STRIPE: Le vendeur n'a pas configure son compte de paiement Stripe.");
+    }
+
+    if (sellerProfile.stripe_account_status !== "active") {
+      throw new Error(`SELLER_ACCOUNT_NOT_ACTIVE: Le compte Stripe du vendeur n'est pas actif (statut: ${sellerProfile.stripe_account_status || "inconnu"}). Veuillez contacter le vendeur.`);
     }
 
     const itemPrice = listing.price;
@@ -96,7 +100,7 @@ Deno.serve(async (req: Request) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalAmount * 100),
       currency: "eur",
-      payment_method_types: ["card"],
+      automatic_payment_methods: { enabled: true },
       capture_method: "automatic",
       application_fee_amount: commissionAmount,
       transfer_data: {
