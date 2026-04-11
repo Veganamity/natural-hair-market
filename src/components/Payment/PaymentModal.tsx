@@ -23,9 +23,10 @@ interface PaymentFormProps {
 function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
+  const [elementReady, setElementReady] = useState(false);
 
   const handleSubmit = async () => {
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !elementReady) {
       return;
     }
 
@@ -57,25 +58,34 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
 
   return (
     <div className="space-y-3">
-      <PaymentElement
-        options={{
-          layout: 'tabs',
-        }}
-      />
-      <button
-        onClick={handleSubmit}
-        disabled={!stripe || loading}
-        className="w-full px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Traitement en cours...
-          </>
-        ) : (
-          'Confirmer le paiement'
-        )}
-      </button>
+      {!elementReady && (
+        <div className="flex items-center justify-center py-6 gap-2 text-gray-500">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Chargement du formulaire de paiement...</span>
+        </div>
+      )}
+      <div className={elementReady ? 'block' : 'invisible h-0 overflow-hidden'}>
+        <PaymentElement
+          options={{ layout: 'tabs' }}
+          onReady={() => setElementReady(true)}
+        />
+      </div>
+      {elementReady && (
+        <button
+          onClick={handleSubmit}
+          disabled={!stripe || !elementReady || loading}
+          className="w-full px-4 py-2.5 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Traitement en cours...
+            </>
+          ) : (
+            'Confirmer le paiement'
+          )}
+        </button>
+      )}
     </div>
   );
 }
