@@ -1,10 +1,11 @@
-import { X, Heart, CheckCircle, XCircle, ShoppingCart, Tag, Flag, BadgeCheck, Hash } from 'lucide-react';
+import { X, Heart, CheckCircle, XCircle, ShoppingCart, Tag, Flag, BadgeCheck, Hash, Plus, Check } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { PaymentModal } from '../Payment/PaymentModal';
 import { ReportModal } from './ReportModal';
+import { useCart } from '../../contexts/CartContext';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -27,6 +28,7 @@ export function ListingDetails({
   isFavorited,
 }: ListingDetailsProps) {
   const { user } = useAuth();
+  const { addToCart, isInCart } = useCart();
   const [seller, setSeller] = useState<Profile | null>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -267,6 +269,32 @@ export function ListingDetails({
                     </button>
                   )}
                 </div>
+                {listing.instant_buy_enabled && (
+                  <button
+                    onClick={() => {
+                      if (!isInCart(listing.id)) {
+                        addToCart(listing, listing.seller_id, seller?.full_name || seller?.email || 'Vendeur');
+                      }
+                    }}
+                    className={`w-full px-2 py-1 rounded-md font-semibold transition-colors flex items-center justify-center gap-0.5 text-[10px] ${
+                      isInCart(listing.id)
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 cursor-default'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
+                    }`}
+                  >
+                    {isInCart(listing.id) ? (
+                      <>
+                        <Check className="w-2.5 h-2.5" />
+                        Dans le panier
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-2.5 h-2.5" />
+                        Ajouter au panier
+                      </>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={() => onFavoriteToggle(listing.id)}
                   className={`w-full px-2 py-1 rounded-md font-semibold transition-colors flex items-center justify-center gap-0.5 text-[10px] ${
@@ -375,6 +403,7 @@ export function ListingDetails({
           listingId={listing.id}
           listingTitle={listing.title}
           amount={listing.price}
+          weightGrams={listing.weight_grams || 100}
           onClose={() => setShowPaymentModal(false)}
           onSuccess={handlePaymentSuccess}
         />

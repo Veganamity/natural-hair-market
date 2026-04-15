@@ -26,10 +26,12 @@ import SalonVerificationAdmin from './components/Admin/SalonVerificationAdmin';
 import ListingAdmin from './components/Admin/ListingAdmin';
 import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
+import { CartView } from './components/Cart/CartView';
+import { CartProvider, useCart } from './contexts/CartContext';
 import { Database } from './lib/database.types';
 import { supabase } from './lib/supabaseClient';
 import { useUnreadOffersCount } from './hooks/useUnreadOffers';
-import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, HelpCircle, ArrowLeft, ChevronDown } from 'lucide-react';
+import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, ArrowLeft, ChevronDown, ShoppingCart } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -38,8 +40,9 @@ function AppContent() {
   const { user, loading, signOut } = useAuth();
   const { t } = useLanguage();
   const { unreadCount } = useUnreadOffersCount();
+  const { cartCount } = useCart();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot-password' | 'reset-password'>('login');
-  const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about' | 'admin-salons' | 'admin-listings' | 'salon-certifie'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about' | 'admin-salons' | 'admin-listings' | 'salon-certifie'>('landing');
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
@@ -64,7 +67,7 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    const validViews = ['landing', 'marketplace', 'profile', 'favorites', 'offers', 'transactions', 'orders', 'privacy', 'terms', 'sales', 'refund', 'safety', 'seller-rules', 'buyer-rules', 'faq', 'about', 'admin-salons', 'admin-listings', 'salon-certifie'];
+    const validViews = ['landing', 'marketplace', 'profile', 'favorites', 'offers', 'transactions', 'orders', 'cart', 'privacy', 'terms', 'sales', 'refund', 'safety', 'seller-rules', 'buyer-rules', 'faq', 'about', 'admin-salons', 'admin-listings', 'salon-certifie'];
 
     const parseHash = (hash: string): typeof currentView | null => {
       const cleanHash = hash.slice(1).split('?')[0].split('&')[0];
@@ -289,6 +292,25 @@ function AppContent() {
                 {t('nav.marketplace')}
               </button>
 
+              <button
+                onClick={() => navigateToView('cart')}
+                className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm relative ${
+                  currentView === 'cart'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <div className="relative">
+                  <ShoppingCart className="w-4 h-4" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-emerald-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                      {cartCount > 9 ? '9+' : cartCount}
+                    </span>
+                  )}
+                </div>
+                Panier
+              </button>
+
               <div className="relative">
                 <button
                   onClick={() => setAccountMenuOpen(!accountMenuOpen)}
@@ -445,6 +467,32 @@ function AppContent() {
               </button>
               <button
                 onClick={() => {
+                  navigateToView('cart');
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                  currentView === 'cart'
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <div className="relative">
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-emerald-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                      {cartCount > 9 ? '9+' : cartCount}
+                    </span>
+                  )}
+                </div>
+                Panier
+                {cartCount > 0 && (
+                  <span className="ml-auto bg-emerald-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => {
                   navigateToView('favorites');
                   setMobileMenuOpen(false);
                 }}
@@ -553,6 +601,7 @@ function AppContent() {
             key={preselectedListingId || 'marketplace'}
           />
         )}
+        {currentView === 'cart' && <CartView />}
         {currentView === 'favorites' && <FavoritesView />}
         {currentView === 'offers' && <OffersView />}
         {currentView === 'orders' && <OrderManagement />}
@@ -632,7 +681,9 @@ function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <AppContent />
+        <CartProvider>
+          <AppContent />
+        </CartProvider>
       </AuthProvider>
     </LanguageProvider>
   );

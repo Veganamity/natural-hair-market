@@ -3,7 +3,7 @@ import { Truck, Package, MapPin } from 'lucide-react';
 import { AddressSelector, ShippingAddress } from '../Payment/AddressSelector';
 import { MondialRelaySelection } from './MondialRelaySelection';
 
-interface ShippingSelectionProps {
+interface CartShippingSelectionProps {
   onShippingSelected: (data: {
     method: 'mondial_relay' | 'chronopost' | 'colissimo';
     cost: number;
@@ -13,7 +13,7 @@ interface ShippingSelectionProps {
     relayPointAddress?: string;
   }) => void;
   selectedMethod?: 'mondial_relay' | 'chronopost' | 'colissimo';
-  weight?: number;
+  totalWeightGrams: number;
 }
 
 function getMondialRelayCost(weightGrams: number): number {
@@ -49,38 +49,32 @@ function getChronopostCost(weightGrams: number): number {
   return 29.99;
 }
 
-export function ShippingSelection({ onShippingSelected, selectedMethod, weight = 100 }: ShippingSelectionProps) {
+export function CartShippingSelection({
+  onShippingSelected,
+  selectedMethod,
+  totalWeightGrams,
+}: CartShippingSelectionProps) {
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
-  const [shippingMethod, setShippingMethod] = useState<'mondial_relay' | 'chronopost' | 'colissimo'>(selectedMethod || 'colissimo');
+  const [shippingMethod, setShippingMethod] = useState<'mondial_relay' | 'chronopost' | 'colissimo'>(
+    selectedMethod || 'colissimo'
+  );
   const [selectedRelayPoint, setSelectedRelayPoint] = useState<any>(null);
 
-  const mondialRelayCost = getMondialRelayCost(weight);
-  const colissimoCost = getColissimoCost(weight);
-  const chronopostCost = getChronopostCost(weight);
+  const mondialRelayCost = getMondialRelayCost(totalWeightGrams);
+  const colissimoCost = getColissimoCost(totalWeightGrams);
+  const chronopostCost = getChronopostCost(totalWeightGrams);
 
   useEffect(() => {
     calculateShipping();
-  }, [shippingMethod, selectedAddress, selectedRelayPoint, weight]);
-
-  const handleAddressSelect = (address: ShippingAddress) => {
-    setSelectedAddress(address);
-  };
+  }, [shippingMethod, selectedAddress, selectedRelayPoint, totalWeightGrams]);
 
   const calculateShipping = () => {
     let cost = 0;
+    if (shippingMethod === 'mondial_relay') cost = mondialRelayCost;
+    else if (shippingMethod === 'chronopost') cost = chronopostCost;
+    else if (shippingMethod === 'colissimo') cost = colissimoCost;
 
-    if (shippingMethod === 'mondial_relay') {
-      cost = mondialRelayCost;
-    } else if (shippingMethod === 'chronopost') {
-      cost = chronopostCost;
-    } else if (shippingMethod === 'colissimo') {
-      cost = colissimoCost;
-    }
-
-    const shippingData: any = {
-      method: shippingMethod,
-      cost,
-    };
+    const shippingData: any = { method: shippingMethod, cost };
 
     if ((shippingMethod === 'chronopost' || shippingMethod === 'colissimo') && selectedAddress) {
       shippingData.address = selectedAddress;
@@ -88,18 +82,25 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
       shippingData.relayPointId = selectedRelayPoint.id;
       shippingData.relayPointName = selectedRelayPoint.name;
       shippingData.relayPointAddress = `${selectedRelayPoint.address}, ${selectedRelayPoint.postalCode} ${selectedRelayPoint.city}`;
-      if (selectedAddress) {
-        shippingData.address = selectedAddress;
-      }
+      if (selectedAddress) shippingData.address = selectedAddress;
     }
 
     onShippingSelected(shippingData);
   };
 
+  const weightLabel = totalWeightGrams >= 1000
+    ? `${(totalWeightGrams / 1000).toFixed(2)} kg`
+    : `${totalWeightGrams} g`;
+
   return (
     <div className="space-y-2">
       <div>
-        <h3 className="text-xs font-bold text-gray-800 mb-1.5">Mode de livraison</h3>
+        <div className="flex items-center justify-between mb-1.5">
+          <h3 className="text-xs font-bold text-gray-800">Mode de livraison</h3>
+          <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+            Poids total: {weightLabel}
+          </span>
+        </div>
 
         <div className="grid grid-cols-3 gap-1.5">
           <button
@@ -150,10 +151,16 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
             </div>
           </button>
         </div>
+
+        {totalWeightGrams > 1000 && (
+          <p className="text-[9px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1.5">
+            Tarifs ajustés en fonction du poids total du colis ({weightLabel})
+          </p>
+        )}
       </div>
 
       <AddressSelector
-        onSelectAddress={handleAddressSelect}
+        onSelectAddress={setSelectedAddress}
         selectedAddress={selectedAddress}
       />
 
@@ -161,7 +168,7 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
         <MondialRelaySelection
           postalCode={selectedAddress.postal_code}
           country={selectedAddress.country}
-          weight={weight}
+          weight={totalWeightGrams}
           onSelectPoint={setSelectedRelayPoint}
           selectedPointId={selectedRelayPoint?.id}
           street={selectedAddress.street}

@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { X, AlertCircle, Loader2 } from 'lucide-react';
+import { X, AlertCircle, Loader2, Package } from 'lucide-react';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from '../../lib/supabaseClient';
 import { getStripe } from '../../lib/stripe';
-import { ShippingSelection } from '../Shipping/ShippingSelection';
+import { CartShippingSelection } from '../Shipping/CartShippingSelection';
+import { CartBySeller } from '../../contexts/CartContext';
 
-interface PaymentModalProps {
-  listingId: string;
-  listingTitle: string;
-  amount: number;
-  weightGrams?: number;
+interface CartPaymentModalProps {
+  sellerCart: CartBySeller;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -28,9 +26,7 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
   const [elementLoadError, setElementLoadError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    if (!stripe || !elements || !elementReady) {
-      return;
-    }
+    if (!stripe || !elements || !elementReady) return;
 
     setLoading(true);
 
@@ -59,10 +55,7 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
       {elementLoadError && (
         <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-xs font-semibold text-red-800">Impossible de charger le formulaire de paiement</p>
-            <p className="text-xs text-red-700 mt-0.5 font-mono break-all">{elementLoadError}</p>
-          </div>
+          <p className="text-xs font-semibold text-red-800">{elementLoadError}</p>
         </div>
       )}
       {!elementReady && !elementLoadError && (
@@ -76,7 +69,7 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
           options={{ layout: 'tabs' }}
           onReady={() => setElementReady(true)}
           onLoadError={(e) => {
-            const msg = (e as any)?.error?.message || (e as any)?.message || JSON.stringify(e);
+            const msg = (e as any)?.error?.message || JSON.stringify(e);
             setElementLoadError(msg);
           }}
         />
@@ -101,17 +94,9 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
   );
 }
 
-export function PaymentModal({
-  listingId,
-  listingTitle,
-  amount,
-  weightGrams = 100,
-  onClose,
-  onSuccess,
-}: PaymentModalProps) {
+export function CartPaymentModal({ sellerCart, onClose, onSuccess }: CartPaymentModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const [shippingData, setShippingData] = useState<any>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [creatingIntent, setCreatingIntent] = useState(false);
@@ -119,63 +104,61 @@ export function PaymentModal({
   const stripePromise = getStripe();
 
   const marketplaceCommissionRate = 0.10;
-  const marketplaceCommission = amount * marketplaceCommissionRate;
+  const itemsTotal = sellerCart.totalPrice;
+  const marketplaceCommission = itemsTotal * marketplaceCommissionRate;
   const shippingCost = shippingData?.cost || 0;
-  const totalAmount = amount + marketplaceCommission + shippingCost;
-  const sellerReceives = amount;
+  const totalAmount = itemsTotal + marketplaceCommission + shippingCost;
 
   const createPaymentIntent = async () => {
-    if (shippingData) {
-      if ((shippingData.method === 'chronopost' || shippingData.method === 'colissimo') && !shippingData.address) {
-        setError('Veuillez renseigner une adresse de livraison');
-        return;
-      }
-
-      if (shippingData.method === 'mondial_relay' && !shippingData.relayPointId) {
-        setError('Veuillez selectionner un point relais');
-        return;
-      }
+    if (!shippingData) {
+      setError('Veuillez sélectionner un mode de livraison');
+      return;
+    }
+    if ((shippingData.method === 'chronopost' || shippingData.method === 'colissimo') && !shippingData.address) {
+      setError('Veuillez renseigner une adresse de livraison');
+      return;
+    }
+    if (shippingData.method === 'mondial_relay' && !shippingData.relayPointId) {
+      setError('Veuillez sélectionner un point relais');
+      return;
     }
 
     setCreatingIntent(true);
     setError(null);
-    setDebugInfo(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Non authentifie - veuillez vous reconnecter');
-      }
+      if (!session) throw new Error('Non authentifié - veuillez vous reconnecter');
+
+      const listingIds = sellerCart.items.map(item => item.listing.id);
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payment-intent`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-cart-payment-intent`,
         {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ listingId, shippingData: shippingData || {} }),
+          body: JSON.stringify({ listingIds, shippingData }),
         }
       );
 
       const responseData = await response.json();
 
       if (!response.ok) {
-        const errMsg = responseData.error || `Erreur serveur (HTTP ${response.status})`;
-        throw new Error(errMsg);
+        throw new Error(responseData.error || `Erreur serveur (HTTP ${response.status})`);
       }
 
       const { clientSecret: secret } = responseData;
 
       if (!secret || typeof secret !== 'string' || !secret.startsWith('pi_')) {
-        setDebugInfo(`Valeur recue pour clientSecret: "${secret}"`);
-        throw new Error('Le serveur n\'a pas retourne une cle de paiement valide.');
+        throw new Error('Le serveur n\'a pas retourné une clé de paiement valide.');
       }
 
       setClientSecret(secret);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la creation du paiement');
+      setError(err.message || 'Erreur lors de la création du paiement');
     } finally {
       setCreatingIntent(false);
     }
@@ -190,11 +173,8 @@ export function PaymentModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-3">
       <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[95vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-3 py-2 flex items-center justify-between z-10 rounded-t-xl">
-          <h3 className="text-sm font-bold text-gray-800">Paiement</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
-          >
+          <h3 className="text-sm font-bold text-gray-800">Paiement — {sellerCart.sellerName}</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -202,38 +182,50 @@ export function PaymentModal({
         <div className="p-3 space-y-3">
           {!clientSecret ? (
             <>
-              <div>
-                <ShippingSelection
-                  onShippingSelected={setShippingData}
-                  selectedMethod={shippingData?.method}
-                  weight={weightGrams}
-                />
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <h4 className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                  <Package className="w-3.5 h-3.5 text-emerald-600" />
+                  {sellerCart.items.length} article{sellerCart.items.length > 1 ? 's' : ''} — Poids total: {(sellerCart.totalWeight / 1000).toFixed(2)} kg
+                </h4>
+                <div className="space-y-1">
+                  {sellerCart.items.map(item => (
+                    <div key={item.listing.id} className="flex justify-between text-[11px]">
+                      <span className="text-gray-600 truncate max-w-[200px]">{item.listing.title}</span>
+                      <span className="font-semibold text-gray-800 flex-shrink-0 ml-2">{item.listing.price.toFixed(2)} €</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
+              <CartShippingSelection
+                onShippingSelected={setShippingData}
+                selectedMethod={shippingData?.method}
+                totalWeightGrams={sellerCart.totalWeight}
+              />
+
               <div className="p-2 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-800 mb-1 text-xs">{listingTitle}</h4>
                 <div className="space-y-1 text-[11px]">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Prix de l'article:</span>
-                    <span className="font-semibold">{amount.toFixed(2)} EUR</span>
+                    <span className="text-gray-600">Sous-total articles:</span>
+                    <span className="font-semibold">{itemsTotal.toFixed(2)} €</span>
                   </div>
                   {shippingCost > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Frais de livraison ({shippingData?.method}):</span>
-                      <span className="font-semibold">{shippingCost.toFixed(2)} EUR</span>
+                      <span className="text-gray-600">Frais de livraison ({shippingData?.method?.replace('_', ' ')}):</span>
+                      <span className="font-semibold">{shippingCost.toFixed(2)} €</span>
                     </div>
                   )}
                   <div className="flex justify-between text-gray-600">
                     <span>Commission ({(marketplaceCommissionRate * 100).toFixed(0)}%):</span>
-                    <span className="font-semibold">+{marketplaceCommission.toFixed(2)} EUR</span>
+                    <span className="font-semibold">+{marketplaceCommission.toFixed(2)} €</span>
                   </div>
                   <div className="border-t border-gray-200 pt-1 flex justify-between">
                     <span className="text-gray-600">Le vendeur recevra:</span>
-                    <span className="font-semibold text-emerald-600">{sellerReceives.toFixed(2)} EUR</span>
+                    <span className="font-semibold text-emerald-600">{itemsTotal.toFixed(2)} €</span>
                   </div>
                   <div className="border-t-2 border-gray-300 pt-1 flex justify-between text-xs">
-                    <span className="font-bold text-gray-800">Total a payer:</span>
-                    <span className="font-bold text-teal-600">{totalAmount.toFixed(2)} EUR</span>
+                    <span className="font-bold text-gray-800">Total à payer:</span>
+                    <span className="font-bold text-teal-600">{totalAmount.toFixed(2)} €</span>
                   </div>
                 </div>
               </div>
@@ -241,16 +233,11 @@ export function PaymentModal({
               {error && (
                 <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-red-800">{error}</p>
-                    {debugInfo && (
-                      <p className="text-[10px] text-red-600 mt-1 font-mono break-all">{debugInfo}</p>
-                    )}
-                  </div>
+                  <p className="text-xs text-red-800">{error}</p>
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-1">
                 <button
                   onClick={onClose}
                   disabled={creatingIntent}
@@ -269,7 +256,7 @@ export function PaymentModal({
                       Chargement...
                     </>
                   ) : (
-                    `Continuer - ${totalAmount.toFixed(2)} EUR`
+                    `Continuer — ${totalAmount.toFixed(2)} €`
                   )}
                 </button>
               </div>
@@ -278,8 +265,8 @@ export function PaymentModal({
             <>
               <div className="p-2 bg-gray-50 rounded-lg mb-3">
                 <div className="flex justify-between text-sm">
-                  <span className="font-medium text-gray-700">Total a payer:</span>
-                  <span className="font-bold text-teal-600">{totalAmount.toFixed(2)} EUR</span>
+                  <span className="font-medium text-gray-700">Total à payer:</span>
+                  <span className="font-bold text-teal-600">{totalAmount.toFixed(2)} €</span>
                 </div>
               </div>
 
@@ -296,10 +283,7 @@ export function PaymentModal({
                   clientSecret,
                   appearance: {
                     theme: 'stripe',
-                    variables: {
-                      colorPrimary: '#059669',
-                      borderRadius: '8px',
-                    },
+                    variables: { colorPrimary: '#059669', borderRadius: '8px' },
                   },
                 }}
               >
@@ -321,7 +305,7 @@ export function PaymentModal({
 
               <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg mt-2">
                 <p className="text-[11px] text-blue-800">
-                  Paiement securise par Stripe. Vos informations bancaires ne sont jamais stockees sur notre plateforme.
+                  Paiement sécurisé par Stripe. Vos informations bancaires ne sont jamais stockées sur notre plateforme.
                 </p>
               </div>
             </>
