@@ -24,6 +24,8 @@ Deno.serve(async (req: Request) => {
       throw new Error("STRIPE_SECRET_KEY not configured");
     }
 
+    console.log("STRIPE_SECRET_KEY prefix:", stripeSecretKey.substring(0, 25));
+
     const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2024-12-18.acacia",
     });
