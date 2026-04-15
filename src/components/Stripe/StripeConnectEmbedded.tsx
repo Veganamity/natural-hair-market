@@ -68,8 +68,7 @@ export function StripeConnectEmbedded({
       setLoading(true);
       setError(null);
       try {
-        const publishableKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-        if (!publishableKey) throw new Error('Clé Stripe manquante');
+        const publishableKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY || 'pk_live_51STHhnREq6ZFjXVXCHlIWoqNkdEfILxmuyN22g8alvqLuJB02rOefwMdwUTBkg5nRs76NzclHiuHiMfJqLFllRBn00aVLN5FOO';
 
         const instance = loadConnectAndInitialize({
           publishableKey,
