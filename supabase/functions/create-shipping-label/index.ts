@@ -102,8 +102,27 @@ Deno.serve(async (req: Request) => {
       throw new Error("Shipping address or seller information missing");
     }
 
-    const destinationCountry = shippingAddress.country || "FR";
-    const isFrenchDestination = destinationCountry === "FR" || destinationCountry === "France";
+    const countryNameToCode: Record<string, string> = {
+      "France": "FR",
+      "Germany": "DE",
+      "Allemagne": "DE",
+      "Spain": "ES",
+      "Espagne": "ES",
+      "Italy": "IT",
+      "Italie": "IT",
+      "Belgium": "BE",
+      "Belgique": "BE",
+      "Switzerland": "CH",
+      "Suisse": "CH",
+      "Netherlands": "NL",
+      "Pays-Bas": "NL",
+      "United Kingdom": "GB",
+      "Royaume-Uni": "GB",
+    };
+
+    const rawCountry = shippingAddress.country || "FR";
+    const destinationCountry = countryNameToCode[rawCountry] || rawCountry;
+    const isFrenchDestination = destinationCountry === "FR";
 
     if (isFrenchDestination) {
       const colissimoUrl = `${supabaseUrl}/functions/v1/create-label-colissimo`;
@@ -148,7 +167,7 @@ Deno.serve(async (req: Request) => {
       address_2: shippingAddress.address_line2 || "",
       city: shippingAddress.city,
       postal_code: shippingAddress.postal_code,
-      country: shippingAddress.country || "FR",
+      country: destinationCountry,
       telephone: shippingAddress.phone || "",
       weight: weight,
       order_number: transactionId,
@@ -160,7 +179,7 @@ Deno.serve(async (req: Request) => {
         address: seller.address_line1 || "",
         city: seller.city || "",
         postal_code: seller.postal_code || "",
-        country: seller.country || "FR",
+        country: countryNameToCode[seller.country] || seller.country || "FR",
       },
     };
 
