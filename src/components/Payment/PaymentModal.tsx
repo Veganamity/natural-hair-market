@@ -168,7 +168,7 @@ export function PaymentModal({
 
       const { clientSecret: secret } = responseData;
 
-      if (!secret || typeof secret !== 'string' || !secret.startsWith('pi_')) {
+      if (!secret || typeof secret !== 'string' || !secret.includes('_secret_')) {
         setDebugInfo(`Valeur recue pour clientSecret: "${secret}"`);
         throw new Error('Le serveur n\'a pas retourne une cle de paiement valide.');
       }

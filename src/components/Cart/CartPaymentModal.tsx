@@ -152,7 +152,7 @@ export function CartPaymentModal({ sellerCart, onClose, onSuccess }: CartPayment
 
       const { clientSecret: secret } = responseData;
 
-      if (!secret || typeof secret !== 'string' || !secret.startsWith('pi_')) {
+      if (!secret || typeof secret !== 'string' || !secret.includes('_secret_')) {
         throw new Error('Le serveur n\'a pas retourné une clé de paiement valide.');
       }
 
