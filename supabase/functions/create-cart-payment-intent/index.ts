@@ -17,6 +17,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    console.log('DEBUG STRIPE: Secret Key starts with:', stripeSecretKey?.slice(0, 12));
     if (!stripeSecretKey) throw new Error("STRIPE_SECRET_KEY not configured");
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2024-12-18.acacia" });
