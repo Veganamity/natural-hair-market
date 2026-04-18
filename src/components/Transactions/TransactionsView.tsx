@@ -41,12 +41,12 @@ export function TransactionsView() {
     const [purchasesRes, salesRes, profileRes] = await Promise.all([
       supabase
         .from('transactions')
-        .select('*, listing:listings(*), buyer:profiles!transactions_buyer_id_fkey(*), seller:profiles!transactions_seller_id_fkey(*)')
+        .select('*, listing:listings(*), buyer:profiles!buyer_id(*), seller:profiles!seller_id(*)')
         .eq('buyer_id', user.id)
         .order('created_at', { ascending: false }),
       supabase
         .from('transactions')
-        .select('*, listing:listings(*), buyer:profiles!transactions_buyer_id_fkey(*), seller:profiles!transactions_seller_id_fkey(*)')
+        .select('*, listing:listings(*), buyer:profiles!buyer_id(*), seller:profiles!seller_id(*)')
         .eq('seller_id', user.id)
         .order('created_at', { ascending: false }),
       supabase
@@ -56,6 +56,8 @@ export function TransactionsView() {
         .maybeSingle(),
     ]);
 
+    if (purchasesRes.error) console.error('Purchases fetch error:', purchasesRes.error);
+    if (salesRes.error) console.error('Sales fetch error:', salesRes.error);
     setPurchases((purchasesRes.data as any) || []);
     setSales((salesRes.data as any) || []);
     if (profileRes.data) {
