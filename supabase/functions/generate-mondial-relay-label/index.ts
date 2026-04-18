@@ -187,7 +187,8 @@ Deno.serve(async (req: Request) => {
 
     if (!shipmentNumberMatch) {
       console.error("Could not extract shipment number from:", responseText);
-      throw new Error("Impossible d'extraire le numéro d'expédition de la réponse Mondial Relay.");
+      const preview = responseText.substring(0, 500).replace(/</g, "[").replace(/>/g, "]");
+      throw new Error(`Réponse inattendue: ${preview}`);
     }
 
     const expeditionNumber = shipmentNumberMatch[1];
