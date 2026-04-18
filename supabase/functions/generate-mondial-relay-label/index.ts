@@ -16,6 +16,29 @@ function formatPhone(phone: string): string {
   return `+${digits}`;
 }
 
+function sanitizeXmlField(str: string, maxLen = 40): string {
+  if (!str) return "";
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^0-9A-Z_\-'., /]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .substring(0, maxLen);
+}
+
+function sanitizeCity(str: string): string {
+  if (!str) return "";
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z_\-' ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .substring(0, 30);
+}
+
 function escapeXml(str: string): string {
   return (str || "")
     .replace(/&/g, "&amp;")
@@ -23,12 +46,6 @@ function escapeXml(str: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
-}
-
-function optionalTag(tag: string, value: string): string {
-  const v = (value || "").trim();
-  if (!v) return "";
-  return `<${tag}>${escapeXml(v)}</${tag}>`;
 }
 
 Deno.serve(async (req: Request) => {
@@ -91,21 +108,25 @@ Deno.serve(async (req: Request) => {
     const weightGrams = Math.max(listing.weight_grams || 100, 10);
     const senderCountry = (sellerProfile.country || "FR").toUpperCase().substring(0, 2);
 
-    const sellerPhone = formatPhone(sellerProfile.phone || "");
-    const buyerPhone = formatPhone(buyerProfile?.phone || sellerProfile.phone || "");
+    const sellerMobile = formatPhone(sellerProfile.phone || "");
+    const buyerMobile = formatPhone(buyerProfile?.phone || sellerProfile.phone || "");
 
-    const sellerNameParts = (sellerProfile.full_name || "Vendeur").split(" ");
-    const sellerFirstname = sellerNameParts[0] || "Vendeur";
-    const sellerLastname = sellerNameParts.slice(1).join(" ") || sellerNameParts[0] || "";
+    const sellerNameParts = (sellerProfile.full_name || "VENDEUR").split(" ");
+    const sellerFirstname = sanitizeXmlField(sellerNameParts[0] || "VENDEUR", 32);
+    const sellerLastname = sanitizeXmlField(sellerNameParts.slice(1).join(" ") || sellerNameParts[0] || "", 32);
 
-    const buyerNameParts = (buyerProfile?.full_name || "Acheteur").split(" ");
-    const buyerFirstname = buyerNameParts[0] || "Acheteur";
-    const buyerLastname = buyerNameParts.slice(1).join(" ") || buyerNameParts[0] || "";
+    const buyerNameParts = (buyerProfile?.full_name || "ACHETEUR").split(" ");
+    const buyerFirstname = sanitizeXmlField(buyerNameParts[0] || "ACHETEUR", 32);
+    const buyerLastname = sanitizeXmlField(buyerNameParts.slice(1).join(" ") || buyerNameParts[0] || "", 32);
 
     const orderRef = transaction.id.substring(0, 15).replace(/-/g, "").toUpperCase();
     const customerRef = user.id.substring(0, 9).replace(/-/g, "").toUpperCase();
 
-    const senderPostCode = (sellerProfile.postal_code || "").replace(/\s/g, "");
+    const senderPostCode = (sellerProfile.postal_code || "").replace(/\s/g, "").substring(0, 10);
+    const senderStreet = sanitizeXmlField(sellerProfile.address_line1 || "", 40);
+    const senderCity = sanitizeCity(sellerProfile.city || "");
+    const senderEmail = escapeXml((sellerProfile.email || "").substring(0, 70));
+    const buyerEmail = escapeXml((buyerProfile?.email || "").substring(0, 70));
 
     const xmlBody = `<?xml version="1.0" encoding="utf-8"?>
 <ShipmentCreationRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.example.org/Request">
@@ -126,37 +147,47 @@ Deno.serve(async (req: Request) => {
       <CustomerNo>${customerRef}</CustomerNo>
       <ParcelCount>1</ParcelCount>
       <DeliveryMode Mode="24R" Location="FR-${relayPointId}" />
-      <CollectionMode Mode="CCC" />
+      <CollectionMode Mode="CCC" Location="" />
       <Parcels>
         <Parcel>
-          <Content>Cheveux</Content>
+          <Content>CHEVEUX</Content>
           <Weight Value="${weightGrams}" Unit="gr" />
         </Parcel>
       </Parcels>
       <Sender>
         <Address>
-          <Firstname>${escapeXml(sellerFirstname)}</Firstname>
-          <Lastname>${escapeXml(sellerLastname)}</Lastname>
-          <Streetname>${escapeXml(sellerProfile.address_line1 || "")}</Streetname>
-          ${optionalTag("HouseNo", "")}
+          <Title />
+          <Firstname>${sellerFirstname}</Firstname>
+          <Lastname>${sellerLastname}</Lastname>
+          <Streetname>${senderStreet}</Streetname>
+          <HouseNo />
           <CountryCode>${senderCountry}</CountryCode>
           <PostCode>${senderPostCode}</PostCode>
-          <City>${escapeXml(sellerProfile.city || "")}</City>
-          ${optionalTag("AddressAdd2", sellerProfile.address_line2 || "")}
-          ${sellerPhone ? `<PhoneNo>${sellerPhone}</PhoneNo>` : ""}
-          <Email>${escapeXml(sellerProfile.email || "")}</Email>
+          <City>${senderCity}</City>
+          <AddressAdd1 />
+          <AddressAdd2 />
+          <AddressAdd3 />
+          <PhoneNo />
+          <MobileNo>${sellerMobile}</MobileNo>
+          <Email>${senderEmail}</Email>
         </Address>
       </Sender>
       <Recipient>
         <Address>
-          <Firstname>${escapeXml(buyerFirstname)}</Firstname>
-          <Lastname>${escapeXml(buyerLastname)}</Lastname>
-          <Streetname>Point Relais</Streetname>
+          <Title />
+          <Firstname>${buyerFirstname}</Firstname>
+          <Lastname>${buyerLastname}</Lastname>
+          <Streetname>POINT RELAIS</Streetname>
+          <HouseNo />
           <CountryCode>FR</CountryCode>
-          <PostCode>00000</PostCode>
-          <City>Point Relais</City>
-          ${buyerPhone ? `<MobileNo>${buyerPhone}</MobileNo>` : ""}
-          <Email>${escapeXml(buyerProfile?.email || "")}</Email>
+          <PostCode>75001</PostCode>
+          <City>Paris</City>
+          <AddressAdd1 />
+          <AddressAdd2 />
+          <AddressAdd3 />
+          <PhoneNo />
+          <MobileNo>${buyerMobile}</MobileNo>
+          <Email>${buyerEmail}</Email>
         </Address>
       </Recipient>
     </Shipment>
@@ -168,7 +199,7 @@ Deno.serve(async (req: Request) => {
     const response = await fetch("https://connect-api.mondialrelay.com/api/shipment", {
       method: "POST",
       headers: {
-        "Content-Type": "application/xml",
+        "Content-Type": "text/xml",
         "Accept": "application/xml",
       },
       body: xmlBody,
@@ -193,7 +224,8 @@ Deno.serve(async (req: Request) => {
       throw new Error(`Erreur HTTP ${response.status}: ${preview}`);
     }
 
-    const shipmentNumberMatch = responseText.match(/ShipmentNumber="([^"]+)"/i) ||
+    const shipmentNumberMatch = responseText.match(/Shipment ShipmentNumber="([^"]+)"/i) ||
+                                responseText.match(/ShipmentNumber="([^"]+)"/i) ||
                                 responseText.match(/<ShipmentNumber>([^<]+)<\/ShipmentNumber>/i);
     const labelUrlMatch = responseText.match(/<Output>([^<]+)<\/Output>/i) ||
                           responseText.match(/<output>([^<]+)<\/output>/i);
