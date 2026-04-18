@@ -49,14 +49,9 @@ Deno.serve(async (req: Request) => {
 
     if (!accountId) {
       const account = await stripe.accounts.create({
+        type: "express",
         country: "FR",
         email: user.email,
-        controller: {
-          stripe_dashboard: { type: "none" },
-          fees: { payer: "application" },
-          losses: { payments: "application" },
-          requirement_collection: "application",
-        },
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
