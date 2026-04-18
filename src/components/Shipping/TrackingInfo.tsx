@@ -8,6 +8,7 @@ interface TrackingInfoProps {
   shippingMethod?: string | null;
   relayPointName?: string | null;
   relayPointAddress?: string | null;
+  labelError?: string | null;
 }
 
 export function TrackingInfo({
@@ -18,6 +19,7 @@ export function TrackingInfo({
   shippingMethod,
   relayPointName,
   relayPointAddress,
+  labelError,
 }: TrackingInfoProps) {
   const getStatusIcon = () => {
     switch (shippingStatus) {
@@ -81,7 +83,7 @@ export function TrackingInfo({
     });
   };
 
-  const isMondialRelay = shippingMethod === 'mondial_relay';
+  const isMondialRelay = shippingMethod === 'mondial_relay' || shippingMethod?.includes('mondial');
 
   return (
     <div className={`rounded-lg border p-6 ${getStatusColor()}`}>
@@ -129,9 +131,20 @@ export function TrackingInfo({
             </div>
           )}
 
+          {labelError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm flex items-start gap-2 mb-3">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>Erreur étiquette : {labelError}</span>
+            </div>
+          )}
+
           {trackingNumber && shippingStatus !== 'pending' && shippingStatus !== 'cancelled' && (
             <a
-              href={`https://tracking.sendcloud.sc/forward?carrier=&tracking_number=${trackingNumber}`}
+              href={
+                isMondialRelay
+                  ? `https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=${trackingNumber}`
+                  : `https://tracking.sendcloud.sc/forward?carrier=&tracking_number=${trackingNumber}`
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"

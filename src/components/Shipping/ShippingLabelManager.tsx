@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Download, ExternalLink, Loader2, CheckCircle, MapPin } from 'lucide-react';
+import { Package, Download, ExternalLink, Loader2, CheckCircle, MapPin, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
 interface ShippingLabelManagerProps {
@@ -9,6 +9,7 @@ interface ShippingLabelManagerProps {
   shippingStatus?: string | null;
   relayPointName?: string | null;
   relayPointAddress?: string | null;
+  relayPointId?: string | null;
   shippingMethod?: string | null;
   onUpdate?: () => void;
 }
@@ -20,11 +21,14 @@ export function ShippingLabelManager({
   shippingStatus,
   relayPointName,
   relayPointAddress,
+  relayPointId,
   shippingMethod,
   onUpdate,
 }: ShippingLabelManagerProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const isMondialRelay = shippingMethod === 'mondial_relay';
 
   const handleGenerateLabel = async () => {
     setLoading(true);
@@ -34,19 +38,30 @@ export function ShippingLabelManager({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-shipping-label`;
+      let apiUrl: string;
+      let body: object;
+
+      if (isMondialRelay) {
+        if (!relayPointId) throw new Error('Point relais non défini pour cette commande');
+        apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-mondial-relay-label`;
+        body = { transactionId, relayPointId };
+      } else {
+        apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-shipping-label`;
+        body = { transactionId };
+      }
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ transactionId }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate label');
+        throw new Error(errorData.error || 'Échec de la génération de l\'étiquette');
       }
 
       onUpdate?.();
@@ -77,14 +92,14 @@ export function ShippingLabelManager({
     );
   };
 
-  const isMondialRelay = shippingMethod === 'mondial_relay';
-
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Package className="w-6 h-6 text-emerald-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Expédition</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Expédition {isMondialRelay ? '— Mondial Relay' : ''}
+          </h3>
         </div>
         {getStatusBadge()}
       </div>
@@ -94,17 +109,19 @@ export function ShippingLabelManager({
           <div className="flex items-start gap-2">
             <MapPin className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-xs font-bold text-teal-800 uppercase tracking-wide mb-1">Point relais Mondial Relay (destination acheteur)</p>
+              <p className="text-xs font-bold text-teal-800 uppercase tracking-wide mb-1">Point relais de destination (acheteur)</p>
               {relayPointName && <p className="text-sm font-semibold text-teal-900">{relayPointName}</p>}
               {relayPointAddress && <p className="text-xs text-teal-700">{relayPointAddress}</p>}
+              {relayPointId && <p className="text-xs text-teal-600 mt-0.5">ID : {relayPointId}</p>}
             </div>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -122,7 +139,7 @@ export function ShippingLabelManager({
           ) : (
             <>
               <Package className="w-5 h-5" />
-              <span>Générer l'étiquette d'expédition</span>
+              <span>Générer l'étiquette {isMondialRelay ? 'Mondial Relay' : 'd\'expédition'}</span>
             </>
           )}
         </button>
@@ -150,15 +167,27 @@ export function ShippingLabelManager({
               <p className="text-sm text-gray-600 mb-2">Numéro de suivi</p>
               <div className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg">
                 <code className="text-sm font-mono text-gray-900">{trackingNumber}</code>
-                <a
-                  href={`https://tracking.sendcloud.sc/forward?carrier=&tracking_number=${trackingNumber}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  <span>Suivre</span>
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+                {isMondialRelay ? (
+                  <a
+                    href={`https://www.mondialrelay.fr/suivi-de-colis/?numeroExpedition=${trackingNumber}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    <span>Suivre</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                ) : (
+                  <a
+                    href={`https://tracking.sendcloud.sc/forward?carrier=&tracking_number=${trackingNumber}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    <span>Suivre</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                )}
               </div>
             </div>
           )}

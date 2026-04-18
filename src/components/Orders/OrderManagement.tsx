@@ -17,11 +17,7 @@ export function OrderManagement() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>(() => {
-    const hashPart = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
-    const params = new URLSearchParams(hashPart || window.location.search);
-    return params.get('redirect_status') === 'succeeded' ? 'completed' : 'pending';
-  });
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,9 +38,15 @@ export function OrderManagement() {
       .order('created_at', { ascending: false });
 
     if (activeTab === 'pending') {
-      query.in('status', ['pending', 'processing']);
+      query.or(
+        'status.in.(pending,processing),' +
+        'and(status.eq.completed,delivery_status.in.(pending,label_created,shipped,in_transit))'
+      );
     } else {
-      query.in('status', ['completed', 'cancelled', 'refunded', 'failed']);
+      query.or(
+        'status.in.(cancelled,refunded,failed),' +
+        'and(status.eq.completed,delivery_status.in.(delivered,cancelled))'
+      );
     }
 
     const { data, error } = await query;
@@ -210,7 +212,7 @@ export function OrderManagement() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            En attente ({transactions.filter(t => ['pending', 'processing'].includes(t.status)).length})
+            En attente ({transactions.length})
           </button>
           <button
             onClick={() => setActiveTab('completed')}
@@ -220,7 +222,7 @@ export function OrderManagement() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Historique ({transactions.filter(t => !['pending', 'processing'].includes(t.status)).length})
+            Historique ({transactions.length})
           </button>
         </div>
       </div>
@@ -348,22 +350,24 @@ export function OrderManagement() {
                   <ShippingLabelManager
                     transactionId={transaction.id}
                     shippingLabelUrl={transaction.shipping_label_pdf_url}
-                    trackingNumber={transaction.tracking_number}
-                    shippingStatus={transaction.delivery_status}
+                    trackingNumber={transaction.shipping_label_tracking_number || transaction.tracking_number}
+                    shippingStatus={transaction.shipping_status || transaction.delivery_status}
                     relayPointName={transaction.relay_point_name}
                     relayPointAddress={transaction.relay_point_address}
                     shippingMethod={transaction.shipping_method}
+                    relayPointId={transaction.relay_point_id}
                     onUpdate={fetchTransactions}
                   />
                 ) : (
                   <TrackingInfo
-                    trackingNumber={transaction.tracking_number}
-                    shippingStatus={transaction.delivery_status}
+                    trackingNumber={transaction.shipping_label_tracking_number || transaction.tracking_number}
+                    shippingStatus={transaction.shipping_status || transaction.delivery_status}
                     shippedAt={transaction.shipped_at}
                     deliveredAt={transaction.delivered_at}
                     shippingMethod={transaction.shipping_method}
                     relayPointName={transaction.relay_point_name}
                     relayPointAddress={transaction.relay_point_address}
+                    labelError={transaction.label_generation_error}
                   />
                 )}
               </div>

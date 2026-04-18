@@ -463,6 +463,9 @@ export interface Database {
           mondial_relay_point_address: string | null
           cancellation_reason: string | null
           cancelled_by: string | null
+          shipping_price: number | null
+          shipping_carrier: string | null
+          shipping_status: string | null
         }
         Insert: {
           id?: string
