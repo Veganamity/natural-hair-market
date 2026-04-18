@@ -428,18 +428,18 @@ export function TransactionsView() {
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-6 mb-2">
-                    <div>
-                      <span className="text-sm text-gray-600">Prix de vente:</span>
-                      <span className="ml-2 font-semibold text-gray-800">{Number(transaction.amount).toFixed(2)}€</span>
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">Prix de vente</span>
+                      <span className="font-semibold text-gray-800 text-sm">{Number(transaction.amount).toFixed(2)}€</span>
                     </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Commission:</span>
-                      <span className="ml-2 font-semibold text-red-600">-{Number(transaction.platform_fee).toFixed(2)}€</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">Commission</span>
+                      <span className="font-semibold text-red-600 text-sm">-{Number(transaction.platform_fee).toFixed(2)}€</span>
                     </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Vous recevez:</span>
-                      <span className="ml-2 font-bold text-emerald-600 text-lg">{Number(transaction.seller_amount).toFixed(2)}€</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">Vous recevez</span>
+                      <span className="font-bold text-emerald-600 text-sm">{Number(transaction.seller_amount).toFixed(2)}€</span>
                     </div>
                   </div>
                   {transaction.shipping_method && (
