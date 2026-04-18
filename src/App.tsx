@@ -48,6 +48,19 @@ function AppContent() {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [preselectedListingId, setPreselectedListingId] = useState<string | null>(null);
+  const [paymentSuccessMessage, setPaymentSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const paymentIntent = searchParams.get('payment_intent');
+    const redirectStatus = searchParams.get('redirect_status');
+    if (paymentIntent && redirectStatus === 'succeeded') {
+      setPaymentSuccessMessage('Votre paiement a bien été effectué ! Votre commande est confirmée.');
+      window.history.replaceState({}, '', '#orders');
+      setCurrentView('orders');
+      setTimeout(() => setPaymentSuccessMessage(null), 8000);
+    }
+  }, []);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
@@ -594,6 +607,16 @@ function AppContent() {
       </nav>
 
       <main className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
+        {paymentSuccessMessage && (
+          <div className="mb-4 p-4 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center gap-3 shadow-sm">
+            <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-emerald-800 font-semibold text-sm">{paymentSuccessMessage}</p>
+          </div>
+        )}
         {currentView === 'marketplace' && (
           <MarketplaceView
             isGuest={false}

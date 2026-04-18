@@ -333,17 +333,23 @@ export function OrderManagement() {
                 {isSellerView ? (
                   <ShippingLabelManager
                     transactionId={transaction.id}
-                    shippingLabelUrl={transaction.shipping_label_url}
+                    shippingLabelUrl={transaction.shipping_label_pdf_url}
                     trackingNumber={transaction.tracking_number}
-                    shippingStatus={transaction.shipping_status}
+                    shippingStatus={transaction.delivery_status}
+                    relayPointName={transaction.relay_point_name}
+                    relayPointAddress={transaction.relay_point_address}
+                    shippingMethod={transaction.shipping_method}
                     onUpdate={fetchTransactions}
                   />
                 ) : (
                   <TrackingInfo
                     trackingNumber={transaction.tracking_number}
-                    shippingStatus={transaction.shipping_status}
+                    shippingStatus={transaction.delivery_status}
                     shippedAt={transaction.shipped_at}
                     deliveredAt={transaction.delivered_at}
+                    shippingMethod={transaction.shipping_method}
+                    relayPointName={transaction.relay_point_name}
+                    relayPointAddress={transaction.relay_point_address}
                   />
                 )}
               </div>

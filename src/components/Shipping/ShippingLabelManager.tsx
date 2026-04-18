@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Download, ExternalLink, Loader2, CheckCircle } from 'lucide-react';
+import { Package, Download, ExternalLink, Loader2, CheckCircle, MapPin } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
 interface ShippingLabelManagerProps {
@@ -7,6 +7,9 @@ interface ShippingLabelManagerProps {
   shippingLabelUrl?: string | null;
   trackingNumber?: string | null;
   shippingStatus?: string | null;
+  relayPointName?: string | null;
+  relayPointAddress?: string | null;
+  shippingMethod?: string | null;
   onUpdate?: () => void;
 }
 
@@ -15,6 +18,9 @@ export function ShippingLabelManager({
   shippingLabelUrl,
   trackingNumber,
   shippingStatus,
+  relayPointName,
+  relayPointAddress,
+  shippingMethod,
   onUpdate,
 }: ShippingLabelManagerProps) {
   const [loading, setLoading] = useState(false);
@@ -71,6 +77,8 @@ export function ShippingLabelManager({
     );
   };
 
+  const isMondialRelay = shippingMethod === 'mondial_relay';
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-4">
@@ -80,6 +88,19 @@ export function ShippingLabelManager({
         </div>
         {getStatusBadge()}
       </div>
+
+      {isMondialRelay && (relayPointName || relayPointAddress) && (
+        <div className="mb-4 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <MapPin className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-xs font-bold text-teal-800 uppercase tracking-wide mb-1">Point relais Mondial Relay (destination acheteur)</p>
+              {relayPointName && <p className="text-sm font-semibold text-teal-900">{relayPointName}</p>}
+              {relayPointAddress && <p className="text-xs text-teal-700">{relayPointAddress}</p>}
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">

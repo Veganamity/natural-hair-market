@@ -64,20 +64,22 @@ export function TransactionsView() {
   };
 
   const getStatusBadge = (status: string) => {
-    const badges = {
+    const badges: Record<string, string> = {
       pending: 'bg-yellow-100 text-yellow-800',
       processing: 'bg-blue-100 text-blue-800',
       completed: 'bg-green-100 text-green-800',
       failed: 'bg-red-100 text-red-800',
       refunded: 'bg-gray-100 text-gray-800',
+      cancelled: 'bg-gray-100 text-gray-600',
     };
 
-    const labels = {
+    const labels: Record<string, string> = {
       pending: 'En attente',
       processing: 'En cours',
       completed: 'Terminé',
       failed: 'Échoué',
       refunded: 'Remboursé',
+      cancelled: 'Annulé',
     };
 
     return (

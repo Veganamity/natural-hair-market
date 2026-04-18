@@ -1,10 +1,13 @@
-import { Package, ExternalLink, Clock, CheckCircle, Truck, AlertCircle } from 'lucide-react';
+import { Package, ExternalLink, Clock, CheckCircle, Truck, AlertCircle, MapPin } from 'lucide-react';
 
 interface TrackingInfoProps {
   trackingNumber?: string | null;
   shippingStatus?: string | null;
   shippedAt?: string | null;
   deliveredAt?: string | null;
+  shippingMethod?: string | null;
+  relayPointName?: string | null;
+  relayPointAddress?: string | null;
 }
 
 export function TrackingInfo({
@@ -12,6 +15,9 @@ export function TrackingInfo({
   shippingStatus,
   shippedAt,
   deliveredAt,
+  shippingMethod,
+  relayPointName,
+  relayPointAddress,
 }: TrackingInfoProps) {
   const getStatusIcon = () => {
     switch (shippingStatus) {
@@ -75,6 +81,8 @@ export function TrackingInfo({
     });
   };
 
+  const isMondialRelay = shippingMethod === 'mondial_relay';
+
   return (
     <div className={`rounded-lg border p-6 ${getStatusColor()}`}>
       <div className="flex items-start space-x-4">
@@ -84,6 +92,19 @@ export function TrackingInfo({
             Suivi de livraison
           </h3>
           <p className="text-sm text-gray-700 mb-4">{getStatusMessage()}</p>
+
+          {isMondialRelay && (relayPointName || relayPointAddress) && (
+            <div className="bg-white border border-teal-200 rounded-lg p-3 mb-4">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-teal-700 uppercase tracking-wide mb-1">Votre point relais Mondial Relay</p>
+                  {relayPointName && <p className="text-sm font-semibold text-gray-900">{relayPointName}</p>}
+                  {relayPointAddress && <p className="text-xs text-gray-600">{relayPointAddress}</p>}
+                </div>
+              </div>
+            </div>
+          )}
 
           {trackingNumber && (
             <div className="bg-white rounded-lg p-4 mb-4">
