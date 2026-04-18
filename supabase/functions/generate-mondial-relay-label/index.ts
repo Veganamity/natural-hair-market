@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: transaction, error: transactionError } = await supabase
       .from("transactions")
-      .select("*, listing:listings(*)")
+      .select("*, listing:listings(*), relay_point_postal_code, relay_point_city, relay_point_name, relay_point_address")
       .eq("id", transactionId)
       .maybeSingle();
 
@@ -105,6 +105,10 @@ Deno.serve(async (req: Request) => {
     const listing = transaction.listing;
     if (!listing) throw new Error("Listing not found");
 
+    if (!/^\d+$/.test(relayPointId)) {
+      throw new Error(`L'identifiant du point relais est invalide (${relayPointId}). Veuillez resélectionner un point relais Mondial Relay valide lors de votre prochain achat.`);
+    }
+
     const weightGrams = Math.max(listing.weight_grams || 100, 10);
     const senderCountry = (sellerProfile.country || "FR").toUpperCase().substring(0, 2);
 
@@ -127,6 +131,26 @@ Deno.serve(async (req: Request) => {
     const senderCity = sanitizeCity(sellerProfile.city || "");
     const senderEmail = escapeXml((sellerProfile.email || "").substring(0, 70));
     const buyerEmail = escapeXml((buyerProfile?.email || "").substring(0, 70));
+
+    const rawRelayPostalCode = transaction.relay_point_postal_code || "";
+    const rawRelayCity = transaction.relay_point_city || "";
+    const rawRelayAddress = transaction.relay_point_address || "";
+
+    let recipientPostCode = rawRelayPostalCode.replace(/\s/g, "").substring(0, 10);
+    let recipientCity = sanitizeCity(rawRelayCity);
+    let recipientStreet = sanitizeXmlField(rawRelayAddress.split(",")[0] || "POINT RELAIS", 40);
+
+    if (!recipientPostCode || !recipientCity) {
+      const addrMatch = rawRelayAddress.match(/,\s*(\d{5})\s+(.+)$/);
+      if (addrMatch) {
+        recipientPostCode = recipientPostCode || addrMatch[1];
+        recipientCity = recipientCity || sanitizeCity(addrMatch[2]);
+      }
+    }
+
+    if (!recipientPostCode) recipientPostCode = senderPostCode;
+    if (!recipientCity) recipientCity = senderCity || "PARIS";
+    if (!recipientStreet) recipientStreet = "POINT RELAIS";
 
     const xmlBody = `<?xml version="1.0" encoding="utf-8"?>
 <ShipmentCreationRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.example.org/Request">
@@ -177,11 +201,11 @@ Deno.serve(async (req: Request) => {
           <Title />
           <Firstname>${buyerFirstname}</Firstname>
           <Lastname>${buyerLastname}</Lastname>
-          <Streetname>POINT RELAIS</Streetname>
+          <Streetname>${recipientStreet}</Streetname>
           <HouseNo />
           <CountryCode>FR</CountryCode>
-          <PostCode>75001</PostCode>
-          <City>Paris</City>
+          <PostCode>${recipientPostCode}</PostCode>
+          <City>${recipientCity}</City>
           <AddressAdd1 />
           <AddressAdd2 />
           <AddressAdd3 />

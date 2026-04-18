@@ -138,6 +138,8 @@ Deno.serve(async (req: Request) => {
           transactionData.relay_point_id = shippingData.relayPointId;
           transactionData.relay_point_name = shippingData.relayPointName;
           transactionData.relay_point_address = shippingData.relayPointAddress;
+          if (shippingData.relayPointPostalCode) transactionData.relay_point_postal_code = shippingData.relayPointPostalCode;
+          if (shippingData.relayPointCity) transactionData.relay_point_city = shippingData.relayPointCity;
         }
       }
 

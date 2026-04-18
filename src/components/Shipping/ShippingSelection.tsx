@@ -11,6 +11,8 @@ interface ShippingSelectionProps {
     relayPointId?: string;
     relayPointName?: string;
     relayPointAddress?: string;
+    relayPointPostalCode?: string;
+    relayPointCity?: string;
   }) => void;
   selectedMethod?: 'mondial_relay' | 'chronopost' | 'colissimo';
   weight?: number;
@@ -88,6 +90,8 @@ export function ShippingSelection({ onShippingSelected, selectedMethod, weight =
       shippingData.relayPointId = selectedRelayPoint.id;
       shippingData.relayPointName = selectedRelayPoint.name;
       shippingData.relayPointAddress = `${selectedRelayPoint.address}, ${selectedRelayPoint.postalCode} ${selectedRelayPoint.city}`;
+      shippingData.relayPointPostalCode = selectedRelayPoint.postalCode;
+      shippingData.relayPointCity = selectedRelayPoint.city;
       if (selectedAddress) {
         shippingData.address = selectedAddress;
       }
