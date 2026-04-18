@@ -16,6 +16,21 @@ function formatPhone(phone: string): string {
   return `+${digits}`;
 }
 
+function escapeXml(str: string): string {
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function optionalTag(tag: string, value: string): string {
+  const v = (value || "").trim();
+  if (!v) return "";
+  return `<${tag}>${escapeXml(v)}</${tag}>`;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -90,12 +105,14 @@ Deno.serve(async (req: Request) => {
     const orderRef = transaction.id.substring(0, 15).replace(/-/g, "").toUpperCase();
     const customerRef = user.id.substring(0, 9).replace(/-/g, "").toUpperCase();
 
+    const senderPostCode = (sellerProfile.postal_code || "").replace(/\s/g, "");
+
     const xmlBody = `<?xml version="1.0" encoding="utf-8"?>
 <ShipmentCreationRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.example.org/Request">
   <Context>
-    <Login>${apiLogin}</Login>
-    <Password>${apiPassword}</Password>
-    <CustomerId>${customerId}</CustomerId>
+    <Login>${escapeXml(apiLogin)}</Login>
+    <Password>${escapeXml(apiPassword)}</Password>
+    <CustomerId>${escapeXml(customerId)}</CustomerId>
     <Culture>fr-FR</Culture>
     <VersionAPI>1.0</VersionAPI>
   </Context>
@@ -109,27 +126,24 @@ Deno.serve(async (req: Request) => {
       <CustomerNo>${customerRef}</CustomerNo>
       <ParcelCount>1</ParcelCount>
       <DeliveryMode Mode="24R" Location="FR-${relayPointId}" />
-      <CollectionMode Mode="REL" Location="${senderCountry}-${relayPointId}" />
+      <CollectionMode Mode="CCC" />
       <Parcels>
         <Parcel>
           <Content>Cheveux</Content>
           <Weight Value="${weightGrams}" Unit="gr" />
         </Parcel>
       </Parcels>
-      <DeliveryInstruction></DeliveryInstruction>
       <Sender>
         <Address>
           <Firstname>${escapeXml(sellerFirstname)}</Firstname>
           <Lastname>${escapeXml(sellerLastname)}</Lastname>
           <Streetname>${escapeXml(sellerProfile.address_line1 || "")}</Streetname>
-          <HouseNo></HouseNo>
+          ${optionalTag("HouseNo", "")}
           <CountryCode>${senderCountry}</CountryCode>
-          <PostCode>${(sellerProfile.postal_code || "").replace(/\s/g, "")}</PostCode>
+          <PostCode>${senderPostCode}</PostCode>
           <City>${escapeXml(sellerProfile.city || "")}</City>
-          <AddressAdd1></AddressAdd1>
-          <AddressAdd2>${escapeXml(sellerProfile.address_line2 || "")}</AddressAdd2>
-          <PhoneNo>${sellerPhone}</PhoneNo>
-          <MobileNo></MobileNo>
+          ${optionalTag("AddressAdd2", sellerProfile.address_line2 || "")}
+          ${sellerPhone ? `<PhoneNo>${sellerPhone}</PhoneNo>` : ""}
           <Email>${escapeXml(sellerProfile.email || "")}</Email>
         </Address>
       </Sender>
@@ -137,15 +151,11 @@ Deno.serve(async (req: Request) => {
         <Address>
           <Firstname>${escapeXml(buyerFirstname)}</Firstname>
           <Lastname>${escapeXml(buyerLastname)}</Lastname>
-          <Streetname></Streetname>
-          <HouseNo></HouseNo>
+          <Streetname>Point Relais</Streetname>
           <CountryCode>FR</CountryCode>
           <PostCode>00000</PostCode>
           <City>Point Relais</City>
-          <AddressAdd1></AddressAdd1>
-          <AddressAdd2></AddressAdd2>
-          <PhoneNo>${buyerPhone}</PhoneNo>
-          <MobileNo></MobileNo>
+          ${buyerPhone ? `<MobileNo>${buyerPhone}</MobileNo>` : ""}
           <Email>${escapeXml(buyerProfile?.email || "")}</Email>
         </Address>
       </Recipient>
@@ -158,7 +168,7 @@ Deno.serve(async (req: Request) => {
     const response = await fetch("https://connect-api.mondialrelay.com/api/shipment", {
       method: "POST",
       headers: {
-        "Content-Type": "text/xml; charset=utf-8",
+        "Content-Type": "application/xml",
         "Accept": "application/xml",
       },
       body: xmlBody,
@@ -168,16 +178,19 @@ Deno.serve(async (req: Request) => {
     console.log("Mondial Relay response status:", response.status);
     console.log("Mondial Relay raw response:", responseText);
 
-    if (!response.ok) {
-      const errorMatch = responseText.match(/<messageField>([^<]+)<\/messageField>/i) ||
-                         responseText.match(/<Message>([^<]+)<\/Message>/i);
-      const errorMsg = errorMatch ? errorMatch[1] : `Erreur HTTP ${response.status}`;
-      throw new Error(`Erreur Mondial Relay: ${errorMsg}`);
+    const errorStatusMatch = responseText.match(/Status\s+Code="(\d+)"\s+Level="([^"]+)"\s+Message="([^"]+)"/i);
+    if (errorStatusMatch) {
+      const code = errorStatusMatch[1];
+      const level = errorStatusMatch[2];
+      const message = errorStatusMatch[3];
+      if (level.toLowerCase().includes("error")) {
+        throw new Error(`Erreur Mondial Relay (${code}): ${message}`);
+      }
     }
 
-    const statusMatch = responseText.match(/<codeField>(\d+)<\/codeField>.*?<levelField>(Error|Critical Error)<\/levelField>.*?<messageField>([^<]+)<\/messageField>/is);
-    if (statusMatch) {
-      throw new Error(`Erreur Mondial Relay (${statusMatch[1]}): ${statusMatch[3]}`);
+    if (!response.ok) {
+      const preview = responseText.substring(0, 300);
+      throw new Error(`Erreur HTTP ${response.status}: ${preview}`);
     }
 
     const shipmentNumberMatch = responseText.match(/ShipmentNumber="([^"]+)"/i) ||
@@ -227,12 +240,3 @@ Deno.serve(async (req: Request) => {
     );
   }
 });
-
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
