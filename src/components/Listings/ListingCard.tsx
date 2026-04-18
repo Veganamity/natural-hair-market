@@ -58,8 +58,15 @@ export function ListingCard({
         <img
           src={mainImage}
           alt={listing.title}
-          className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+          className={`w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300 ${listing.status === 'sold' ? 'brightness-75' : ''}`}
         />
+        {listing.status === 'sold' && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full rotate-[-8deg] shadow-lg tracking-wide">
+              VENDU
+            </span>
+          </div>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -123,6 +130,11 @@ export function ListingCard({
             {listing.status === 'active' && (
               <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium text-[10px]">
                 Dispo
+              </span>
+            )}
+            {listing.status === 'sold' && (
+              <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium text-[10px]">
+                Vendu
               </span>
             )}
           </div>

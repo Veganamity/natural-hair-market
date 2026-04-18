@@ -149,6 +149,11 @@ export function ListingDetails({
                     Disponible
                   </span>
                 )}
+                {listing.status === 'sold' && (
+                  <span className="inline-block bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full text-[9px] font-medium">
+                    Vendu
+                  </span>
+                )}
               </div>
               <div className="text-lg font-bold text-emerald-600 mb-0.5">{listing.price}€</div>
             </div>
@@ -249,51 +254,59 @@ export function ListingDetails({
 
             {!isOwner && (
               <div className="space-y-1 pt-1">
-                <div className="flex gap-1">
-                  {listing.instant_buy_enabled && (
-                    <button
-                      onClick={handleInstantBuy}
-                      className="flex-1 px-2 py-1 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-0.5 text-[10px]"
-                    >
-                      <ShoppingCart className="w-2.5 h-2.5" />
-                      Acheter
-                    </button>
-                  )}
-                  {listing.accept_offers && (
-                    <button
-                      onClick={() => setShowOfferModal(true)}
-                      className="flex-1 px-2 py-1 bg-teal-600 text-white rounded-md font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center gap-0.5 text-[10px]"
-                    >
-                      <Tag className="w-2.5 h-2.5" />
-                      Offre
-                    </button>
-                  )}
-                </div>
-                {listing.instant_buy_enabled && (
-                  <button
-                    onClick={() => {
-                      if (!isInCart(listing.id)) {
-                        addToCart(listing, listing.seller_id, seller?.full_name || seller?.email || 'Vendeur');
-                      }
-                    }}
-                    className={`w-full px-2 py-1 rounded-md font-semibold transition-colors flex items-center justify-center gap-0.5 text-[10px] ${
-                      isInCart(listing.id)
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 cursor-default'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
-                    }`}
-                  >
-                    {isInCart(listing.id) ? (
-                      <>
-                        <Check className="w-2.5 h-2.5" />
-                        Dans le panier
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-2.5 h-2.5" />
-                        Ajouter au panier
-                      </>
+                {listing.status !== 'active' ? (
+                  <div className="w-full px-2 py-2 bg-red-50 border border-red-200 rounded-md text-center">
+                    <span className="text-[10px] font-semibold text-red-700">Cette annonce a été vendue</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-1">
+                      {listing.instant_buy_enabled && (
+                        <button
+                          onClick={handleInstantBuy}
+                          className="flex-1 px-2 py-1 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-0.5 text-[10px]"
+                        >
+                          <ShoppingCart className="w-2.5 h-2.5" />
+                          Acheter
+                        </button>
+                      )}
+                      {listing.accept_offers && (
+                        <button
+                          onClick={() => setShowOfferModal(true)}
+                          className="flex-1 px-2 py-1 bg-teal-600 text-white rounded-md font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center gap-0.5 text-[10px]"
+                        >
+                          <Tag className="w-2.5 h-2.5" />
+                          Offre
+                        </button>
+                      )}
+                    </div>
+                    {listing.instant_buy_enabled && (
+                      <button
+                        onClick={() => {
+                          if (!isInCart(listing.id)) {
+                            addToCart(listing, listing.seller_id, seller?.full_name || seller?.email || 'Vendeur');
+                          }
+                        }}
+                        className={`w-full px-2 py-1 rounded-md font-semibold transition-colors flex items-center justify-center gap-0.5 text-[10px] ${
+                          isInCart(listing.id)
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 cursor-default'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
+                        }`}
+                      >
+                        {isInCart(listing.id) ? (
+                          <>
+                            <Check className="w-2.5 h-2.5" />
+                            Dans le panier
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-2.5 h-2.5" />
+                            Ajouter au panier
+                          </>
+                        )}
+                      </button>
                     )}
-                  </button>
+                  </>
                 )}
                 <button
                   onClick={() => onFavoriteToggle(listing.id)}

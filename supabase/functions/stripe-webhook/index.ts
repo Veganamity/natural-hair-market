@@ -162,13 +162,26 @@ Deno.serve(async (req: Request) => {
       case "charge.refunded": {
         const charge = event.data.object as Stripe.Charge;
         if (charge.payment_intent) {
-          await supabase
+          const { data: refundedTransactions } = await supabase
             .from("transactions")
             .update({
               status: "refunded",
+              delivery_status: "cancelled",
               updated_at: new Date().toISOString(),
             })
-            .eq("stripe_payment_intent_id", charge.payment_intent as string);
+            .eq("stripe_payment_intent_id", charge.payment_intent as string)
+            .select("listing_id");
+
+          if (refundedTransactions) {
+            for (const t of refundedTransactions) {
+              if (t.listing_id) {
+                await supabase
+                  .from("listings")
+                  .update({ status: "active" })
+                  .eq("id", t.listing_id);
+              }
+            }
+          }
         }
         break;
       }
