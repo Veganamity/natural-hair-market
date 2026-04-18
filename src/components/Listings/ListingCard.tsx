@@ -13,6 +13,7 @@ interface ListingCardProps {
   onFavoriteToggle?: (listingId: string) => void;
   isFavorited?: boolean;
   onClick?: () => void;
+  onSellerClick?: (sellerId: string) => void;
 }
 
 export function ListingCard({
@@ -23,7 +24,8 @@ export function ListingCard({
   isFavorite,
   onFavoriteToggle,
   isFavorited,
-  onClick
+  onClick,
+  onSellerClick,
 }: ListingCardProps) {
   const { t } = useLanguage();
   const isOldApi = onFavoriteToggle !== undefined;
@@ -139,6 +141,17 @@ export function ListingCard({
             )}
           </div>
         </div>
+        {seller && onSellerClick && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSellerClick(seller.id);
+            }}
+            className="mt-1.5 w-full text-left text-[10px] text-emerald-600 hover:text-emerald-700 font-medium truncate transition-colors"
+          >
+            {seller.full_name || seller.email} — voir sa boutique →
+          </button>
+        )}
       </div>
     </div>
   );

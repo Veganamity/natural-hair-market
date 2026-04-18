@@ -15,6 +15,7 @@ interface ListingDetailsProps {
   onClose: () => void;
   onFavoriteToggle: (listingId: string) => void;
   isFavorited: boolean;
+  onSellerClick?: (sellerId: string) => void;
 }
 
 const getListingNumber = (id: string): string => {
@@ -26,6 +27,7 @@ export function ListingDetails({
   onClose,
   onFavoriteToggle,
   isFavorited,
+  onSellerClick,
 }: ListingDetailsProps) {
   const { user } = useAuth();
   const { addToCart, isInCart } = useCart();
@@ -228,17 +230,27 @@ export function ListingDetails({
             {seller && (
               <div className="border-t border-gray-200 pt-1">
                 <h3 className="font-semibold text-gray-800 mb-0.5 text-[10px]">Vendeur</h3>
-                <div className="flex items-center gap-1">
-                  <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
+                <button
+                  onClick={() => {
+                    if (onSellerClick) {
+                      onClose();
+                      onSellerClick(seller.id);
+                    }
+                  }}
+                  className={`flex items-center gap-1 w-full text-left rounded-md transition-colors ${onSellerClick ? 'hover:bg-emerald-50 p-1 -ml-1 cursor-pointer' : ''}`}
+                >
+                  <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-emerald-700 font-semibold text-[10px]">
                       {seller.full_name?.[0] || seller.email[0].toUpperCase()}
                     </span>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-0.5">
-                      <p className="font-semibold text-gray-800 text-[10px]">{seller.full_name || 'Utilisateur'}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-0.5 flex-wrap">
+                      <p className={`font-semibold text-[10px] ${onSellerClick ? 'text-emerald-700 underline underline-offset-1' : 'text-gray-800'}`}>
+                        {seller.full_name || 'Utilisateur'}
+                      </p>
                       {seller.is_certified_salon && (
-                        <div className="flex items-center gap-0.5 bg-blue-50 px-0.5 py-0.5 rounded-full" title="Salon Certifié">
+                        <div className="flex items-center gap-0.5 bg-blue-50 px-0.5 py-0.5 rounded-full">
                           <BadgeCheck className="w-2 h-2 text-blue-600" />
                           <span className="text-[8px] text-blue-700 font-medium">Salon Certifié</span>
                         </div>
@@ -247,8 +259,11 @@ export function ListingDetails({
                     {seller.location && (
                       <p className="text-[9px] text-gray-600">{seller.location}</p>
                     )}
+                    {onSellerClick && (
+                      <p className="text-[8px] text-emerald-600 font-medium mt-0.5">Voir tous ses produits →</p>
+                    )}
                   </div>
-                </div>
+                </button>
               </div>
             )}
 

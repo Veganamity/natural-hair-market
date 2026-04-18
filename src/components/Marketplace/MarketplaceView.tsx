@@ -15,9 +15,10 @@ interface MarketplaceViewProps {
   onListingClick?: () => void;
   isGuest?: boolean;
   initialListingId?: string | null;
+  onSellerClick?: (sellerId: string) => void;
 }
 
-export function MarketplaceView({ onListingClick, isGuest = false, initialListingId }: MarketplaceViewProps) {
+export function MarketplaceView({ onListingClick, isGuest = false, initialListingId, onSellerClick }: MarketplaceViewProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [listings, setListings] = useState<Listing[]>([]);
@@ -345,6 +346,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
               seller={(listing as any).profiles}
               onFavoriteToggle={handleFavoriteToggle}
               isFavorited={favorites.has(listing.id)}
+              onSellerClick={!isGuest ? onSellerClick : undefined}
               onClick={() => {
                 if (isGuest && onListingClick) {
                   onListingClick();
@@ -364,6 +366,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
               seller={(listing as any).profiles}
               onFavoriteToggle={handleFavoriteToggle}
               isFavorited={favorites.has(listing.id)}
+              onSellerClick={!isGuest ? onSellerClick : undefined}
               onClick={() => {
                 if (isGuest && onListingClick) {
                   onListingClick();
@@ -382,6 +385,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
           onClose={() => setSelectedListing(null)}
           onFavoriteToggle={handleFavoriteToggle}
           isFavorited={favorites.has(selectedListing.id)}
+          onSellerClick={onSellerClick}
         />
       )}
     </div>

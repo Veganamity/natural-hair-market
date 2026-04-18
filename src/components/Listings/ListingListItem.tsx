@@ -9,6 +9,7 @@ interface ListingListItemProps {
   onFavoriteToggle?: (listingId: string) => void;
   isFavorited?: boolean;
   onClick?: () => void;
+  onSellerClick?: (sellerId: string) => void;
 }
 
 export function ListingListItem({
@@ -16,7 +17,8 @@ export function ListingListItem({
   seller,
   onFavoriteToggle,
   isFavorited,
-  onClick
+  onClick,
+  onSellerClick,
 }: ListingListItemProps) {
   const images = Array.isArray(listing.images) ? listing.images : [];
   const mainImage = images[0] || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg';
@@ -109,7 +111,18 @@ export function ListingListItem({
               <Calendar className="w-3.5 h-3.5" />
               <span>{formatDate(listing.created_at)}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              {seller && onSellerClick && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSellerClick(seller.id);
+                  }}
+                  className="text-emerald-600 hover:text-emerald-700 font-medium text-xs transition-colors"
+                >
+                  {seller.full_name || seller.email} — boutique →
+                </button>
+              )}
               {seller?.is_certified_salon && (
                 <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-full" title="Salon Certifié">
                   <BadgeCheck className="w-3.5 h-3.5 text-blue-600" />

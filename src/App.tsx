@@ -28,6 +28,7 @@ import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
 import { CartView } from './components/Cart/CartView';
 import { CartProvider, useCart } from './contexts/CartContext';
+import { SellerStorePage } from './components/Seller/SellerStorePage';
 import { Database } from './lib/database.types';
 import { supabase } from './lib/supabaseClient';
 import { useUnreadOffersCount } from './hooks/useUnreadOffers';
@@ -42,13 +43,14 @@ function AppContent() {
   const { unreadCount } = useUnreadOffersCount();
   const { cartCount } = useCart();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot-password' | 'reset-password'>('login');
-  const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about' | 'admin-salons' | 'admin-listings' | 'salon-certifie'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about' | 'admin-salons' | 'admin-listings' | 'salon-certifie' | 'seller-store'>('landing');
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [preselectedListingId, setPreselectedListingId] = useState<string | null>(null);
   const [paymentSuccessMessage, setPaymentSuccessMessage] = useState<string | null>(null);
+  const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
 
   useEffect(() => {
     const hashPart = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
@@ -162,6 +164,12 @@ function AppContent() {
     }
     setCurrentView(view);
     window.history.pushState({ view }, '', `#${view}`);
+  };
+
+  const navigateToSellerStore = (sellerId: string) => {
+    setSelectedSellerId(sellerId);
+    setCurrentView('seller-store');
+    window.history.pushState({ view: 'seller-store' }, '', '#seller-store');
   };
 
   if (loading) {
@@ -643,6 +651,13 @@ function AppContent() {
             isGuest={false}
             initialListingId={preselectedListingId}
             key={preselectedListingId || 'marketplace'}
+            onSellerClick={navigateToSellerStore}
+          />
+        )}
+        {currentView === 'seller-store' && selectedSellerId && (
+          <SellerStorePage
+            sellerId={selectedSellerId}
+            onBack={() => navigateToView('marketplace')}
           />
         )}
         {currentView === 'cart' && <CartView />}
