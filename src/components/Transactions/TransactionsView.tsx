@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart, Wallet, BarChart2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart, Wallet, BarChart2, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { StripeConnectEmbedded } from '../Stripe/StripeConnectEmbedded';
+import { downloadInvoicePDF } from '../../lib/invoiceGenerator';
 
 type Transaction = Database['public']['Tables']['transactions']['Row'];
 type Listing = Database['public']['Tables']['listings']['Row'];
@@ -249,7 +250,17 @@ export function TransactionsView() {
                         Vendeur: <span className="font-semibold">{transaction.seller.full_name || 'Utilisateur'}</span>
                       </p>
                     </div>
-                    {getStatusBadge(transaction.status)}
+                    <div className="flex flex-col items-end gap-2">
+                      {getStatusBadge(transaction.status)}
+                      <button
+                        onClick={() => downloadInvoicePDF({ transaction, listing: transaction.listing, buyer: transaction.buyer, seller: transaction.seller })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+                        title="Télécharger la facture"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Facture
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-center gap-6 mb-2">
                     <div>
@@ -332,7 +343,17 @@ export function TransactionsView() {
                         Acheteur: <span className="font-semibold">{transaction.buyer.full_name || 'Utilisateur'}</span>
                       </p>
                     </div>
-                    {getStatusBadge(transaction.status)}
+                    <div className="flex flex-col items-end gap-2">
+                      {getStatusBadge(transaction.status)}
+                      <button
+                        onClick={() => downloadInvoicePDF({ transaction, listing: transaction.listing, buyer: transaction.buyer, seller: transaction.seller })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+                        title="Télécharger la facture"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Facture
+                      </button>
+                    </div>
                   </div>
                   <div className="flex items-center gap-6 mb-2">
                     <div>

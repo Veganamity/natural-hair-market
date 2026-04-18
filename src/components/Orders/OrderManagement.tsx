@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { Package, Check, X, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, Download } from 'lucide-react';
 import { ShippingLabelManager } from '../Shipping/ShippingLabelManager';
 import { TrackingInfo } from '../Shipping/TrackingInfo';
+import { downloadInvoicePDF } from '../../lib/invoiceGenerator';
 
 type Transaction = Database['public']['Tables']['transactions']['Row'] & {
   listing: Database['public']['Tables']['listings']['Row'] | null;
@@ -290,30 +291,42 @@ export function OrderManagement() {
                   )}
                 </div>
 
-                {(canConfirm || canCancel) && (
-                  <div className="flex flex-col gap-2 min-w-[200px]">
-                    {canConfirm && (
-                      <button
-                        onClick={() => handleConfirmDelivery(transaction.id)}
-                        disabled={processingId === transaction.id}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        {processingId === transaction.id ? 'En cours...' : 'Confirmer livraison'}
-                      </button>
-                    )}
-                    {canCancel && (
-                      <button
-                        onClick={() => handleCancelOrder(transaction.id, hasPaymentIntent)}
-                        disabled={processingId === transaction.id}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        {processingId === transaction.id ? 'En cours...' : 'Annuler'}
-                      </button>
-                    )}
-                  </div>
-                )}
+                <div className="flex flex-col gap-2 min-w-[200px]">
+                  {canConfirm && (
+                    <button
+                      onClick={() => handleConfirmDelivery(transaction.id)}
+                      disabled={processingId === transaction.id}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      {processingId === transaction.id ? 'En cours...' : 'Confirmer livraison'}
+                    </button>
+                  )}
+                  {canCancel && (
+                    <button
+                      onClick={() => handleCancelOrder(transaction.id, hasPaymentIntent)}
+                      disabled={processingId === transaction.id}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      {processingId === transaction.id ? 'En cours...' : 'Annuler'}
+                    </button>
+                  )}
+                  {['completed', 'cancelled', 'refunded'].includes(transaction.status) && (
+                    <button
+                      onClick={() => downloadInvoicePDF({
+                        transaction,
+                        listing: transaction.listing,
+                        buyer: transaction.buyer!,
+                        seller: transaction.seller!,
+                      })}
+                      className="px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg font-semibold hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Télécharger la facture
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-200">
