@@ -344,10 +344,6 @@ export function TransactionsView() {
                       <span className="text-sm text-gray-600">Montant payé:</span>
                       <span className="ml-2 font-bold text-gray-800 text-lg">{Number(transaction.amount).toFixed(2)}€</span>
                     </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Commission:</span>
-                      <span className="ml-2 font-semibold text-red-600">{Number(transaction.platform_fee).toFixed(2)}€</span>
-                    </div>
                   </div>
                   {transaction.shipping_method && (
                     <div className="mt-3 p-3 bg-gray-50 rounded-lg">
