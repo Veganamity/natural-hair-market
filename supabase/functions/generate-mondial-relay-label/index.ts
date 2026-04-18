@@ -171,7 +171,7 @@ Deno.serve(async (req: Request) => {
       <CustomerNo>${customerRef}</CustomerNo>
       <ParcelCount>1</ParcelCount>
       <DeliveryMode Mode="24R" Location="FR-${relayPointId}" />
-      <CollectionMode Mode="CCC" Location="" />
+      <CollectionMode Mode="REL" Location="" />
       <Parcels>
         <Parcel>
           <Content>CHEVEUX</Content>
