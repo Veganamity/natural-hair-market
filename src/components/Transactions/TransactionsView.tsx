@@ -144,7 +144,7 @@ export function TransactionsView() {
       processing: 'bg-blue-100 text-blue-800',
       completed: 'bg-green-100 text-green-800',
       failed: 'bg-red-100 text-red-800',
-      refunded: 'bg-gray-100 text-gray-800',
+      refunded: 'bg-orange-100 text-orange-800',
       cancelled: 'bg-gray-100 text-gray-600',
     };
 
@@ -155,6 +155,7 @@ export function TransactionsView() {
       failed: 'Échoué',
       refunded: 'Remboursé',
       cancelled: 'Annulé',
+      disputed: 'Litige',
     };
 
     return (
@@ -532,6 +533,11 @@ export function TransactionsView() {
                   {transaction.status === 'completed' && (
                     <p className="text-xs text-emerald-600 font-medium mt-1">
                       Paiement envoyé à votre compte bancaire
+                    </p>
+                  )}
+                  {transaction.status === 'refunded' && (
+                    <p className="text-xs text-orange-600 font-medium mt-1">
+                      Paiement remboursé à l'acheteur
                     </p>
                   )}
                 </div>
