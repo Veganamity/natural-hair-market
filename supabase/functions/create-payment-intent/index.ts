@@ -128,6 +128,15 @@ Deno.serve(async (req: Request) => {
     if (shippingData) {
       transactionData.shipping_method = shippingData.method;
       transactionData.shipping_cost = buyerShippingCost;
+      transactionData.shipping_price = buyerShippingCost;
+
+      if (shippingData.method === 'mondial_relay') {
+        transactionData.shipping_carrier = 'Mondial Relay';
+      } else if (shippingData.method === 'chronopost') {
+        transactionData.shipping_carrier = 'Chronopost';
+      } else if (shippingData.method === 'colissimo') {
+        transactionData.shipping_carrier = 'Colissimo';
+      }
 
       if (shippingData.address) {
         transactionData.shipping_address = JSON.stringify(shippingData.address);
@@ -146,6 +155,7 @@ Deno.serve(async (req: Request) => {
 
     if (transactionError) {
       console.error("Transaction insert error:", transactionError);
+      throw new Error(`Failed to create transaction record: ${transactionError.message}`);
     }
 
     return new Response(
