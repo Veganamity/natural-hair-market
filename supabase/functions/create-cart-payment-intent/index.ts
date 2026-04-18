@@ -80,9 +80,9 @@ Deno.serve(async (req: Request) => {
 
     const itemsTotal = listings.reduce((sum: number, l: any) => sum + l.price, 0);
     const buyerShippingCost = shippingData?.cost || 0;
-    const totalAmount = itemsTotal + buyerShippingCost;
-    const commissionAmount = Math.round(totalAmount * MARKETPLACE_COMMISSION_RATE * 100);
-    const sellerReceivesAmount = Math.round(totalAmount * 100) - commissionAmount;
+    const commissionAmount = Math.round(itemsTotal * MARKETPLACE_COMMISSION_RATE * 100);
+    const totalAmount = itemsTotal + (commissionAmount / 100) + buyerShippingCost;
+    const sellerReceivesAmount = Math.round(itemsTotal * 100) - commissionAmount;
 
     const metadata: Record<string, string> = {
       listingIds: listingIds.join(","),
@@ -109,14 +109,14 @@ Deno.serve(async (req: Request) => {
 
     for (const listing of listings) {
       const shippingCostPerItem = buyerShippingCost / listings.length;
-      const itemCommission = Math.round((listing.price + shippingCostPerItem) * MARKETPLACE_COMMISSION_RATE * 100) / 100;
+      const itemCommission = Math.round(listing.price * MARKETPLACE_COMMISSION_RATE * 100) / 100;
 
       const transactionData: Record<string, unknown> = {
         listing_id: listing.id,
         buyer_id: user.id,
         seller_id: sellerId,
-        amount: listing.price + shippingCostPerItem,
-        seller_amount: (listing.price + shippingCostPerItem) * (1 - MARKETPLACE_COMMISSION_RATE),
+        amount: listing.price + itemCommission + shippingCostPerItem,
+        seller_amount: listing.price - itemCommission,
         platform_fee: itemCommission,
         marketplace_commission_rate: MARKETPLACE_COMMISSION_RATE,
         marketplace_commission_amount: itemCommission,

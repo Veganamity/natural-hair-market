@@ -108,6 +108,7 @@ export function CartPaymentModal({ sellerCart, onClose, onSuccess }: CartPayment
   const marketplaceCommission = itemsTotal * marketplaceCommissionRate;
   const shippingCost = shippingData?.cost || 0;
   const totalAmount = itemsTotal + marketplaceCommission + shippingCost;
+  const sellerReceives = itemsTotal - marketplaceCommission;
 
   const createPaymentIntent = async () => {
     if (!shippingData) {

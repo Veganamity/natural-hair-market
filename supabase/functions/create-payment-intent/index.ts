@@ -81,9 +81,9 @@ Deno.serve(async (req: Request) => {
 
     const itemPrice = listing.price;
     const buyerShippingCost = shippingData?.cost || 0;
-    const totalAmount = itemPrice + buyerShippingCost;
-    const commissionAmount = Math.round(totalAmount * MARKETPLACE_COMMISSION_RATE * 100);
-    const sellerReceivesAmount = Math.round(totalAmount * 100) - commissionAmount;
+    const commissionAmount = Math.round(itemPrice * MARKETPLACE_COMMISSION_RATE * 100);
+    const totalAmount = itemPrice + (commissionAmount / 100) + buyerShippingCost;
+    const sellerReceivesAmount = Math.round(itemPrice * 100) - commissionAmount;
 
     const metadata: Record<string, string> = {
       listingId,
@@ -113,7 +113,7 @@ Deno.serve(async (req: Request) => {
       listing_id: listingId,
       buyer_id: user.id,
       seller_id: listing.seller_id,
-      amount: totalAmount,
+      amount: itemPrice + (commissionAmount / 100) + buyerShippingCost,
       seller_amount: sellerReceivesAmount / 100,
       platform_fee: commissionAmount / 100,
       marketplace_commission_rate: MARKETPLACE_COMMISSION_RATE,
