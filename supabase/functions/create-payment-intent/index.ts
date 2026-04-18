@@ -67,7 +67,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: sellerProfile } = await supabase
       .from("profiles")
-      .select("stripe_account_id, stripe_account_status")
+      .select("stripe_account_id, stripe_account_status, full_name, email, phone, address_line1, address_line2, postal_code, city, country")
       .eq("id", listing.seller_id)
       .maybeSingle();
 
@@ -124,6 +124,19 @@ Deno.serve(async (req: Request) => {
       capture_method: "automatic",
       delivery_status: "pending",
     };
+
+    if (sellerProfile && (sellerProfile.address_line1 || sellerProfile.city)) {
+      transactionData.sender_address = {
+        name: sellerProfile.full_name || '',
+        addressLine1: sellerProfile.address_line1 || '',
+        addressLine2: sellerProfile.address_line2 || '',
+        postalCode: sellerProfile.postal_code || '',
+        city: sellerProfile.city || '',
+        country: sellerProfile.country || 'FR',
+        phone: sellerProfile.phone || '',
+        email: sellerProfile.email || '',
+      };
+    }
 
     if (shippingData) {
       transactionData.shipping_method = shippingData.method;

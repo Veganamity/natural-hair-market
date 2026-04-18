@@ -63,11 +63,32 @@ Deno.serve(async (req: Request) => {
       throw new Error("Unauthorized to access this transaction");
     }
 
-    if (!transaction.sender_address) {
-      throw new Error("Sender address missing");
-    }
+    let senderAddress: MondialRelayAddress;
 
-    const senderAddress = transaction.sender_address as unknown as MondialRelayAddress;
+    if (transaction.sender_address) {
+      senderAddress = transaction.sender_address as unknown as MondialRelayAddress;
+    } else {
+      const { data: sellerProfile } = await supabase
+        .from("profiles")
+        .select("full_name, email, phone, address_line1, address_line2, postal_code, city, country")
+        .eq("id", transaction.seller_id)
+        .maybeSingle();
+
+      if (!sellerProfile || (!sellerProfile.address_line1 && !sellerProfile.city)) {
+        throw new Error("Adresse expéditeur manquante. Veuillez renseigner votre adresse dans votre profil avant de générer un bon.");
+      }
+
+      senderAddress = {
+        name: sellerProfile.full_name || '',
+        addressLine1: sellerProfile.address_line1 || '',
+        addressLine2: sellerProfile.address_line2 || '',
+        postalCode: sellerProfile.postal_code || '',
+        city: sellerProfile.city || '',
+        country: sellerProfile.country || 'FR',
+        phone: sellerProfile.phone || '',
+        email: sellerProfile.email || '',
+      };
+    }
 
     const listing = transaction.listing;
     if (!listing) {
