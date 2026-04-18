@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart, Wallet, BarChart2, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart, Wallet, BarChart2, ChevronDown, ChevronUp, Download, Printer, Loader2, AlertCircle } from 'lucide-react';
 import { StripeConnectEmbedded } from '../Stripe/StripeConnectEmbedded';
 import { downloadInvoicePDF } from '../../lib/invoiceGenerator';
 
@@ -22,6 +22,8 @@ export function TransactionsView() {
   const [sales, setSales] = useState<TransactionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'purchases' | 'sales' | 'dashboard'>('purchases');
+  const [generatingLabel, setGeneratingLabel] = useState<string | null>(null);
+  const [labelErrors, setLabelErrors] = useState<Record<string, string>>({});
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [stripeOnboardingCompleted, setStripeOnboardingCompleted] = useState(false);
   const [showBalances, setShowBalances] = useState(false);
@@ -61,6 +63,49 @@ export function TransactionsView() {
       setStripeOnboardingCompleted(profileRes.data.stripe_onboarding_completed ?? false);
     }
     setLoading(false);
+  };
+
+  const generateMondialRelayLabel = async (transaction: TransactionWithDetails) => {
+    if (!transaction.relay_point_id) return;
+    setGeneratingLabel(transaction.id);
+    setLabelErrors(prev => ({ ...prev, [transaction.id]: '' }));
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-mondial-relay-label`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'Apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            transactionId: transaction.id,
+            relayPointId: transaction.relay_point_id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error || 'Erreur lors de la génération du bon');
+      }
+
+      if (result.labelUrl) {
+        window.open(result.labelUrl, '_blank');
+      }
+
+      await fetchTransactions();
+    } catch (err: any) {
+      setLabelErrors(prev => ({ ...prev, [transaction.id]: err.message || 'Erreur inconnue' }));
+    } finally {
+      setGeneratingLabel(null);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -403,6 +448,41 @@ export function TransactionsView() {
                             <p className="font-medium">{transaction.relay_point_name}</p>
                             <p>{transaction.relay_point_address}</p>
                           </div>
+                        </div>
+                      )}
+                      {transaction.shipping_method === 'mondial_relay' && (
+                        <div className="mt-3">
+                          {(transaction as any).shipping_label_pdf_url ? (
+                            <a
+                              href={(transaction as any).shipping_label_pdf_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                              Imprimer le bon Mondial Relay
+                            </a>
+                          ) : (
+                            <div className="space-y-1">
+                              <button
+                                onClick={() => generateMondialRelayLabel(transaction)}
+                                disabled={generatingLabel === transaction.id}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                              >
+                                {generatingLabel === transaction.id ? (
+                                  <><Loader2 className="w-3.5 h-3.5 animate-spin" />Génération en cours...</>
+                                ) : (
+                                  <><Printer className="w-3.5 h-3.5" />Générer le bon Mondial Relay</>
+                                )}
+                              </button>
+                              {labelErrors[transaction.id] && (
+                                <div className="flex items-center gap-1 text-xs text-red-600">
+                                  <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                                  <span>{labelErrors[transaction.id]}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                       {transaction.tracking_number && (
