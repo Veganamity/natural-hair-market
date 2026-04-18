@@ -122,7 +122,7 @@ export function PaymentModal({
   const marketplaceCommission = amount * marketplaceCommissionRate;
   const shippingCost = shippingData?.cost || 0;
   const totalAmount = amount + marketplaceCommission + shippingCost;
-  const sellerReceives = amount - marketplaceCommission;
+  const sellerReceives = amount;
 
   const createPaymentIntent = async () => {
     if (shippingData) {
