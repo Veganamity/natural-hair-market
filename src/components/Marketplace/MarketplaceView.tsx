@@ -58,7 +58,8 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
           is_verified_salon
         )
       `)
-      .eq('status', 'active')
+      .in('status', ['active', 'sold'])
+      .order('status', { ascending: true })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -140,16 +141,25 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
       return matchesSearch && matchesFilter && matchesPriceRange && matchesLengthRange;
     });
 
+    const statusWeight = (s: string) => (s === 'active' ? 0 : 1);
+
     switch (sortBy) {
       case 'recent':
-        return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        return filtered.sort((a, b) =>
+          statusWeight(a.status) - statusWeight(b.status) ||
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
       case 'price_asc':
-        return filtered.sort((a, b) => a.price - b.price);
+        return filtered.sort((a, b) =>
+          statusWeight(a.status) - statusWeight(b.status) || a.price - b.price
+        );
       case 'price_desc':
-        return filtered.sort((a, b) => b.price - a.price);
+        return filtered.sort((a, b) =>
+          statusWeight(a.status) - statusWeight(b.status) || b.price - a.price
+        );
       case 'relevant':
       default:
-        return filtered;
+        return filtered.sort((a, b) => statusWeight(a.status) - statusWeight(b.status));
     }
   })();
 
