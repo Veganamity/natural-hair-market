@@ -1,7 +1,5 @@
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 
-console.log('DEBUG STRIPE: Public Key starts with:', 'pk_live_51STHh');
-
 let stripePromise: Promise<Stripe | null>;
 
 export const getStripe = () => {
