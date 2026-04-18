@@ -52,13 +52,33 @@ function AppContent() {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
-    const paymentIntent = searchParams.get('payment_intent');
+    const paymentIntentId = searchParams.get('payment_intent');
     const redirectStatus = searchParams.get('redirect_status');
-    if (paymentIntent && redirectStatus === 'succeeded') {
+    if (paymentIntentId && redirectStatus === 'succeeded') {
       setPaymentSuccessMessage('Votre paiement a bien été effectué ! Votre commande est confirmée.');
       window.history.replaceState({}, '', '#orders');
       setCurrentView('orders');
       setTimeout(() => setPaymentSuccessMessage(null), 8000);
+
+      (async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
+          await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/confirm-payment`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ paymentIntentId }),
+            }
+          );
+        } catch (e) {
+          console.error('Failed to confirm payment status:', e);
+        }
+      })();
     }
   }, []);
 
