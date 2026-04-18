@@ -105,7 +105,7 @@ export function downloadInvoicePDF(data: InvoiceData): void {
 <body>
   <div class="header">
     <div class="brand">
-      <div class="brand-name">HairMarket</div>
+      <div class="brand-name">NaturalHairMarket</div>
       <div class="brand-sub">Marketplace de cheveux naturels</div>
     </div>
     <div class="invoice-meta">
@@ -173,7 +173,7 @@ export function downloadInvoicePDF(data: InvoiceData): void {
       <tr>
         <td>
           <div class="item-title">Commission marketplace</div>
-          <div class="item-sub">Service HairMarket (${(Number(transaction.marketplace_commission_rate) * 100).toFixed(0)}%)</div>
+          <div class="item-sub">Service NaturalHairMarket (${(Number(transaction.marketplace_commission_rate) * 100).toFixed(0)}%)</div>
         </td>
         <td style="color:#ef4444">-${formatCurrency(commission)}</td>
       </tr>
@@ -193,7 +193,7 @@ export function downloadInvoicePDF(data: InvoiceData): void {
       </div>
       ` : ''}
       <div class="totals-row commission">
-        <span>Commission HairMarket</span>
+        <span>Commission NaturalHairMarket</span>
         <span>-${formatCurrency(commission)}</span>
       </div>
       <div class="totals-row total">
@@ -239,7 +239,7 @@ export function downloadInvoicePDF(data: InvoiceData): void {
 
   <div class="footer">
     <div class="footer-text">
-      <span class="footer-brand">HairMarket</span> — Marketplace de cheveux naturels<br>
+      <span class="footer-brand">NaturalHairMarket</span> — Marketplace de cheveux naturels<br>
       Ce document tient lieu de facture. Conservez-le pour vos archives.<br>
       Pour toute question, contactez notre support.
     </div>
