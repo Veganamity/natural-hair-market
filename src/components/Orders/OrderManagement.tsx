@@ -31,19 +31,19 @@ export function OrderManagement() {
 
     setLoading(true);
 
-    const query = supabase
+    let query = supabase
       .from('transactions')
-      .select('*, listing:listings(*), buyer:profiles!buyer_id(*), seller:profiles!seller_id(*)')
+      .select('*, listing:listings(*)')
       .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
       .order('created_at', { ascending: false });
 
     if (activeTab === 'pending') {
-      query.or(
+      query = query.or(
         'status.in.(pending,processing),' +
         'and(status.eq.completed,delivery_status.in.(pending,label_created,shipped,in_transit))'
       );
     } else {
-      query.or(
+      query = query.or(
         'status.in.(cancelled,refunded,failed),' +
         'and(status.eq.completed,delivery_status.in.(delivered,cancelled))'
       );
@@ -53,10 +53,36 @@ export function OrderManagement() {
 
     if (error) {
       console.error('Error fetching transactions:', error);
-    } else {
-      setTransactions(data as any);
+      setLoading(false);
+      return;
     }
 
+    const rawTransactions = data || [];
+
+    const allUserIds = new Set<string>();
+    rawTransactions.forEach((t: any) => {
+      if (t.buyer_id) allUserIds.add(t.buyer_id);
+      if (t.seller_id) allUserIds.add(t.seller_id);
+    });
+
+    let profilesMap: Record<string, any> = {};
+    if (allUserIds.size > 0) {
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', Array.from(allUserIds));
+      (profilesData || []).forEach((p: any) => {
+        profilesMap[p.id] = p;
+      });
+    }
+
+    const enriched = rawTransactions.map((t: any) => ({
+      ...t,
+      buyer: profilesMap[t.buyer_id] || null,
+      seller: profilesMap[t.seller_id] || null,
+    }));
+
+    setTransactions(enriched as any);
     setLoading(false);
   };
 

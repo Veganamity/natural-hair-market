@@ -41,12 +41,12 @@ export function TransactionsView() {
     const [purchasesRes, salesRes, profileRes] = await Promise.all([
       supabase
         .from('transactions')
-        .select('*, listing:listings(*), buyer:profiles!buyer_id(*), seller:profiles!seller_id(*)')
+        .select('*, listing:listings(*)')
         .eq('buyer_id', user.id)
         .order('created_at', { ascending: false }),
       supabase
         .from('transactions')
-        .select('*, listing:listings(*), buyer:profiles!buyer_id(*), seller:profiles!seller_id(*)')
+        .select('*, listing:listings(*)')
         .eq('seller_id', user.id)
         .order('created_at', { ascending: false }),
       supabase
@@ -58,8 +58,36 @@ export function TransactionsView() {
 
     if (purchasesRes.error) console.error('Purchases fetch error:', purchasesRes.error);
     if (salesRes.error) console.error('Sales fetch error:', salesRes.error);
-    setPurchases((purchasesRes.data as any) || []);
-    setSales((salesRes.data as any) || []);
+
+    const rawPurchases = purchasesRes.data || [];
+    const rawSales = salesRes.data || [];
+
+    const allUserIds = new Set<string>();
+    [...rawPurchases, ...rawSales].forEach((t: any) => {
+      if (t.buyer_id) allUserIds.add(t.buyer_id);
+      if (t.seller_id) allUserIds.add(t.seller_id);
+    });
+
+    let profilesMap: Record<string, Profile> = {};
+    if (allUserIds.size > 0) {
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', Array.from(allUserIds));
+      (profilesData || []).forEach((p: Profile) => {
+        profilesMap[p.id] = p;
+      });
+    }
+
+    const enrich = (t: any): TransactionWithDetails => ({
+      ...t,
+      buyer: profilesMap[t.buyer_id] || { id: t.buyer_id, full_name: 'Utilisateur' } as Profile,
+      seller: profilesMap[t.seller_id] || { id: t.seller_id, full_name: 'Utilisateur' } as Profile,
+    });
+
+    setPurchases(rawPurchases.map(enrich));
+    setSales(rawSales.map(enrich));
+
     if (profileRes.data) {
       setStripeAccountId(profileRes.data.stripe_account_id);
       setStripeOnboardingCompleted(profileRes.data.stripe_onboarding_completed ?? false);
