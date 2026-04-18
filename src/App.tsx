@@ -51,7 +51,8 @@ function AppContent() {
   const [paymentSuccessMessage, setPaymentSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
+    const hashPart = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+    const searchParams = new URLSearchParams(hashPart || window.location.search);
     const paymentIntentId = searchParams.get('payment_intent');
     const redirectStatus = searchParams.get('redirect_status');
     if (paymentIntentId && redirectStatus === 'succeeded') {

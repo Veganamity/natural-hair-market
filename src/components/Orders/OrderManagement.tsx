@@ -18,7 +18,8 @@ export function OrderManagement() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>(() => {
-    const params = new URLSearchParams(window.location.search);
+    const hashPart = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+    const params = new URLSearchParams(hashPart || window.location.search);
     return params.get('redirect_status') === 'succeeded' ? 'completed' : 'pending';
   });
   const [processingId, setProcessingId] = useState<string | null>(null);
