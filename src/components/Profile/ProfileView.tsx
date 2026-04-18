@@ -205,6 +205,16 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       .eq('id', listingId);
 
     if (!error) {
+      if (status === 'active') {
+        await supabase
+          .from('transactions')
+          .update({
+            status: 'cancelled',
+            cancelled_at: new Date().toISOString(),
+          })
+          .eq('listing_id', listingId)
+          .in('status', ['pending', 'processing']);
+      }
       fetchUserListings();
     }
   };
