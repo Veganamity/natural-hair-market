@@ -91,12 +91,14 @@ export function OrderManagement() {
     }
   };
 
-  const handleCancelOrder = async (transactionId: string, hasPayment: boolean) => {
-    const reason = prompt('Raison de l\'annulation (optionnelle):');
+  const handleCancelOrder = async (transactionId: string, hasPayment: boolean, isBuyer: boolean) => {
+    const confirmMsg = hasPayment
+      ? isBuyer
+        ? 'Annuler cette commande ? Vous serez remboursé intégralement sur votre moyen de paiement.'
+        : 'Annuler cette commande et rembourser l\'acheteur ?'
+      : 'Annuler cette transaction ?';
 
-    if (reason === null) return;
-
-    if (!confirm(hasPayment ? 'Annuler cette commande et rembourser l\'acheteur ?' : 'Annuler cette transaction ?')) return;
+    if (!confirm(confirmMsg)) return;
 
     setProcessingId(transactionId);
 
@@ -116,7 +118,7 @@ export function OrderManagement() {
           },
           body: JSON.stringify({
             transactionId,
-            reason: reason || 'Annulation par l\'utilisateur'
+            reason: 'Annulation par l\'utilisateur'
           }),
         }
       );
@@ -127,7 +129,13 @@ export function OrderManagement() {
         throw new Error(result.error || 'Failed to cancel transaction');
       }
 
-      alert(hasPayment ? 'Commande annulée et remboursée avec succès !' : 'Transaction annulée avec succès !');
+      const successMsg = hasPayment
+        ? result.action === 'refunded'
+          ? 'Commande annulée. Le remboursement sera crédité sur votre moyen de paiement sous 5 à 10 jours ouvrés.'
+          : 'Commande annulée avec succès.'
+        : 'Transaction annulée avec succès.';
+
+      alert(successMsg);
       fetchTransactions();
     } catch (error: any) {
       console.error('Error cancelling transaction:', error);
@@ -222,9 +230,11 @@ export function OrderManagement() {
 
         {transactions.map((transaction) => {
           const isSellerView = transaction.seller_id === user?.id;
+          const isBuyerView = transaction.buyer_id === user?.id;
           const otherParty = isSellerView ? transaction.buyer : transaction.seller;
           const canConfirm = isSellerView && transaction.status === 'processing';
-          const canCancel = ['pending', 'processing'].includes(transaction.status);
+          const notYetShipped = !['shipped', 'delivered'].includes(transaction.delivery_status);
+          const canCancel = ['pending', 'processing'].includes(transaction.status) && notYetShipped;
           const hasPaymentIntent = !!transaction.stripe_payment_intent_id;
 
           return (
@@ -304,12 +314,12 @@ export function OrderManagement() {
                   )}
                   {canCancel && (
                     <button
-                      onClick={() => handleCancelOrder(transaction.id, hasPaymentIntent)}
+                      onClick={() => handleCancelOrder(transaction.id, hasPaymentIntent, isBuyerView)}
                       disabled={processingId === transaction.id}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <XCircle className="w-4 h-4" />
-                      {processingId === transaction.id ? 'En cours...' : 'Annuler'}
+                      {processingId === transaction.id ? 'En cours...' : isBuyerView ? 'Annuler & Rembourser' : 'Annuler'}
                     </button>
                   )}
                   {['completed', 'cancelled', 'refunded'].includes(transaction.status) && (

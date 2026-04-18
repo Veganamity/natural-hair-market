@@ -66,17 +66,51 @@ Deno.serve(async (req: Request) => {
       throw new Error("Transaction already cancelled or refunded");
     }
 
-    const paymentIntent = await stripe.paymentIntents.cancel(
-      transaction.stripe_payment_intent_id,
-      {
-        cancellation_reason: reason || "requested_by_customer",
-      }
+    if (transaction.delivery_status === "shipped" || transaction.delivery_status === "delivered") {
+      throw new Error("Cannot cancel: the parcel has already been shipped");
+    }
+
+    let stripeAction = "cancelled";
+    let stripeRefId = "";
+
+    if (!transaction.stripe_payment_intent_id) {
+      throw new Error("No payment intent found for this transaction");
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(
+      transaction.stripe_payment_intent_id
     );
+
+    if (
+      paymentIntent.status === "requires_payment_method" ||
+      paymentIntent.status === "requires_confirmation" ||
+      paymentIntent.status === "requires_action" ||
+      paymentIntent.status === "requires_capture" ||
+      paymentIntent.status === "processing"
+    ) {
+      const cancelled = await stripe.paymentIntents.cancel(
+        transaction.stripe_payment_intent_id,
+        { cancellation_reason: "requested_by_customer" }
+      );
+      stripeAction = "cancelled";
+      stripeRefId = cancelled.id;
+    } else if (paymentIntent.status === "succeeded") {
+      const refund = await stripe.refunds.create({
+        payment_intent: transaction.stripe_payment_intent_id,
+        reason: "requested_by_customer",
+      });
+      stripeAction = "refunded";
+      stripeRefId = refund.id;
+    } else {
+      throw new Error(`Cannot cancel payment in status: ${paymentIntent.status}`);
+    }
+
+    const newStatus = stripeAction === "refunded" ? "refunded" : "cancelled";
 
     const { error: updateError } = await supabase
       .from("transactions")
       .update({
-        status: "cancelled",
+        status: newStatus,
         delivery_status: "cancelled",
         cancelled_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -98,8 +132,9 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         success: true,
-        paymentIntent: paymentIntent.id,
-        status: paymentIntent.status,
+        action: stripeAction,
+        refId: stripeRefId,
+        status: newStatus,
       }),
       {
         headers: {
