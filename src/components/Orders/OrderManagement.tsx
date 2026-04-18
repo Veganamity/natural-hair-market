@@ -17,7 +17,10 @@ export function OrderManagement() {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('redirect_status') === 'succeeded' ? 'completed' : 'pending';
+  });
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
