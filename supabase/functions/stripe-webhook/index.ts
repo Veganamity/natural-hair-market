@@ -62,7 +62,7 @@ Deno.serve(async (req: Request) => {
 
         const { data: transaction } = await supabase
           .from("transactions")
-          .select("id, listing_id")
+          .select("id, listing_id, shipping_method, relay_point_id")
           .eq("stripe_payment_intent_id", paymentIntent.id)
           .maybeSingle();
 
@@ -75,15 +75,38 @@ Deno.serve(async (req: Request) => {
 
         if (transaction?.id) {
           try {
-            const createLabelUrl = `${supabaseUrl}/functions/v1/create-shipping-label`;
-            await fetch(createLabelUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${supabaseKey}`,
-              },
-              body: JSON.stringify({ transactionId: transaction.id }),
-            });
+            if (transaction.shipping_method === "mondial_relay" && transaction.relay_point_id) {
+              const mondialRelayUrl = `${supabaseUrl}/functions/v1/generate-mondial-relay-label`;
+              const mrResponse = await fetch(mondialRelayUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${supabaseKey}`,
+                },
+                body: JSON.stringify({
+                  transactionId: transaction.id,
+                  relayPointId: transaction.relay_point_id,
+                }),
+              });
+              if (!mrResponse.ok) {
+                const mrError = await mrResponse.text();
+                console.error("Failed to create Mondial Relay label:", mrError);
+                await supabase
+                  .from("transactions")
+                  .update({ label_generation_error: mrError })
+                  .eq("id", transaction.id);
+              }
+            } else {
+              const createLabelUrl = `${supabaseUrl}/functions/v1/create-shipping-label`;
+              await fetch(createLabelUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${supabaseKey}`,
+                },
+                body: JSON.stringify({ transactionId: transaction.id }),
+              });
+            }
           } catch (labelError) {
             console.error("Failed to create shipping label:", labelError);
           }

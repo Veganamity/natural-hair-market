@@ -375,7 +375,7 @@ export function OrderManagement() {
                 {isSellerView ? (
                   <ShippingLabelManager
                     transactionId={transaction.id}
-                    shippingLabelUrl={transaction.shipping_label_pdf_url}
+                    shippingLabelUrl={transaction.shipping_label_pdf_url || transaction.shipping_label_url}
                     trackingNumber={transaction.shipping_label_tracking_number || transaction.tracking_number}
                     shippingStatus={transaction.shipping_status || transaction.delivery_status}
                     relayPointName={transaction.relay_point_name}

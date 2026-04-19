@@ -64,9 +64,14 @@ Deno.serve(async (req: Request) => {
 
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const isServiceRole = token === supabaseKey;
 
-    if (userError || !user) throw new Error("Unauthorized");
+    let userId: string | null = null;
+    if (!isServiceRole) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      if (userError || !user) throw new Error("Unauthorized");
+      userId = user.id;
+    }
 
     const { transactionId, relayPointId } = await req.json();
 
@@ -82,7 +87,7 @@ Deno.serve(async (req: Request) => {
 
     if (transactionError || !transaction) throw new Error("Transaction not found");
 
-    if (transaction.seller_id !== user.id && transaction.buyer_id !== user.id) {
+    if (!isServiceRole && userId && transaction.seller_id !== userId && transaction.buyer_id !== userId) {
       throw new Error("Unauthorized to access this transaction");
     }
 
