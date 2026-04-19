@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Truck, Package, MapPin, Loader2, AlertCircle, Globe } from 'lucide-react';
 import { AddressSelector, ShippingAddress } from '../Payment/AddressSelector';
-import { MondialRelaySelection } from './MondialRelaySelection';
+import { SendcloudServicePointWidget, ServicePoint } from './SendcloudServicePointWidget';
 import { SendcloudMethod, isRelayMethod } from './shippingUtils';
 
 interface CartShippingSelectionProps {
@@ -47,6 +47,15 @@ function priceColor(carrier: string) {
   return 'text-emerald-600';
 }
 
+function carriersForMethod(method: SendcloudMethod): string {
+  const name = method.carrier?.toLowerCase() ?? '';
+  if (name.includes('mondial') || method.name?.toLowerCase().includes('mondial')) return 'mondial_relay';
+  if (name.includes('ups')) return 'ups';
+  if (name.includes('colissimo')) return 'colissimo';
+  if (name.includes('chronopost') || name.includes('chrono')) return 'chronopost';
+  return method.carrier ?? '';
+}
+
 export function CartShippingSelection({
   onShippingSelected,
   totalWeightGrams,
@@ -56,7 +65,7 @@ export function CartShippingSelection({
   const [loadingMethods, setLoadingMethods] = useState(false);
   const [methodsError, setMethodsError] = useState('');
   const [selectedMethodId, setSelectedMethodId] = useState<number | null>(null);
-  const [selectedRelayPoint, setSelectedRelayPoint] = useState<any>(null);
+  const [selectedServicePoint, setSelectedServicePoint] = useState<ServicePoint | null>(null);
   const lastCountryRef = useRef<string>('');
 
   const weightLabel = totalWeightGrams >= 1000
@@ -74,7 +83,7 @@ export function CartShippingSelection({
     setLoadingMethods(true);
     setMethodsError('');
     setSelectedMethodId(null);
-    setSelectedRelayPoint(null);
+    setSelectedServicePoint(null);
 
     try {
       const response = await fetch(
@@ -104,7 +113,7 @@ export function CartShippingSelection({
 
   useEffect(() => {
     emitShipping();
-  }, [selectedMethodId, selectedAddress, selectedRelayPoint]);
+  }, [selectedMethodId, selectedAddress, selectedServicePoint]);
 
   const emitShipping = () => {
     const method = shippingMethods.find(m => m.id === selectedMethodId);
@@ -113,18 +122,18 @@ export function CartShippingSelection({
     const isRelay = isRelayMethod(method);
 
     const data: any = {
-      method: isRelay ? 'mondial_relay' : method.carrier?.toLowerCase().includes('chrono') ? 'chronopost' : method.carrier?.toLowerCase() ?? method.name?.toLowerCase(),
+      method: isRelay ? 'mondial_relay' : method.carrier?.toLowerCase() ?? method.name?.toLowerCase(),
       sendcloudMethodId: method.id,
       cost: method.price ?? 0,
       address: selectedAddress,
     };
 
-    if (isRelay && selectedRelayPoint) {
-      data.relayPointId = selectedRelayPoint.id;
-      data.relayPointName = selectedRelayPoint.name;
-      data.relayPointAddress = `${selectedRelayPoint.address}, ${selectedRelayPoint.postalCode} ${selectedRelayPoint.city}`;
-      data.relayPointPostalCode = selectedRelayPoint.postalCode;
-      data.relayPointCity = selectedRelayPoint.city;
+    if (isRelay && selectedServicePoint) {
+      data.relayPointId = String(selectedServicePoint.id);
+      data.relayPointName = selectedServicePoint.name;
+      data.relayPointAddress = `${selectedServicePoint.street} ${selectedServicePoint.house_number}`;
+      data.relayPointPostalCode = selectedServicePoint.postal_code;
+      data.relayPointCity = selectedServicePoint.city;
     }
 
     onShippingSelected(data);
@@ -174,7 +183,10 @@ export function CartShippingSelection({
                 return (
                   <button
                     key={m.id}
-                    onClick={() => { setSelectedMethodId(m.id); setSelectedRelayPoint(null); }}
+                    onClick={() => {
+                      setSelectedMethodId(m.id);
+                      setSelectedServicePoint(null);
+                    }}
                     className={`p-2 border rounded-lg transition-all ${
                       isSelected ? selectedColor(m.carrier) : 'border-gray-200 hover:border-gray-300'
                     }`}
@@ -194,16 +206,18 @@ export function CartShippingSelection({
         </div>
       )}
 
-      {requiresRelay && selectedAddress && (
-        <MondialRelaySelection
-          postalCode={selectedAddress.postal_code}
-          country={selectedAddress.country}
-          weight={totalWeightGrams}
-          onSelectPoint={(point) => { setSelectedRelayPoint(point); }}
-          selectedPointId={selectedRelayPoint?.id}
-          street={selectedAddress.address_line1}
-          city={selectedAddress.city}
-        />
+      {requiresRelay && selectedAddress && selectedMethodObj && (
+        <div>
+          <p className="text-xs font-semibold text-gray-700 mb-1.5">Sélectionner un point relais</p>
+          <SendcloudServicePointWidget
+            postalCode={selectedAddress.postal_code}
+            country={selectedAddress.country}
+            carriers={carriersForMethod(selectedMethodObj)}
+            language="fr"
+            onSelect={(point) => setSelectedServicePoint(point)}
+            selectedPoint={selectedServicePoint}
+          />
+        </div>
       )}
     </div>
   );
