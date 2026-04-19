@@ -9,10 +9,15 @@ export interface SendcloudMethod {
 }
 
 export function isRelayMethod(method: SendcloudMethod): boolean {
+  const n = method.name?.toLowerCase() ?? '';
   return (
     method.service_point_input === 'required' ||
-    method.name?.toLowerCase().includes('relay') ||
-    method.name?.toLowerCase().includes('point relais') ||
+    n.includes('relay') ||
+    n.includes('relais') ||
+    n.includes('shop2shop') ||
+    n.includes('locker') ||
+    n.includes('service point') ||
+    n.includes('point retrait') ||
     method.carrier?.toLowerCase().includes('mondial')
   );
 }
