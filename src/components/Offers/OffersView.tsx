@@ -428,7 +428,7 @@ export function OffersView() {
           listingId={selectedOfferForPayment.listing.id}
           listingTitle={selectedOfferForPayment.listing.title}
           amount={selectedOfferForPayment.amount}
-          sellerShippingFee={selectedOfferForPayment.listing.seller_shipping_fee || 0}
+          weightGrams={selectedOfferForPayment.listing.weight_grams || 100}
           onClose={() => {
             setShowPaymentModal(false);
             setSelectedOfferForPayment(null);
