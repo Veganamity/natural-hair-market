@@ -19,10 +19,9 @@ async function md5Hash(text: string): Promise<string> {
 function formatPhone(phone: string): string {
   if (!phone) return "";
   const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("33") && digits.length === 11) return `+${digits}`;
-  if (digits.startsWith("0") && digits.length === 10) return `+33${digits.substring(1)}`;
-  if (digits.length === 9) return `+33${digits}`;
-  if (digits.length > 0) return `+${digits}`;
+  if (digits.startsWith("33") && digits.length === 11) return `0${digits}`;
+  if (digits.startsWith("0") && digits.length === 10) return `0033${digits.substring(1)}`;
+  if (digits.length === 9) return `0033${digits}`;
   return "";
 }
 
@@ -53,8 +52,9 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const enseigne = Deno.env.get("MONDIAL_RELAY_BRAND_ID") || "CC20EUCU";
-    const privateKey = Deno.env.get("MONDIAL_RELAY_PRIVATE_KEY") || "Nvhs3RMN";
+    const enseigne = Deno.env.get("MONDIAL_RELAY_BRAND_ID")!;
+    const privateKey = Deno.env.get("MONDIAL_RELAY_PRIVATE_KEY")!;
+    if (!enseigne || !privateKey) throw new Error("Credentials Mondial Relay manquants");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -71,7 +71,8 @@ Deno.serve(async (req: Request) => {
       userId = user.id;
     }
 
-    const { transactionId, relayPointId } = await req.json();
+    const body = await req.json();
+    const { transactionId, relayPointId, debug } = body;
 
     if (!transactionId || !relayPointId) {
       throw new Error("Transaction ID and relay point ID are required");
@@ -186,9 +187,18 @@ Deno.serve(async (req: Request) => {
     ];
 
     const securityString = securityFields.join("");
-    console.log("Security string:", securityString);
     const security = await md5Hash(securityString);
-    console.log("Security hash:", security);
+
+    if (debug) {
+      return new Response(JSON.stringify({ securityString, security, fields: {
+        enseigne, modeCol, modeLiv, orderRef, customerRef, senderCountry,
+        sellerLastname, sellerFirstname, senderStreet, senderCity, senderPostCode,
+        sellerPhone, sellerEmail: (sellerProfile.email||"").substring(0,70),
+        buyerLastname, buyerFirstname, relayName, recipientCity, recipientPostCode,
+        buyerPhone, buyerEmail: (buyerProfile?.email||"").substring(0,70),
+        weightGrams, relayPointId,
+      }}), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     const soapBody = `<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.mondialrelay.fr/webservice/">
