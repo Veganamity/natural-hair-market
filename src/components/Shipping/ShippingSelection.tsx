@@ -20,30 +20,33 @@ interface ShippingSelectionProps {
   weight?: number;
 }
 
-function carrierIcon(carrier: string) {
-  const name = carrier?.toLowerCase() ?? '';
-  if (name.includes('relay') || name.includes('mondial')) return <MapPin className="w-4 h-4" />;
-  if (name.includes('chrono') || name.includes('ups') || name.includes('dhl') || name.includes('fedex')) return <Truck className="w-4 h-4" />;
-  if (name.includes('colissimo')) return <Package className="w-4 h-4" />;
+function carrierIcon(carrier: string, methodName = '') {
+  const s = `${carrier ?? ''} ${methodName ?? ''}`.toLowerCase();
+  if (s.includes('relay') || s.includes('relais') || s.includes('mondial') || s.includes('locker') || s.includes('shop2shop') || s.includes('service point') || s.includes('point retrait')) return <MapPin className="w-4 h-4" />;
+  if (s.includes('chrono') || s.includes('ups') || s.includes('dhl') || s.includes('fedex') || s.includes('gls') || s.includes('tnt')) return <Truck className="w-4 h-4" />;
+  if (s.includes('colissimo') || s.includes('laposte') || s.includes('la poste')) return <Package className="w-4 h-4" />;
   return <Globe className="w-4 h-4" />;
 }
 
-function carrierAccent(carrier: string): { border: string; bg: string; text: string; icon: string } {
-  const name = carrier?.toLowerCase() ?? '';
-  if (name.includes('relay') || name.includes('mondial')) return { border: 'border-teal-500', bg: 'bg-teal-50', text: 'text-teal-700', icon: 'text-teal-500' };
-  if (name.includes('chrono')) return { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700', icon: 'text-blue-500' };
-  if (name.includes('ups')) return { border: 'border-amber-500', bg: 'bg-amber-50', text: 'text-amber-700', icon: 'text-amber-500' };
-  if (name.includes('dhl')) return { border: 'border-yellow-400', bg: 'bg-yellow-50', text: 'text-yellow-700', icon: 'text-yellow-500' };
-  if (name.includes('colissimo')) return { border: 'border-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'text-emerald-500' };
+function carrierAccent(carrier: string, methodName = ''): { border: string; bg: string; text: string; icon: string } {
+  const s = `${carrier ?? ''} ${methodName ?? ''}`.toLowerCase();
+  if (s.includes('relay') || s.includes('relais') || s.includes('mondial') || s.includes('locker') || s.includes('shop2shop')) return { border: 'border-teal-500', bg: 'bg-teal-50', text: 'text-teal-700', icon: 'text-teal-500' };
+  if (s.includes('chrono')) return { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700', icon: 'text-blue-500' };
+  if (s.includes('ups')) return { border: 'border-amber-500', bg: 'bg-amber-50', text: 'text-amber-700', icon: 'text-amber-500' };
+  if (s.includes('dhl')) return { border: 'border-yellow-400', bg: 'bg-yellow-50', text: 'text-yellow-700', icon: 'text-yellow-500' };
+  if (s.includes('colissimo') || s.includes('laposte') || s.includes('la poste')) return { border: 'border-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'text-emerald-500' };
+  if (s.includes('gls')) return { border: 'border-orange-400', bg: 'bg-orange-50', text: 'text-orange-700', icon: 'text-orange-500' };
   return { border: 'border-gray-400', bg: 'bg-gray-50', text: 'text-gray-700', icon: 'text-gray-500' };
 }
 
 function carriersParam(method: SendcloudMethod): string {
-  const name = method.carrier?.toLowerCase() ?? '';
-  if (name.includes('mondial') || method.name?.toLowerCase().includes('mondial')) return 'mondial_relay';
-  if (name.includes('ups')) return 'ups';
-  if (name.includes('colissimo')) return 'colissimo';
-  if (name.includes('chronopost') || name.includes('chrono')) return 'chronopost';
+  const s = `${method.carrier ?? ''} ${method.name ?? ''}`.toLowerCase();
+  if (s.includes('mondial') || s.includes('relay') || s.includes('relais') || s.includes('locker') || s.includes('shop2shop')) return 'mondial_relay';
+  if (s.includes('ups')) return 'ups';
+  if (s.includes('colissimo')) return 'colissimo';
+  if (s.includes('chronopost') || s.includes('chrono')) return 'chronopost';
+  if (s.includes('dhl')) return 'dhl';
+  if (s.includes('gls')) return 'gls';
   return method.carrier ?? '';
 }
 
@@ -159,7 +162,7 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
             <div className="space-y-1.5">
               {shippingMethods.map((m) => {
                 const isSelected = m.id === selectedMethodId;
-                const accent = carrierAccent(m.carrier);
+                const accent = carrierAccent(m.carrier, m.name);
                 const relay = isRelayMethod(m);
                 return (
                   <button
@@ -175,7 +178,7 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
                     }`}
                   >
                     <span className={isSelected ? accent.icon : 'text-gray-400'}>
-                      {carrierIcon(m.carrier)}
+                      {carrierIcon(m.carrier, m.name)}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className={`text-xs font-semibold truncate ${isSelected ? accent.text : 'text-gray-800'}`}>

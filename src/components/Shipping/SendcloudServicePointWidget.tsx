@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { MapPin, Loader2, X, Check } from 'lucide-react';
+import { MapPin, Loader2, Check } from 'lucide-react';
 
 export interface ServicePoint {
   id: number;
@@ -46,16 +46,31 @@ declare global {
 const SCRIPT_ID = 'sendcloud-service-point-widget';
 const SCRIPT_SRC = 'https://embed.sendcloud.sc/spp/1.0.0/api.min.js';
 
-function loadSendcloudScript(): Promise<void> {
+function waitForSendcloud(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.sendcloud?.servicePoints) {
+      resolve();
+      return;
+    }
+
+    let attempts = 0;
+    const poll = setInterval(() => {
+      attempts++;
+      if (window.sendcloud?.servicePoints) {
+        clearInterval(poll);
+        resolve();
+      } else if (attempts > 100) {
+        clearInterval(poll);
+        reject(new Error('Sendcloud widget timeout'));
+      }
+    }, 100);
+  });
+}
+
+function injectScript(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (document.getElementById(SCRIPT_ID)) {
-      if (window.sendcloud) {
-        resolve();
-      } else {
-        const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement;
-        existing.addEventListener('load', () => resolve());
-        existing.addEventListener('error', reject);
-      }
+      waitForSendcloud().then(resolve).catch(reject);
       return;
     }
 
@@ -63,8 +78,10 @@ function loadSendcloudScript(): Promise<void> {
     script.id = SCRIPT_ID;
     script.src = SCRIPT_SRC;
     script.async = true;
-    script.onload = () => resolve();
-    script.onerror = reject;
+    script.onload = () => {
+      waitForSendcloud().then(resolve).catch(reject);
+    };
+    script.onerror = () => reject(new Error('Script load failed'));
     document.head.appendChild(script);
   });
 }
@@ -78,18 +95,25 @@ export function SendcloudServicePointWidget({
   selectedPoint,
 }: SendcloudServicePointWidgetProps) {
   const [scriptReady, setScriptReady] = useState(false);
-  const [opening, setOpening] = useState(false);
+  const [scriptError, setScriptError] = useState(false);
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
-    loadSendcloudScript()
+
+    if (window.sendcloud?.servicePoints) {
+      setScriptReady(true);
+      return;
+    }
+
+    injectScript()
       .then(() => {
         if (mountedRef.current) setScriptReady(true);
       })
       .catch(() => {
-        if (mountedRef.current) setScriptReady(false);
+        if (mountedRef.current) setScriptError(true);
       });
+
     return () => {
       mountedRef.current = false;
     };
@@ -97,9 +121,7 @@ export function SendcloudServicePointWidget({
 
   const openWidget = () => {
     const apiKey = import.meta.env.VITE_SENDCLOUD_PUBLIC_KEY;
-    if (!apiKey || apiKey.includes('YOUR_SENDCLOUD') || !window.sendcloud?.servicePoints) return;
-
-    setOpening(true);
+    if (!apiKey || !window.sendcloud?.servicePoints) return;
 
     window.sendcloud.servicePoints.open(
       apiKey,
@@ -108,15 +130,12 @@ export function SendcloudServicePointWidget({
       carriers,
       language,
       (servicePoint: ServicePoint) => {
-        setOpening(false);
-        onSelect(servicePoint);
+        if (mountedRef.current) {
+          onSelect(servicePoint);
+        }
       },
       {}
     );
-
-    setTimeout(() => {
-      if (mountedRef.current) setOpening(false);
-    }, 2000);
   };
 
   const publicKey = import.meta.env.VITE_SENDCLOUD_PUBLIC_KEY;
@@ -126,7 +145,15 @@ export function SendcloudServicePointWidget({
     return (
       <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
         <p className="font-semibold">Clé publique Sendcloud non configurée</p>
-        <p className="text-amber-700">Ajoutez <code className="bg-amber-100 px-1 rounded">VITE_SENDCLOUD_PUBLIC_KEY</code> dans votre fichier <code>.env</code> pour activer la sélection de points relais.</p>
+        <p className="text-amber-700">Ajoutez <code className="bg-amber-100 px-1 rounded">VITE_SENDCLOUD_PUBLIC_KEY</code> dans votre fichier <code>.env</code>.</p>
+      </div>
+    );
+  }
+
+  if (scriptError) {
+    return (
+      <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
+        Impossible de charger le widget de points relais. Vérifiez votre connexion.
       </div>
     );
   }
@@ -162,10 +189,10 @@ export function SendcloudServicePointWidget({
       ) : (
         <button
           onClick={openWidget}
-          disabled={!scriptReady || opening}
+          disabled={!scriptReady}
           className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border-2 border-dashed border-teal-400 rounded-lg text-sm font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {opening || !scriptReady ? (
+          {!scriptReady ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>Chargement...</span>
