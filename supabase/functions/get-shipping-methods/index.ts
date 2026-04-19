@@ -19,10 +19,6 @@ function isRelayDelivery(name: string, servicePointInput: string): boolean {
   );
 }
 
-function isHomeDelivery(name: string, servicePointInput: string): boolean {
-  return !isRelayDelivery(name, servicePointInput);
-}
-
 interface ShippingMethod {
   id: number;
   name: string;
@@ -45,6 +41,7 @@ function deduplicateMethods(methods: ShippingMethod[], weightKg: number): Shippi
       groups.set(groupKey, m);
       continue;
     }
+
     const existingCoversWeight = weightKg >= existing.min_weight && weightKg <= existing.max_weight;
     const currentCoversWeight = weightKg >= m.min_weight && weightKg <= m.max_weight;
 
@@ -85,7 +82,7 @@ Deno.serve(async (req: Request) => {
     const sendcloudAuth = btoa(`${sendcloudApiKey}:${sendcloudApiSecret}`);
     const weightKg = Math.max((weightGrams || 100) / 1000, 0.001);
 
-    const url = `https://panel.sendcloud.sc/api/v2/shipping_methods?to_country=${toCountry}&weight=${weightKg}`;
+    const url = `https://panel.sendcloud.sc/api/v2/shipping_methods?to_country=${toCountry}`;
 
     const response = await fetch(url, {
       headers: {
@@ -112,10 +109,10 @@ Deno.serve(async (req: Request) => {
         if (rawPrice === null || rawPrice === undefined) return null;
 
         const price = typeof rawPrice === "string" ? parseFloat(rawPrice) : rawPrice;
-        if (isNaN(price)) return null;
+        if (isNaN(price) || price <= 0) return null;
 
-        const minWeight = parseFloat(countryData?.min_weight ?? m.min_weight ?? "0");
-        const maxWeight = parseFloat(countryData?.max_weight ?? m.max_weight ?? "99999");
+        const minWeight = parseFloat(countryData?.min_weight ?? m.min_weight ?? "0") || 0;
+        const maxWeight = parseFloat(countryData?.max_weight ?? m.max_weight ?? "99999") || 99999;
 
         if (weightKg < minWeight || weightKg > maxWeight) return null;
 
