@@ -97,7 +97,7 @@ export function SendcloudServicePointWidget({
 
   const openWidget = () => {
     const apiKey = import.meta.env.VITE_SENDCLOUD_PUBLIC_KEY;
-    if (!apiKey || !window.sendcloud?.servicePoints) return;
+    if (!apiKey || apiKey.includes('YOUR_SENDCLOUD') || !window.sendcloud?.servicePoints) return;
 
     setOpening(true);
 
@@ -119,10 +119,14 @@ export function SendcloudServicePointWidget({
     }, 2000);
   };
 
-  if (!import.meta.env.VITE_SENDCLOUD_PUBLIC_KEY) {
+  const publicKey = import.meta.env.VITE_SENDCLOUD_PUBLIC_KEY;
+  const keyInvalid = !publicKey || publicKey.includes('YOUR_SENDCLOUD') || publicKey.length < 10;
+
+  if (keyInvalid) {
     return (
-      <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
-        Clé publique Sendcloud manquante. Ajoutez <code>VITE_SENDCLOUD_PUBLIC_KEY</code> dans votre fichier <code>.env</code>.
+      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
+        <p className="font-semibold">Clé publique Sendcloud non configurée</p>
+        <p className="text-amber-700">Ajoutez <code className="bg-amber-100 px-1 rounded">VITE_SENDCLOUD_PUBLIC_KEY</code> dans votre fichier <code>.env</code> pour activer la sélection de points relais.</p>
       </div>
     );
   }
