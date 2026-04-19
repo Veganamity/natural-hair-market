@@ -222,13 +222,15 @@ Deno.serve(async (req: Request) => {
       <web:Dest_Tel2></web:Dest_Tel2>
       <web:Dest_Mail>${escapeXml((buyerProfile?.email || "").substring(0, 70))}</web:Dest_Mail>
       <web:Poids>${weightGrams}</web:Poids>
+      <web:Longueur></web:Longueur>
+      <web:Taille></web:Taille>
       <web:NbColis>1</web:NbColis>
       <web:CRT_Valeur>0</web:CRT_Valeur>
       <web:CRT_Devise></web:CRT_Devise>
-      <web:Exp_Valeur></web:Exp_Valeur>
-      <web:Exp_Devise></web:Exp_Devise>
+      <web:EXP_Valeur></web:EXP_Valeur>
+      <web:EXP_Devise></web:EXP_Devise>
       <web:COL_Rel_Pays></web:COL_Rel_Pays>
-      <web:COL_Rel>${''}</web:COL_Rel>
+      <web:COL_Rel></web:COL_Rel>
       <web:LIV_Rel_Pays>FR</web:LIV_Rel_Pays>
       <web:LIV_Rel>${escapeXml(relayPointId)}</web:LIV_Rel>
       <web:TAvisage></web:TAvisage>
@@ -237,8 +239,6 @@ Deno.serve(async (req: Request) => {
       <web:TRDV></web:TRDV>
       <web:Assurance>0</web:Assurance>
       <web:Instructions></web:Instructions>
-      <web:Texte></web:Texte>
-      <web:Taille></web:Taille>
       <web:Security>${security}</web:Security>
     </web:WSI2_CreationEtiquette>
   </soap:Body>
