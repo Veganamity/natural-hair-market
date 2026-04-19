@@ -134,6 +134,10 @@ Deno.serve(async (req: Request) => {
         if (shippingData.address) {
           transactionData.shipping_address = JSON.stringify(shippingData.address);
         }
+        if (shippingData.sendcloudMethodId) {
+          transactionData.sendcloud_method_id = shippingData.sendcloudMethodId;
+        }
+
         if (shippingData.relayPointId) {
           transactionData.relay_point_id = shippingData.relayPointId;
           transactionData.relay_point_name = shippingData.relayPointName;

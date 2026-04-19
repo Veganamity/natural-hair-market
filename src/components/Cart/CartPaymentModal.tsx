@@ -111,11 +111,7 @@ export function CartPaymentModal({ sellerCart, onClose, onSuccess }: CartPayment
   const sellerReceives = itemsTotal;
 
   const createPaymentIntent = async () => {
-    if (!shippingData) {
-      setError('Veuillez sélectionner un mode de livraison');
-      return;
-    }
-    if ((shippingData.method === 'chronopost' || shippingData.method === 'colissimo') && !shippingData.address) {
+    if (!shippingData || !shippingData.address) {
       setError('Veuillez renseigner une adresse de livraison');
       return;
     }
@@ -165,9 +161,8 @@ export function CartPaymentModal({ sellerCart, onClose, onSuccess }: CartPayment
     }
   };
 
-  const isShippingValid = shippingData && (
-    (shippingData.method === 'mondial_relay' && shippingData.relayPointId) ||
-    ((shippingData.method === 'chronopost' || shippingData.method === 'colissimo') && shippingData.address)
+  const isShippingValid = shippingData && shippingData.sendcloudMethodId && shippingData.address && (
+    !shippingData.relayPointId || (shippingData.method === 'mondial_relay' && shippingData.relayPointId)
   );
 
   return (

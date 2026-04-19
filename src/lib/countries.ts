@@ -1,0 +1,80 @@
+export interface Country {
+  code: string;
+  name: string;
+  zone: 'fr' | 'eu' | 'world';
+}
+
+export const COUNTRIES: Country[] = [
+  { code: 'FR', name: 'France', zone: 'fr' },
+  { code: 'BE', name: 'Belgique', zone: 'eu' },
+  { code: 'LU', name: 'Luxembourg', zone: 'eu' },
+  { code: 'CH', name: 'Suisse', zone: 'eu' },
+  { code: 'DE', name: 'Allemagne', zone: 'eu' },
+  { code: 'ES', name: 'Espagne', zone: 'eu' },
+  { code: 'IT', name: 'Italie', zone: 'eu' },
+  { code: 'NL', name: 'Pays-Bas', zone: 'eu' },
+  { code: 'PT', name: 'Portugal', zone: 'eu' },
+  { code: 'AT', name: 'Autriche', zone: 'eu' },
+  { code: 'PL', name: 'Pologne', zone: 'eu' },
+  { code: 'SE', name: 'Suède', zone: 'eu' },
+  { code: 'NO', name: 'Norvège', zone: 'eu' },
+  { code: 'DK', name: 'Danemark', zone: 'eu' },
+  { code: 'FI', name: 'Finlande', zone: 'eu' },
+  { code: 'IE', name: 'Irlande', zone: 'eu' },
+  { code: 'CZ', name: 'Tchéquie', zone: 'eu' },
+  { code: 'SK', name: 'Slovaquie', zone: 'eu' },
+  { code: 'HU', name: 'Hongrie', zone: 'eu' },
+  { code: 'RO', name: 'Roumanie', zone: 'eu' },
+  { code: 'BG', name: 'Bulgarie', zone: 'eu' },
+  { code: 'HR', name: 'Croatie', zone: 'eu' },
+  { code: 'GR', name: 'Grèce', zone: 'eu' },
+  { code: 'GB', name: 'Royaume-Uni', zone: 'world' },
+  { code: 'US', name: 'États-Unis', zone: 'world' },
+  { code: 'CA', name: 'Canada', zone: 'world' },
+  { code: 'AU', name: 'Australie', zone: 'world' },
+  { code: 'JP', name: 'Japon', zone: 'world' },
+  { code: 'CN', name: 'Chine', zone: 'world' },
+  { code: 'BR', name: 'Brésil', zone: 'world' },
+  { code: 'MX', name: 'Mexique', zone: 'world' },
+  { code: 'AR', name: 'Argentine', zone: 'world' },
+  { code: 'ZA', name: 'Afrique du Sud', zone: 'world' },
+  { code: 'NG', name: 'Nigéria', zone: 'world' },
+  { code: 'KE', name: 'Kenya', zone: 'world' },
+  { code: 'GH', name: 'Ghana', zone: 'world' },
+  { code: 'CI', name: "Côte d'Ivoire", zone: 'world' },
+  { code: 'SN', name: 'Sénégal', zone: 'world' },
+  { code: 'CM', name: 'Cameroun', zone: 'world' },
+  { code: 'MA', name: 'Maroc', zone: 'world' },
+  { code: 'DZ', name: 'Algérie', zone: 'world' },
+  { code: 'TN', name: 'Tunisie', zone: 'world' },
+  { code: 'EG', name: 'Égypte', zone: 'world' },
+  { code: 'AE', name: 'Émirats arabes unis', zone: 'world' },
+  { code: 'SA', name: 'Arabie saoudite', zone: 'world' },
+  { code: 'QA', name: 'Qatar', zone: 'world' },
+  { code: 'KW', name: 'Koweït', zone: 'world' },
+  { code: 'IN', name: 'Inde', zone: 'world' },
+  { code: 'SG', name: 'Singapour', zone: 'world' },
+  { code: 'HK', name: 'Hong Kong', zone: 'world' },
+  { code: 'KR', name: 'Corée du Sud', zone: 'world' },
+  { code: 'TH', name: 'Thaïlande', zone: 'world' },
+  { code: 'ID', name: 'Indonésie', zone: 'world' },
+  { code: 'MY', name: 'Malaisie', zone: 'world' },
+  { code: 'PH', name: 'Philippines', zone: 'world' },
+  { code: 'VN', name: 'Vietnam', zone: 'world' },
+  { code: 'NZ', name: 'Nouvelle-Zélande', zone: 'world' },
+  { code: 'IL', name: 'Israël', zone: 'world' },
+  { code: 'TR', name: 'Turquie', zone: 'world' },
+  { code: 'RU', name: 'Russie', zone: 'world' },
+  { code: 'UA', name: 'Ukraine', zone: 'world' },
+  { code: 'BO', name: 'Bolivie', zone: 'world' },
+  { code: 'CO', name: 'Colombie', zone: 'world' },
+  { code: 'CL', name: 'Chili', zone: 'world' },
+  { code: 'PE', name: 'Pérou', zone: 'world' },
+];
+
+export const EU_COUNTRIES = COUNTRIES.filter(c => c.zone === 'eu' || c.zone === 'fr');
+export const WORLD_COUNTRIES = COUNTRIES.filter(c => c.zone === 'world');
+
+export function getCountryName(code: string): string {
+  return COUNTRIES.find(c => c.code === code)?.name ?? code;
+}

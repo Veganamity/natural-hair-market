@@ -125,16 +125,13 @@ export function PaymentModal({
   const sellerReceives = amount;
 
   const createPaymentIntent = async () => {
-    if (shippingData) {
-      if ((shippingData.method === 'chronopost' || shippingData.method === 'colissimo') && !shippingData.address) {
-        setError('Veuillez renseigner une adresse de livraison');
-        return;
-      }
-
-      if (shippingData.method === 'mondial_relay' && !shippingData.relayPointId) {
-        setError('Veuillez selectionner un point relais');
-        return;
-      }
+    if (!shippingData || !shippingData.address) {
+      setError('Veuillez renseigner une adresse de livraison');
+      return;
+    }
+    if (shippingData.method === 'mondial_relay' && !shippingData.relayPointId) {
+      setError('Veuillez sélectionner un point relais');
+      return;
     }
 
     setCreatingIntent(true);
@@ -181,9 +178,8 @@ export function PaymentModal({
     }
   };
 
-  const isShippingValid = shippingData && (
-    (shippingData.method === 'mondial_relay' && shippingData.relayPointId) ||
-    ((shippingData.method === 'chronopost' || shippingData.method === 'colissimo') && shippingData.address)
+  const isShippingValid = shippingData && shippingData.sendcloudMethodId && shippingData.address && (
+    !shippingData.relayPointId || (shippingData.method === 'mondial_relay' && shippingData.relayPointId)
   );
 
   return (
