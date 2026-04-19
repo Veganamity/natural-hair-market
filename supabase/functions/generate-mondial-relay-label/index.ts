@@ -128,6 +128,8 @@ Deno.serve(async (req: Request) => {
 
     const recipientPostCode = (transaction.relay_point_postal_code || "").replace(/\s/g, "").substring(0, 10);
     const recipientCity = sanitize(transaction.relay_point_city || senderCity, 30);
+    const relayAddress = sanitize(transaction.relay_point_address || "POINT RELAIS", 32);
+    const relayName = sanitize(transaction.relay_point_name || "POINT RELAIS", 32);
     const orderRef = transaction.id.substring(0, 15).replace(/-/g, "").toUpperCase();
     const customerRef = (userId || transaction.seller_id).substring(0, 9).replace(/-/g, "").toUpperCase();
 
@@ -154,7 +156,7 @@ Deno.serve(async (req: Request) => {
       "FR",           // Dest_Langage
       buyerLastname,  // Dest_Ad1
       buyerFirstname, // Dest_Ad2
-      "",             // Dest_Ad3
+      relayName,      // Dest_Ad3 (nom du point relais)
       "",             // Dest_Ad4
       recipientCity,  // Dest_Ville
       recipientPostCode, // Dest_CP
@@ -168,7 +170,7 @@ Deno.serve(async (req: Request) => {
       "1",            // NbColis
       "0",            // CRT_Valeur
       "",             // CRT_Devise
-      "",             // EXP_Valeur (note: in MR_KEYS it's EXP not Exp)
+      "",             // EXP_Valeur
       "",             // EXP_Devise
       "",             // COL_Rel_Pays
       "",             // COL_Rel
@@ -211,8 +213,8 @@ Deno.serve(async (req: Request) => {
       <web:Dest_Langage>FR</web:Dest_Langage>
       <web:Dest_Ad1>${escapeXml(buyerLastname)}</web:Dest_Ad1>
       <web:Dest_Ad2>${escapeXml(buyerFirstname)}</web:Dest_Ad2>
-      <web:Dest_Ad3></web:Dest_Ad3>
-      <web:Dest_Ad4></web:Dest_Ad4>
+      <web:Dest_Ad3>${escapeXml(relayName)}</web:Dest_Ad3>
+      <web:Dest_Ad4>${escapeXml(relayAddress)}</web:Dest_Ad4>
       <web:Dest_Ville>${escapeXml(recipientCity)}</web:Dest_Ville>
       <web:Dest_CP>${escapeXml(recipientPostCode)}</web:Dest_CP>
       <web:Dest_Pays>FR</web:Dest_Pays>
