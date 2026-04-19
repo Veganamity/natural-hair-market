@@ -131,40 +131,55 @@ Deno.serve(async (req: Request) => {
     const orderRef = transaction.id.substring(0, 15).replace(/-/g, "").toUpperCase();
     const customerRef = (userId || transaction.seller_id).substring(0, 9).replace(/-/g, "").toUpperCase();
 
+    const modeCol = "CCC";
+    const modeLiv = "24R";
+
     const securityFields = [
-      enseigne,
-      senderCountry,
-      sellerLastname,
-      sellerFirstname,
-      sellerPhone,
-      senderStreet,
-      "",
-      senderPostCode,
-      senderCity,
-      "",
-      "FR",
-      buyerLastname,
-      buyerFirstname,
-      buyerPhone,
-      "",
-      "",
-      recipientPostCode,
-      recipientCity,
-      "",
-      "24R",
-      relayPointId,
-      weightGrams.toString(),
-      "",
-      "A",
-      "",
-      "",
-      "",
-      "10x15",
-      orderRef,
-      customerRef,
-      "",
-      "",
-      "",
+      enseigne,       // Enseigne
+      modeCol,        // ModeCol
+      modeLiv,        // ModeLiv
+      orderRef,       // NDossier
+      customerRef,    // NClient
+      senderCountry,  // Expe_Langage
+      sellerLastname, // Expe_Ad1
+      sellerFirstname,// Expe_Ad2
+      senderStreet,   // Expe_Ad3
+      "",             // Expe_Ad4
+      senderCity,     // Expe_Ville
+      senderPostCode, // Expe_CP
+      senderCountry,  // Expe_Pays
+      sellerPhone,    // Expe_Tel1
+      "",             // Expe_Tel2
+      (sellerProfile.email || "").substring(0, 70), // Expe_Mail
+      "FR",           // Dest_Langage
+      buyerLastname,  // Dest_Ad1
+      buyerFirstname, // Dest_Ad2
+      "",             // Dest_Ad3
+      "",             // Dest_Ad4
+      recipientCity,  // Dest_Ville
+      recipientPostCode, // Dest_CP
+      "FR",           // Dest_Pays
+      buyerPhone,     // Dest_Tel1
+      "",             // Dest_Tel2
+      (buyerProfile?.email || "").substring(0, 70), // Dest_Mail
+      weightGrams.toString(), // Poids
+      "",             // Longueur
+      "",             // Taille
+      "1",            // NbColis
+      "0",            // CRT_Valeur
+      "",             // CRT_Devise
+      "",             // EXP_Valeur (note: in MR_KEYS it's EXP not Exp)
+      "",             // EXP_Devise
+      "",             // COL_Rel_Pays
+      "",             // COL_Rel
+      "FR",           // LIV_Rel_Pays
+      relayPointId,   // LIV_Rel
+      "",             // TAvisage
+      "",             // TReprise
+      "",             // Montage
+      "",             // TRDV
+      "0",            // Assurance
+      "",             // Instructions
       privateKey,
     ];
 

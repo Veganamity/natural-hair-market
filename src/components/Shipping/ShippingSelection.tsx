@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { AddressSelector, ShippingAddress } from '../Payment/AddressSelector';
-import { SendcloudServicePointWidget, ServicePoint } from './SendcloudServicePointWidget';
+import { MondialRelaySelection } from './MondialRelaySelection';
 import { SendcloudMethod, isRelayMethod } from './shippingUtils';
 import { ShippingMethodList } from './ShippingMethodList';
 
@@ -38,7 +38,7 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
   const [loadingMethods, setLoadingMethods] = useState(false);
   const [methodsError, setMethodsError] = useState('');
   const [selectedMethodId, setSelectedMethodId] = useState<number | null>(null);
-  const [selectedServicePoint, setSelectedServicePoint] = useState<ServicePoint | null>(null);
+  const [selectedRelayPoint, setSelectedRelayPoint] = useState<any | null>(null);
   const prevCountryRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
 
   useEffect(() => {
     emitShipping();
-  }, [selectedMethodId, selectedAddress, selectedServicePoint]);
+  }, [selectedMethodId, selectedAddress, selectedRelayPoint]);
 
   const emitShipping = () => {
     const method = shippingMethods.find(m => m.id === selectedMethodId);
@@ -97,12 +97,12 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
       address: selectedAddress,
     };
 
-    if (isRelay && selectedServicePoint) {
-      data.relayPointId = String(selectedServicePoint.id);
-      data.relayPointName = selectedServicePoint.name;
-      data.relayPointAddress = `${selectedServicePoint.street} ${selectedServicePoint.house_number}`;
-      data.relayPointPostalCode = selectedServicePoint.postal_code;
-      data.relayPointCity = selectedServicePoint.city;
+    if (isRelay && selectedRelayPoint) {
+      data.relayPointId = String(selectedRelayPoint.id);
+      data.relayPointName = selectedRelayPoint.name;
+      data.relayPointAddress = selectedRelayPoint.address;
+      data.relayPointPostalCode = selectedRelayPoint.postalCode;
+      data.relayPointCity = selectedRelayPoint.city;
     }
 
     onShippingSelected(data);
@@ -156,13 +156,12 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
       {requiresRelay && selectedAddress && selectedMethodObj && (
         <div className="space-y-1.5">
           <p className="text-xs font-bold text-gray-800">Point relais</p>
-          <SendcloudServicePointWidget
+          <MondialRelaySelection
             postalCode={selectedAddress.postal_code}
             country={selectedAddress.country}
-            carriers={carriersParam(selectedMethodObj)}
-            language="fr"
-            onSelect={(point) => setSelectedServicePoint(point)}
-            selectedPoint={selectedServicePoint}
+            weight={weight}
+            onSelectPoint={(point) => setSelectedRelayPoint(point)}
+            selectedPointId={selectedRelayPoint?.id}
           />
         </div>
       )}
