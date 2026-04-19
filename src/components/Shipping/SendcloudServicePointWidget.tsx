@@ -30,13 +30,15 @@ declare global {
     sendcloud?: {
       servicePoints: {
         open: (
-          apiKey: string,
-          country: string,
-          postalCode: string,
-          carriers: string,
-          language: string,
-          callback: (servicePoint: ServicePoint) => void,
-          options?: Record<string, unknown>
+          config: {
+            apiKey: string;
+            country: string;
+            postalCode?: string;
+            carriers?: string;
+            language?: string;
+          },
+          successCallback: (servicePoint: ServicePoint) => void,
+          errorCallback?: () => void
         ) => void;
       };
     };
@@ -124,17 +126,19 @@ export function SendcloudServicePointWidget({
     if (!apiKey || !window.sendcloud?.servicePoints) return;
 
     window.sendcloud.servicePoints.open(
-      apiKey,
-      country,
-      postalCode,
-      carriers,
-      language,
+      {
+        apiKey,
+        country: country.toLowerCase(),
+        postalCode,
+        carriers,
+        language,
+      },
       (servicePoint: ServicePoint) => {
         if (mountedRef.current) {
           onSelect(servicePoint);
         }
       },
-      {}
+      () => {}
     );
   };
 
