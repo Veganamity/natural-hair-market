@@ -129,7 +129,7 @@ Deno.serve(async (req: Request) => {
     const buyerLastname = sanitizeXmlField(buyerNameParts.slice(1).join(" ") || buyerNameParts[0] || "", 32);
 
     const orderRef = transaction.id.substring(0, 15).replace(/-/g, "").toUpperCase();
-    const customerRef = user.id.substring(0, 9).replace(/-/g, "").toUpperCase();
+    const customerRef = (userId || transaction.seller_id).substring(0, 9).replace(/-/g, "").toUpperCase();
 
     const senderPostCode = (sellerProfile.postal_code || "").replace(/\s/g, "").substring(0, 10);
     const senderStreet = sanitizeXmlField(sellerProfile.address_line1 || "", 40);
