@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Truck, Package, MapPin, Loader2, AlertCircle, Globe, Check } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { AddressSelector, ShippingAddress } from '../Payment/AddressSelector';
 import { SendcloudServicePointWidget, ServicePoint } from './SendcloudServicePointWidget';
 import { SendcloudMethod, isRelayMethod } from './shippingUtils';
+import { ShippingMethodList } from './ShippingMethodList';
 
 interface ShippingSelectionProps {
   onShippingSelected: (data: {
@@ -18,25 +19,6 @@ interface ShippingSelectionProps {
   }) => void;
   selectedMethod?: string;
   weight?: number;
-}
-
-function carrierIcon(carrier: string, methodName = '') {
-  const s = `${carrier ?? ''} ${methodName ?? ''}`.toLowerCase();
-  if (s.includes('relay') || s.includes('relais') || s.includes('mondial') || s.includes('locker') || s.includes('shop2shop') || s.includes('service point') || s.includes('point retrait')) return <MapPin className="w-4 h-4" />;
-  if (s.includes('chrono') || s.includes('ups') || s.includes('dhl') || s.includes('fedex') || s.includes('gls') || s.includes('tnt')) return <Truck className="w-4 h-4" />;
-  if (s.includes('colissimo') || s.includes('laposte') || s.includes('la poste')) return <Package className="w-4 h-4" />;
-  return <Globe className="w-4 h-4" />;
-}
-
-function carrierAccent(carrier: string, methodName = ''): { border: string; bg: string; text: string; icon: string } {
-  const s = `${carrier ?? ''} ${methodName ?? ''}`.toLowerCase();
-  if (s.includes('relay') || s.includes('relais') || s.includes('mondial') || s.includes('locker') || s.includes('shop2shop')) return { border: 'border-teal-500', bg: 'bg-teal-50', text: 'text-teal-700', icon: 'text-teal-500' };
-  if (s.includes('chrono')) return { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700', icon: 'text-blue-500' };
-  if (s.includes('ups')) return { border: 'border-amber-500', bg: 'bg-amber-50', text: 'text-amber-700', icon: 'text-amber-500' };
-  if (s.includes('dhl')) return { border: 'border-yellow-400', bg: 'bg-yellow-50', text: 'text-yellow-700', icon: 'text-yellow-500' };
-  if (s.includes('colissimo') || s.includes('laposte') || s.includes('la poste')) return { border: 'border-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'text-emerald-500' };
-  if (s.includes('gls')) return { border: 'border-orange-400', bg: 'bg-orange-50', text: 'text-orange-700', icon: 'text-orange-500' };
-  return { border: 'border-gray-400', bg: 'bg-gray-50', text: 'text-gray-700', icon: 'text-gray-500' };
 }
 
 function carriersParam(method: SendcloudMethod): string {
@@ -159,49 +141,14 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
           )}
 
           {!loadingMethods && shippingMethods.length > 0 && (
-            <div className="space-y-1.5">
-              {shippingMethods.map((m) => {
-                const isSelected = m.id === selectedMethodId;
-                const accent = carrierAccent(m.carrier, m.name);
-                const relay = isRelayMethod(m);
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => {
-                      setSelectedMethodId(m.id);
-                      setSelectedServicePoint(null);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 border rounded-xl transition-all text-left ${
-                      isSelected
-                        ? `${accent.border} ${accent.bg} shadow-sm`
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
-                    }`}
-                  >
-                    <span className={isSelected ? accent.icon : 'text-gray-400'}>
-                      {carrierIcon(m.carrier, m.name)}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold truncate ${isSelected ? accent.text : 'text-gray-800'}`}>
-                        {m.name}
-                      </p>
-                      {relay && (
-                        <p className="text-[10px] text-gray-500 mt-0.5">Livraison en point relais</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className={`text-sm font-bold ${isSelected ? accent.text : 'text-gray-700'}`}>
-                        {(m.price ?? 0) === 0 ? 'Gratuit' : `${(m.price ?? 0).toFixed(2).replace('.', ',')} €`}
-                      </span>
-                      {isSelected && (
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center ${accent.bg} border ${accent.border}`}>
-                          <Check className={`w-3 h-3 ${accent.text}`} />
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <ShippingMethodList
+              methods={shippingMethods}
+              selectedMethodId={selectedMethodId}
+              onSelect={(id) => {
+                setSelectedMethodId(id);
+                setSelectedServicePoint(null);
+              }}
+            />
           )}
         </div>
       )}

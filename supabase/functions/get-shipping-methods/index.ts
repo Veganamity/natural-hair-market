@@ -33,7 +33,7 @@ interface ShippingMethod {
   service_point_input: string;
 }
 
-function deduplicateMethods(methods: ShippingMethod[]): ShippingMethod[] {
+function deduplicateMethods(methods: ShippingMethod[], weightKg: number): ShippingMethod[] {
   const groups = new Map<string, ShippingMethod>();
 
   for (const m of methods) {
@@ -41,7 +41,18 @@ function deduplicateMethods(methods: ShippingMethod[]): ShippingMethod[] {
     const groupKey = `${m.carrier.toLowerCase()}__${relay ? 'relay' : 'home'}`;
 
     const existing = groups.get(groupKey);
-    if (!existing || m.price < existing.price) {
+    if (!existing) {
+      groups.set(groupKey, m);
+      continue;
+    }
+    const existingCoversWeight = weightKg >= existing.min_weight && weightKg <= existing.max_weight;
+    const currentCoversWeight = weightKg >= m.min_weight && weightKg <= m.max_weight;
+
+    if (!existingCoversWeight && currentCoversWeight) {
+      groups.set(groupKey, m);
+    } else if (existingCoversWeight && currentCoversWeight && m.price < existing.price) {
+      groups.set(groupKey, m);
+    } else if (!existingCoversWeight && !currentCoversWeight && m.max_weight > existing.max_weight) {
       groups.set(groupKey, m);
     }
   }
@@ -120,7 +131,7 @@ Deno.serve(async (req: Request) => {
       })
       .filter(Boolean) as ShippingMethod[];
 
-    const deduplicated = deduplicateMethods(filtered);
+    const deduplicated = deduplicateMethods(filtered, weightKg);
 
     return new Response(
       JSON.stringify({ shipping_methods: deduplicated }),
