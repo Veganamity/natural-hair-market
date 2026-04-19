@@ -269,6 +269,13 @@ export function AddressSelector({ onSelectAddress, selectedAddress }: AddressSel
     );
   }
 
+  const handleCountryChange = (newCountry: string) => {
+    const updated = { ...profileAddress!, country: newCountry };
+    setProfileAddress(updated);
+    setFormData(updated);
+    onSelectAddress(updated);
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -284,24 +291,49 @@ export function AddressSelector({ onSelectAddress, selectedAddress }: AddressSel
         </button>
       </div>
 
-      <div className="border border-teal-500 bg-teal-50 rounded-lg p-3">
+      <div className="border border-teal-500 bg-teal-50 rounded-lg p-3 space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-gray-800 text-sm">{profileAddress.full_name}</h4>
-            <p className="text-xs text-gray-600 mt-1">{profileAddress.address_line1}</p>
-            {profileAddress.address_line2 && (
-              <p className="text-xs text-gray-600">{profileAddress.address_line2}</p>
+            <h4 className="font-semibold text-gray-800 text-sm">{profileAddress!.full_name}</h4>
+            <p className="text-xs text-gray-600 mt-1">{profileAddress!.address_line1}</p>
+            {profileAddress!.address_line2 && (
+              <p className="text-xs text-gray-600">{profileAddress!.address_line2}</p>
             )}
             <p className="text-xs text-gray-600">
-              {profileAddress.postal_code} {profileAddress.city}
+              {profileAddress!.postal_code} {profileAddress!.city}
             </p>
-            <p className="text-xs text-gray-600">{profileAddress.phone}</p>
+            <p className="text-xs text-gray-600">{profileAddress!.phone}</p>
           </div>
           <div className="ml-2 flex-shrink-0">
             <div className="w-5 h-5 bg-teal-600 rounded-full flex items-center justify-center">
               <Check className="w-3 h-3 text-white" />
             </div>
           </div>
+        </div>
+
+        <div className="border-t border-teal-200 pt-2">
+          <label className="block text-xs font-medium text-gray-700 mb-1">
+            Pays de livraison
+          </label>
+          <select
+            value={profileAddress!.country}
+            onChange={(e) => handleCountryChange(e.target.value)}
+            className="w-full px-3 py-1.5 text-sm border border-teal-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+          >
+            <optgroup label="France">
+              <option value="FR">France</option>
+            </optgroup>
+            <optgroup label="Europe">
+              {EU_COUNTRIES.map(c => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
+            </optgroup>
+            <optgroup label="Monde entier">
+              {WORLD_COUNTRIES.map(c => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
+            </optgroup>
+          </select>
         </div>
       </div>
     </div>
