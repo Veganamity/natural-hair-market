@@ -30,7 +30,7 @@ Deno.serve(async (req: Request) => {
 
     const sendcloudAuth = btoa(`${sendcloudApiKey}:${sendcloudApiSecret}`);
 
-    const weightKg = Math.max((weightGrams || 100) / 1000, 0.01);
+    const weightKg = Math.max((weightGrams || 100) / 1000, 0.001);
 
     const url = `https://panel.sendcloud.sc/api/v2/shipping_methods?to_country=${toCountry}&weight=${weightKg}`;
 
@@ -48,16 +48,34 @@ Deno.serve(async (req: Request) => {
 
     const data = await response.json();
 
-    const methods = (data.shipping_methods || []).map((m: any) => ({
-      id: m.id,
-      name: m.name,
-      carrier: m.carrier,
-      min_weight: m.min_weight,
-      max_weight: m.max_weight,
-      price: m.price,
-      service_point_input: m.service_point_input,
-      countries: m.countries,
-    }));
+    const allMethods = (data.shipping_methods || []);
+
+    const methods = allMethods
+      .map((m: any) => {
+        const countryData = (m.countries || []).find(
+          (c: any) => c.iso_2?.toUpperCase() === toCountry.toUpperCase()
+        );
+
+        const price = countryData?.price ?? m.price ?? null;
+        const minWeight = parseFloat(countryData?.min_weight ?? m.min_weight ?? "0");
+        const maxWeight = parseFloat(countryData?.max_weight ?? m.max_weight ?? "99999");
+
+        if (price === null || price === undefined) return null;
+
+        if (weightKg < minWeight || weightKg > maxWeight) return null;
+
+        return {
+          id: m.id,
+          name: m.name,
+          carrier: m.carrier,
+          min_weight: minWeight,
+          max_weight: maxWeight,
+          price: typeof price === "string" ? parseFloat(price) : price,
+          service_point_input: m.service_point_input,
+          countries: m.countries,
+        };
+      })
+      .filter(Boolean);
 
     return new Response(
       JSON.stringify({ shipping_methods: methods }),
