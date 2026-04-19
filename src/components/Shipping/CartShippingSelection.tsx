@@ -43,6 +43,7 @@ export function CartShippingSelection({
   const [selectedMethodId, setSelectedMethodId] = useState<number | null>(null);
   const [selectedServicePoint, setSelectedServicePoint] = useState<ServicePoint | null>(null);
   const prevCountryRef = useRef<string | null>(null);
+  const prevWeightRef = useRef<number>(totalWeightGrams);
 
   const weightLabel = totalWeightGrams >= 1000
     ? `${(totalWeightGrams / 1000).toFixed(2)} kg`
@@ -50,11 +51,13 @@ export function CartShippingSelection({
 
   useEffect(() => {
     const country = selectedAddress?.country ?? null;
-    if (country && country !== prevCountryRef.current) {
+    const weightChanged = totalWeightGrams !== prevWeightRef.current;
+    if (country && (country !== prevCountryRef.current || (weightChanged && country === prevCountryRef.current))) {
       prevCountryRef.current = country;
+      prevWeightRef.current = totalWeightGrams;
       fetchMethods(country);
     }
-  }, [selectedAddress]);
+  }, [selectedAddress, totalWeightGrams]);
 
   const fetchMethods = async (country: string) => {
     setLoadingMethods(true);

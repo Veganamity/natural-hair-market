@@ -153,6 +153,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           hair_color: formData.hair_color,
           hair_texture: formData.hair_texture || null,
           hair_weight: formData.hair_weight || null,
+          weight_grams: formData.hair_weight ? parseInt(formData.hair_weight.replace('g', ''), 10) || 100 : 100,
           is_dyed: formData.is_dyed,
           is_treated: formData.is_treated,
           condition: formData.condition,

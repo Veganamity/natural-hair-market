@@ -12,6 +12,18 @@ interface EditListingFormProps {
   onSuccess: () => void;
 }
 
+function parseWeightGrams(hairWeight: string): number {
+  if (!hairWeight) return 100;
+  const lower = hairWeight.toLowerCase().trim();
+  const kgMatch = lower.match(/^([0-9]+(?:\.[0-9]+)?)\s*kg$/);
+  if (kgMatch) return Math.round(parseFloat(kgMatch[1]) * 1000);
+  const gMatch = lower.match(/^([0-9]+(?:\.[0-9]+)?)\s*g$/);
+  if (gMatch) return Math.round(parseFloat(gMatch[1]));
+  const numMatch = lower.match(/^([0-9]+(?:\.[0-9]+)?)/);
+  if (numMatch) return Math.round(parseFloat(numMatch[1]));
+  return 100;
+}
+
 export function EditListingForm({ listing, onClose, onSuccess }: EditListingFormProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -125,6 +137,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
           hair_color: formData.hair_color,
           hair_texture: formData.hair_texture || null,
           hair_weight: formData.hair_weight || null,
+          weight_grams: parseWeightGrams(formData.hair_weight),
           is_dyed: formData.is_dyed,
           is_treated: formData.is_treated,
           condition: formData.condition,
