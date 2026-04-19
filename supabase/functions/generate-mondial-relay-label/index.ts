@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
+import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,36 +8,34 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+async function md5Hash(text: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest("MD5", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+
 function formatPhone(phone: string): string {
   if (!phone) return "";
   const digits = phone.replace(/\D/g, "");
   if (digits.startsWith("33") && digits.length === 11) return `+${digits}`;
   if (digits.startsWith("0") && digits.length === 10) return `+33${digits.substring(1)}`;
   if (digits.length === 9) return `+33${digits}`;
-  return `+${digits}`;
+  if (digits.length > 0) return `+${digits}`;
+  return "";
 }
 
-function sanitizeXmlField(str: string, maxLen = 40): string {
+function sanitize(str: string, maxLen = 32): string {
   if (!str) return "";
   return str
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toUpperCase()
-    .replace(/[^0-9A-Z_\-'., /]/g, " ")
+    .replace(/[^0-9A-Z _\-]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .substring(0, maxLen);
-}
-
-function sanitizeCity(str: string): string {
-  if (!str) return "";
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z_\-' ]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .substring(0, 30);
 }
 
 function escapeXml(str: string): string {
@@ -54,9 +53,8 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const apiLogin = Deno.env.get("MONDIAL_RELAY_API_USERNAME") || "CC20EUCU@business-api.mondialrelay.com";
-    const apiPassword = Deno.env.get("MONDIAL_RELAY_API_PASSWORD") || "\\zYDC=g<kj3WBiQ[6QKF";
-    const customerId = Deno.env.get("MONDIAL_RELAY_BRAND_ID") || "CC20EUCU";
+    const enseigne = Deno.env.get("MONDIAL_RELAY_BRAND_ID") || "CC20EUCU";
+    const privateKey = Deno.env.get("MONDIAL_RELAY_PRIVATE_KEY") || "Nvhs3RMN";
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -110,163 +108,161 @@ Deno.serve(async (req: Request) => {
     const listing = transaction.listing;
     if (!listing) throw new Error("Listing not found");
 
-    if (!/^\d+$/.test(relayPointId)) {
-      throw new Error(`L'identifiant du point relais est invalide (${relayPointId}). Veuillez resélectionner un point relais Mondial Relay valide lors de votre prochain achat.`);
-    }
-
     const weightGrams = Math.max(listing.weight_grams || 100, 10);
-    const senderCountry = (sellerProfile.country || "FR").toUpperCase().substring(0, 2);
-
-    const sellerMobile = formatPhone(sellerProfile.phone || "");
-    const buyerMobile = formatPhone(buyerProfile?.phone || sellerProfile.phone || "");
 
     const sellerNameParts = (sellerProfile.full_name || "VENDEUR").split(" ");
-    const sellerFirstname = sanitizeXmlField(sellerNameParts[0] || "VENDEUR", 32);
-    const sellerLastname = sanitizeXmlField(sellerNameParts.slice(1).join(" ") || sellerNameParts[0] || "", 32);
+    const sellerLastname = sanitize(sellerNameParts[0] || "VENDEUR", 30);
+    const sellerFirstname = sanitize(sellerNameParts.slice(1).join(" ") || "", 20);
 
     const buyerNameParts = (buyerProfile?.full_name || "ACHETEUR").split(" ");
-    const buyerFirstname = sanitizeXmlField(buyerNameParts[0] || "ACHETEUR", 32);
-    const buyerLastname = sanitizeXmlField(buyerNameParts.slice(1).join(" ") || buyerNameParts[0] || "", 32);
+    const buyerLastname = sanitize(buyerNameParts[0] || "ACHETEUR", 30);
+    const buyerFirstname = sanitize(buyerNameParts.slice(1).join(" ") || "", 20);
 
+    const sellerPhone = formatPhone(sellerProfile.phone || "");
+    const buyerPhone = formatPhone(buyerProfile?.phone || sellerProfile.phone || "");
+
+    const senderPostCode = (sellerProfile.postal_code || "").replace(/\s/g, "").substring(0, 10);
+    const senderCity = sanitize(sellerProfile.city || "", 30);
+    const senderStreet = sanitize(sellerProfile.address_line1 || "", 32);
+    const senderCountry = (sellerProfile.country || "FR").toUpperCase().substring(0, 2);
+
+    const recipientPostCode = (transaction.relay_point_postal_code || "").replace(/\s/g, "").substring(0, 10);
+    const recipientCity = sanitize(transaction.relay_point_city || senderCity, 30);
     const orderRef = transaction.id.substring(0, 15).replace(/-/g, "").toUpperCase();
     const customerRef = (userId || transaction.seller_id).substring(0, 9).replace(/-/g, "").toUpperCase();
 
-    const senderPostCode = (sellerProfile.postal_code || "").replace(/\s/g, "").substring(0, 10);
-    const senderStreet = sanitizeXmlField(sellerProfile.address_line1 || "", 40);
-    const senderCity = sanitizeCity(sellerProfile.city || "");
-    const senderEmail = escapeXml((sellerProfile.email || "").substring(0, 70));
-    const buyerEmail = escapeXml((buyerProfile?.email || "").substring(0, 70));
+    const securityFields = [
+      enseigne,
+      senderCountry,
+      sellerLastname,
+      sellerFirstname,
+      sellerPhone,
+      senderStreet,
+      "",
+      senderPostCode,
+      senderCity,
+      "",
+      "FR",
+      buyerLastname,
+      buyerFirstname,
+      buyerPhone,
+      "",
+      "",
+      recipientPostCode,
+      recipientCity,
+      "",
+      "24R",
+      relayPointId,
+      weightGrams.toString(),
+      "",
+      "A",
+      "",
+      "",
+      "",
+      "10x15",
+      orderRef,
+      customerRef,
+      "",
+      "",
+      "",
+      privateKey,
+    ];
 
-    const rawRelayPostalCode = transaction.relay_point_postal_code || "";
-    const rawRelayCity = transaction.relay_point_city || "";
-    const rawRelayAddress = transaction.relay_point_address || "";
+    const securityString = securityFields.join("");
+    console.log("Security string:", securityString);
+    const security = await md5Hash(securityString);
+    console.log("Security hash:", security);
 
-    let recipientPostCode = rawRelayPostalCode.replace(/\s/g, "").substring(0, 10);
-    let recipientCity = sanitizeCity(rawRelayCity);
-    let recipientStreet = sanitizeXmlField(rawRelayAddress.split(",")[0] || "POINT RELAIS", 40);
+    const soapBody = `<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:web="http://www.mondialrelay.fr/webservice/">
+  <soap:Body>
+    <web:WSI2_CreationEtiquette>
+      <web:Enseigne>${escapeXml(enseigne)}</web:Enseigne>
+      <web:ModeCol>CCC</web:ModeCol>
+      <web:ModeLiv>24R</web:ModeLiv>
+      <web:NDossier>${escapeXml(orderRef)}</web:NDossier>
+      <web:NClient>${escapeXml(customerRef)}</web:NClient>
+      <web:Expe_Langage>${senderCountry}</web:Expe_Langage>
+      <web:Expe_Ad1>${escapeXml(sellerLastname)}</web:Expe_Ad1>
+      <web:Expe_Ad2>${escapeXml(sellerFirstname)}</web:Expe_Ad2>
+      <web:Expe_Ad3>${escapeXml(senderStreet)}</web:Expe_Ad3>
+      <web:Expe_Ad4></web:Expe_Ad4>
+      <web:Expe_Ville>${escapeXml(senderCity)}</web:Expe_Ville>
+      <web:Expe_CP>${escapeXml(senderPostCode)}</web:Expe_CP>
+      <web:Expe_Pays>${senderCountry}</web:Expe_Pays>
+      <web:Expe_Tel1>${escapeXml(sellerPhone)}</web:Expe_Tel1>
+      <web:Expe_Tel2></web:Expe_Tel2>
+      <web:Expe_Mail>${escapeXml((sellerProfile.email || "").substring(0, 70))}</web:Expe_Mail>
+      <web:Dest_Langage>FR</web:Dest_Langage>
+      <web:Dest_Ad1>${escapeXml(buyerLastname)}</web:Dest_Ad1>
+      <web:Dest_Ad2>${escapeXml(buyerFirstname)}</web:Dest_Ad2>
+      <web:Dest_Ad3></web:Dest_Ad3>
+      <web:Dest_Ad4></web:Dest_Ad4>
+      <web:Dest_Ville>${escapeXml(recipientCity)}</web:Dest_Ville>
+      <web:Dest_CP>${escapeXml(recipientPostCode)}</web:Dest_CP>
+      <web:Dest_Pays>FR</web:Dest_Pays>
+      <web:Dest_Tel1>${escapeXml(buyerPhone)}</web:Dest_Tel1>
+      <web:Dest_Tel2></web:Dest_Tel2>
+      <web:Dest_Mail>${escapeXml((buyerProfile?.email || "").substring(0, 70))}</web:Dest_Mail>
+      <web:Poids>${weightGrams}</web:Poids>
+      <web:NbColis>1</web:NbColis>
+      <web:CRT_Valeur>0</web:CRT_Valeur>
+      <web:CRT_Devise></web:CRT_Devise>
+      <web:Exp_Valeur></web:Exp_Valeur>
+      <web:Exp_Devise></web:Exp_Devise>
+      <web:COL_Rel_Pays></web:COL_Rel_Pays>
+      <web:COL_Rel>${''}</web:COL_Rel>
+      <web:LIV_Rel_Pays>FR</web:LIV_Rel_Pays>
+      <web:LIV_Rel>${escapeXml(relayPointId)}</web:LIV_Rel>
+      <web:TAvisage></web:TAvisage>
+      <web:TReprise></web:TReprise>
+      <web:Montage></web:Montage>
+      <web:TRDV></web:TRDV>
+      <web:Assurance>0</web:Assurance>
+      <web:Instructions></web:Instructions>
+      <web:Texte></web:Texte>
+      <web:Taille></web:Taille>
+      <web:Security>${security}</web:Security>
+    </web:WSI2_CreationEtiquette>
+  </soap:Body>
+</soap:Envelope>`;
 
-    if (!recipientPostCode || !recipientCity) {
-      const addrMatch = rawRelayAddress.match(/,\s*(\d{5})\s+(.+)$/);
-      if (addrMatch) {
-        recipientPostCode = recipientPostCode || addrMatch[1];
-        recipientCity = recipientCity || sanitizeCity(addrMatch[2]);
-      }
-    }
+    console.log("Sending SOAP to Mondial Relay WSI2_CreationEtiquette");
+    console.log("SOAP body:", soapBody);
 
-    if (!recipientPostCode) recipientPostCode = senderPostCode;
-    if (!recipientCity) recipientCity = senderCity || "PARIS";
-    if (!recipientStreet) recipientStreet = "POINT RELAIS";
-
-    const xmlBody = `<?xml version="1.0" encoding="utf-8"?>
-<ShipmentCreationRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.example.org/Request">
-  <Context>
-    <Login>${escapeXml(apiLogin)}</Login>
-    <Password>${escapeXml(apiPassword)}</Password>
-    <CustomerId>${escapeXml(customerId)}</CustomerId>
-    <Culture>fr-FR</Culture>
-    <VersionAPI>1.0</VersionAPI>
-  </Context>
-  <OutputOptions>
-    <OutputFormat>10x15</OutputFormat>
-    <OutputType>PdfUrl</OutputType>
-  </OutputOptions>
-  <ShipmentsList>
-    <Shipment>
-      <OrderNo>${orderRef}</OrderNo>
-      <CustomerNo>${customerRef}</CustomerNo>
-      <ParcelCount>1</ParcelCount>
-      <DeliveryMode Mode="24R" Location="FR-${relayPointId}" />
-      <CollectionMode Mode="CCC" Location="" />
-      <Parcels>
-        <Parcel>
-          <Content>CHEVEUX</Content>
-          <Weight Value="${weightGrams}" Unit="gr" />
-        </Parcel>
-      </Parcels>
-      <Sender>
-        <Address>
-          <Title />
-          <Firstname>${sellerFirstname}</Firstname>
-          <Lastname>${sellerLastname}</Lastname>
-          <Streetname>${senderStreet}</Streetname>
-          <HouseNo />
-          <CountryCode>${senderCountry}</CountryCode>
-          <PostCode>${senderPostCode}</PostCode>
-          <City>${senderCity}</City>
-          <AddressAdd1 />
-          <AddressAdd2 />
-          <AddressAdd3 />
-          <PhoneNo />
-          <MobileNo>${sellerMobile}</MobileNo>
-          <Email>${senderEmail}</Email>
-        </Address>
-      </Sender>
-      <Recipient>
-        <Address>
-          <Title />
-          <Firstname>${buyerFirstname}</Firstname>
-          <Lastname>${buyerLastname}</Lastname>
-          <Streetname>${recipientStreet}</Streetname>
-          <HouseNo />
-          <CountryCode>FR</CountryCode>
-          <PostCode>${recipientPostCode}</PostCode>
-          <City>${recipientCity}</City>
-          <AddressAdd1 />
-          <AddressAdd2 />
-          <AddressAdd3 />
-          <PhoneNo />
-          <MobileNo>${buyerMobile}</MobileNo>
-          <Email>${buyerEmail}</Email>
-        </Address>
-      </Recipient>
-    </Shipment>
-  </ShipmentsList>
-</ShipmentCreationRequest>`;
-
-    console.log("Sending XML to Mondial Relay:", xmlBody);
-
-    const response = await fetch("https://connect-api.mondialrelay.com/api/shipment", {
+    const response = await fetch("https://api.mondialrelay.com/WebService.asmx", {
       method: "POST",
       headers: {
-        "Content-Type": "text/xml",
-        "Accept": "application/xml",
+        "Content-Type": "text/xml; charset=utf-8",
+        "SOAPAction": "http://www.mondialrelay.fr/webservice/WSI2_CreationEtiquette",
       },
-      body: xmlBody,
+      body: soapBody,
     });
 
     const responseText = await response.text();
-    console.log("Mondial Relay response status:", response.status);
-    console.log("Mondial Relay raw response:", responseText);
+    console.log("SOAP response status:", response.status);
+    console.log("SOAP response:", responseText);
 
-    const errorStatusMatch = responseText.match(/Status\s+Code="(\d+)"\s+Level="([^"]+)"\s+Message="([^"]+)"/i);
-    if (errorStatusMatch) {
-      const code = errorStatusMatch[1];
-      const level = errorStatusMatch[2];
-      const message = errorStatusMatch[3];
-      if (level.toLowerCase().includes("error")) {
-        throw new Error(`Erreur Mondial Relay (${code}): ${message}`);
-      }
+    const statMatch = responseText.match(/<STAT>([^<]*)<\/STAT>/i);
+    if (statMatch && statMatch[1] !== "0") {
+      const statCode = statMatch[1];
+      let errorMsg = `Erreur Mondial Relay (code ${statCode})`;
+      if (statCode === "62") errorMsg = "Erreur de sécurité (code 62). Vérifiez vos identifiants Mondial Relay.";
+      else if (statCode === "38") errorMsg = "Données expéditeur invalides. Vérifiez votre adresse dans votre profil.";
+      else if (statCode === "79") errorMsg = "Point relais invalide ou non trouvé. Veuillez resélectionner un point relais.";
+      throw new Error(errorMsg);
     }
 
-    if (!response.ok) {
-      const preview = responseText.substring(0, 300);
-      throw new Error(`Erreur HTTP ${response.status}: ${preview}`);
+    const expeditionMatch = responseText.match(/<ExpeditionNum>([^<]+)<\/ExpeditionNum>/i);
+    const urlEtiquetteMatch = responseText.match(/<URL_Etiquette>([^<]+)<\/URL_Etiquette>/i);
+
+    if (!expeditionMatch) {
+      const preview = responseText.substring(0, 600).replace(/</g, "[").replace(/>/g, "]");
+      throw new Error(`Réponse inattendue de Mondial Relay: ${preview}`);
     }
 
-    const shipmentNumberMatch = responseText.match(/Shipment ShipmentNumber="([^"]+)"/i) ||
-                                responseText.match(/ShipmentNumber="([^"]+)"/i) ||
-                                responseText.match(/<ShipmentNumber>([^<]+)<\/ShipmentNumber>/i);
-    const labelUrlMatch = responseText.match(/<Output>([^<]+)<\/Output>/i) ||
-                          responseText.match(/<output>([^<]+)<\/output>/i);
-
-    if (!shipmentNumberMatch) {
-      console.error("Could not extract shipment number from:", responseText);
-      const preview = responseText.substring(0, 500).replace(/</g, "[").replace(/>/g, "]");
-      throw new Error(`Réponse inattendue: ${preview}`);
-    }
-
-    const expeditionNumber = shipmentNumberMatch[1];
-    const labelUrl = labelUrlMatch ? labelUrlMatch[1].replace(/&amp;/g, "&") : "";
+    const expeditionNumber = expeditionMatch[1].trim();
+    const labelUrl = urlEtiquetteMatch ? urlEtiquetteMatch[1].trim().replace(/&amp;/g, "&") : "";
 
     console.log("Expedition number:", expeditionNumber);
     console.log("Label URL:", labelUrl);
