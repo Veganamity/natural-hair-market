@@ -79,22 +79,26 @@ Deno.serve(async (req: Request) => {
 
     const sellerCountryCode = countryNameToCode[seller.country] || seller.country || "FR";
 
-    const senderInfo = {
+    const senderAddress = {
       name: seller.full_name || "Vendeur",
-      address: seller.address_line1 || "",
-      city: seller.city || "",
-      postal_code: seller.postal_code || "",
+      company_name: seller.full_name || "Vendeur",
+      address: (seller.address_line1 || "").trim(),
+      address_2: (seller.address_line2 || "").trim(),
+      city: (seller.city || "").trim(),
+      postal_code: (seller.postal_code || "").replace(/\s/g, ""),
       country: sellerCountryCode,
+      email: seller.email || "",
+      telephone: seller.phone || "",
     };
 
-    const itemValue = listing?.price ?? transaction.amount ?? 0;
+    const itemValue = Number(listing?.price ?? transaction.amount ?? 0);
 
     const parcelItems = [
       {
         description: listing?.title || "Cheveux naturels",
         quantity: 1,
         weight: weightKg,
-        value: String(itemValue.toFixed(2)),
+        value: itemValue.toFixed(2),
         hs_code: "6703000000",
         origin_country: sellerCountryCode,
       },
@@ -124,10 +128,10 @@ Deno.serve(async (req: Request) => {
         email: buyer?.email || "",
         weight: weightKg,
         order_number: transactionId,
-        insured_value: String(itemValue.toFixed(2)),
+        insured_value: itemValue.toFixed(2),
         to_service_point: parseInt(relayPointId, 10),
         shipment: { id: sendcloudMethodId },
-        sender: senderInfo,
+        sender_address: senderAddress,
         parcel_items: parcelItems,
       };
     } else {
@@ -149,9 +153,9 @@ Deno.serve(async (req: Request) => {
         telephone: shippingAddress.phone || "",
         weight: weightKg,
         order_number: transactionId,
-        insured_value: String(itemValue.toFixed(2)),
+        insured_value: itemValue.toFixed(2),
         shipment: { id: sendcloudMethodId },
-        sender: senderInfo,
+        sender_address: senderAddress,
         parcel_items: parcelItems,
       };
     }
@@ -167,12 +171,21 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({ parcel: parcelData }),
     });
 
+    const responseText = await sendcloudResponse.text();
+
     if (!sendcloudResponse.ok) {
-      const errorData = await sendcloudResponse.text();
-      throw new Error(`Sendcloud API error: ${errorData}`);
+      let errorMessage = `Sendcloud erreur (${sendcloudResponse.status})`;
+      try {
+        const errorData = JSON.parse(responseText);
+        if (errorData.error?.message) errorMessage = `Sendcloud: ${errorData.error.message}`;
+        else errorMessage = `Sendcloud: ${responseText.substring(0, 300)}`;
+      } catch {
+        errorMessage = `Sendcloud: ${responseText.substring(0, 300)}`;
+      }
+      throw new Error(errorMessage);
     }
 
-    const sendcloudResult = await sendcloudResponse.json();
+    const sendcloudResult = JSON.parse(responseText);
     const parcel = sendcloudResult.parcel;
 
     const labelUrl = parcel.label?.label_printer || parcel.label?.normal_printer?.[0];

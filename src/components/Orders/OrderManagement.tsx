@@ -291,17 +291,17 @@ export function OrderManagement() {
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div>
                       <span className="text-sm text-gray-600">Montant total:</span>
-                      <span className="ml-2 font-bold text-gray-800">{transaction.amount}€</span>
+                      <span className="ml-2 font-bold text-gray-800">{Number(transaction.amount).toFixed(2)}€</span>
                     </div>
                     {isSellerView && (
                       <div>
                         <span className="text-sm text-gray-600">Vous recevez:</span>
-                        <span className="ml-2 font-bold text-green-600">{transaction.seller_amount}€</span>
+                        <span className="ml-2 font-bold text-green-600">{Number(transaction.seller_amount).toFixed(2)}€</span>
                       </div>
                     )}
                     <div>
                       <span className="text-sm text-gray-600">Commission:</span>
-                      <span className="ml-2 font-semibold text-gray-700">{transaction.platform_fee}€</span>
+                      <span className="ml-2 font-semibold text-gray-700">{Number(transaction.platform_fee).toFixed(2)}€</span>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600">Date:</span>
