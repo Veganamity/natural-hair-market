@@ -38,30 +38,26 @@ export function ShippingLabelManager({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      let apiUrl: string;
-      let body: object;
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-shipping-label`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ transactionId }),
+        }
+      );
 
-      if (isMondialRelay) {
-        if (!relayPointId) throw new Error('Point relais non défini pour cette commande');
-        apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-mondial-relay-label`;
-        body = { transactionId, relayPointId };
-      } else {
-        apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-shipping-label`;
-        body = { transactionId };
-      }
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+      const result = await response.json();
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Échec de la génération de l\'étiquette');
+        throw new Error(result.error || 'Échec de la génération de l\'étiquette');
+      }
+
+      if (result.shipping_label_url) {
+        window.open(result.shipping_label_url, '_blank');
       }
 
       onUpdate?.();
@@ -139,7 +135,7 @@ export function ShippingLabelManager({
           ) : (
             <>
               <Package className="w-5 h-5" />
-              <span>Générer l'étiquette {isMondialRelay ? 'Mondial Relay' : 'd\'expédition'}</span>
+              <span>Générer l'étiquette d'expédition</span>
             </>
           )}
         </button>
