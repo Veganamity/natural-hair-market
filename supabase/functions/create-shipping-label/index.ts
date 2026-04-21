@@ -33,12 +33,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Fetch transaction with seller and listing — shipping_address is a JSON column, not a FK
     const { data: transaction, error: txError } = await supabase
       .from("transactions")
       .select(`
         *,
-        shipping_address:shipping_addresses(*),
-        buyer:buyer_id(email, full_name, phone),
         seller:seller_id(full_name, email, address_line1, address_line2, postal_code, city, country, phone),
         listing:listings(title, hair_weight, price, weight_grams)
       `)
@@ -46,18 +45,29 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     if (txError || !transaction) {
-      throw new Error("Transaction not found");
+      console.error("Transaction fetch error:", txError, "id:", transactionId);
+      return new Response(
+        JSON.stringify({ error: "Transaction not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    if (transaction.shipping_label_url) {
+    // Label already exists — return it directly
+    if (transaction.shipping_label_pdf_url) {
       return new Response(
         JSON.stringify({
           message: "Label already exists",
-          shipping_label_url: transaction.shipping_label_url,
-          tracking_number: transaction.tracking_number,
+          shipping_label_url: transaction.shipping_label_pdf_url,
+          tracking_number: transaction.shipping_label_tracking_number || transaction.tracking_number,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const sendcloudApiKey = Deno.env.get("SENDCLOUD_API_KEY");
+    const sendcloudApiSecret = Deno.env.get("SENDCLOUD_API_SECRET");
+    if (!sendcloudApiKey || !sendcloudApiSecret) {
+      throw new Error("Sendcloud API credentials not configured");
     }
 
     const seller = transaction.seller as any;
@@ -66,18 +76,13 @@ Deno.serve(async (req: Request) => {
 
     if (!seller) throw new Error("Seller information missing");
 
-    const sendcloudApiKey = Deno.env.get("SENDCLOUD_API_KEY");
-    const sendcloudApiSecret = Deno.env.get("SENDCLOUD_API_SECRET");
-    if (!sendcloudApiKey || !sendcloudApiSecret) {
-      throw new Error("Sendcloud API credentials not configured");
-    }
-
     const weightGrams = listing?.weight_grams
       || parseInt(listing?.hair_weight?.replace(/[^\d]/g, "") || "100", 10)
       || 100;
     const weightKg = (Math.max(weightGrams, 10) / 1000).toFixed(3);
 
     const sellerCountryCode = countryNameToCode[seller.country] || seller.country || "FR";
+    const itemValue = Number(listing?.price ?? transaction.amount ?? 0);
 
     const senderAddress = {
       name: seller.full_name || "Vendeur",
@@ -90,8 +95,6 @@ Deno.serve(async (req: Request) => {
       email: seller.email || "",
       telephone: seller.phone || "",
     };
-
-    const itemValue = Number(listing?.price ?? transaction.amount ?? 0);
 
     const parcelItems = [
       {
@@ -107,25 +110,30 @@ Deno.serve(async (req: Request) => {
     let parcelData: Record<string, any>;
 
     if (isMondialRelay) {
-      const relayPointId = (transaction as any).relay_point_id;
+      const relayPointId = transaction.relay_point_id;
       if (!relayPointId) throw new Error("Point relais non défini pour cette commande");
 
-      const relayAddress = (transaction as any).relay_point_address || "";
-      const relayCity = (transaction as any).relay_point_city || "";
-      const relayPostalCode = (transaction as any).relay_point_postal_code || "";
+      const relayAddress = transaction.relay_point_address || "";
+      const relayCity = transaction.relay_point_city || "";
+      const relayPostalCode = transaction.relay_point_postal_code || "";
 
-      const buyer = transaction.buyer as any;
+      // Fetch buyer profile for name/phone/email
+      const { data: buyerProfile } = await supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("id", transaction.buyer_id)
+        .maybeSingle();
 
       const sendcloudMethodId = transaction.sendcloud_method_id || 161;
 
       parcelData = {
-        name: buyer?.full_name || "Acheteur",
+        name: buyerProfile?.full_name || "Acheteur",
         address: relayAddress.split(",")[0] || "POINT RELAIS",
         city: relayCity,
         postal_code: relayPostalCode,
         country: "FR",
-        telephone: buyer?.phone || seller.phone || "",
-        email: buyer?.email || "",
+        telephone: buyerProfile?.phone || seller.phone || "",
+        email: buyerProfile?.email || "",
         weight: weightKg,
         order_number: transactionId,
         insured_value: itemValue.toFixed(2),
@@ -135,7 +143,11 @@ Deno.serve(async (req: Request) => {
         parcel_items: parcelItems,
       };
     } else {
-      const shippingAddress = transaction.shipping_address as any;
+      // shipping_address is stored as a JSON string or object in the column
+      let shippingAddress: any = transaction.shipping_address;
+      if (typeof shippingAddress === "string") {
+        try { shippingAddress = JSON.parse(shippingAddress); } catch { shippingAddress = null; }
+      }
       if (!shippingAddress) throw new Error("Shipping address missing");
 
       const rawCountry = shippingAddress.country || "FR";
@@ -172,6 +184,8 @@ Deno.serve(async (req: Request) => {
     });
 
     const responseText = await sendcloudResponse.text();
+    console.log("Sendcloud response status:", sendcloudResponse.status);
+    console.log("Sendcloud response:", responseText.substring(0, 500));
 
     if (!sendcloudResponse.ok) {
       let errorMessage = `Sendcloud erreur (${sendcloudResponse.status})`;
@@ -195,10 +209,12 @@ Deno.serve(async (req: Request) => {
     const { error: updateError } = await supabase
       .from("transactions")
       .update({
-        shipping_label_url: labelUrl,
+        shipping_label_pdf_url: labelUrl,
+        shipping_label_tracking_number: trackingNumber,
         tracking_number: trackingNumber,
         sendcloud_parcel_id: parcelId?.toString(),
         shipping_status: "label_created",
+        label_generated_at: new Date().toISOString(),
       })
       .eq("id", transactionId);
 
@@ -214,6 +230,7 @@ Deno.serve(async (req: Request) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
+    console.error("create-shipping-label error:", (error as Error).message);
     return new Response(
       JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
