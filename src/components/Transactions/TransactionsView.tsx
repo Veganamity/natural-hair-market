@@ -105,30 +105,31 @@ export function TransactionsView() {
       if (!session) throw new Error('Non authentifié');
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-mondial-relay-label`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-shipping-label`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session.access_token}`,
-            'Apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({
-            transactionId: transaction.id,
-            relayPointId: transaction.relay_point_id,
-          }),
+          body: JSON.stringify({ transactionId: transaction.id }),
         }
       );
 
-      const result = await response.json();
-
-      if (!response.ok || result.error) {
-        throw new Error(result.error || 'Erreur lors de la génération du bon');
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+        throw new Error(err.error || `Erreur ${response.status}`);
       }
 
-      if (result.labelUrl) {
-        window.open(result.labelUrl, '_blank');
-      }
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = 'etiquette-expedition.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
 
       await fetchTransactions();
     } catch (err: any) {
@@ -477,37 +478,23 @@ export function TransactionsView() {
                           </div>
                         </div>
                       )}
-                      {transaction.shipping_method === 'mondial_relay' && (
-                        <div className="mt-3">
-                          {(transaction as any).shipping_label_pdf_url ? (
-                            <a
-                              href={(transaction as any).shipping_label_pdf_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
-                            >
-                              <Printer className="w-3.5 h-3.5" />
-                              Imprimer le bon Mondial Relay
-                            </a>
-                          ) : (
-                            <div className="space-y-1">
-                              <button
-                                onClick={() => generateMondialRelayLabel(transaction)}
-                                disabled={generatingLabel === transaction.id}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                              >
-                                {generatingLabel === transaction.id ? (
-                                  <><Loader2 className="w-3.5 h-3.5 animate-spin" />Génération en cours...</>
-                                ) : (
-                                  <><Printer className="w-3.5 h-3.5" />Générer le bon Mondial Relay</>
-                                )}
-                              </button>
-                              {labelErrors[transaction.id] && (
-                                <div className="flex items-center gap-1 text-xs text-red-600">
-                                  <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                                  <span>{labelErrors[transaction.id]}</span>
-                                </div>
-                              )}
+                      {(transaction.shipping_method === 'mondial_relay' || (transaction as any).relay_point_id) && (
+                        <div className="mt-3 space-y-1">
+                          <button
+                            onClick={() => generateMondialRelayLabel(transaction)}
+                            disabled={generatingLabel === transaction.id}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {generatingLabel === transaction.id ? (
+                              <><Loader2 className="w-3.5 h-3.5 animate-spin" />Téléchargement...</>
+                            ) : (
+                              <><Download className="w-3.5 h-3.5" />Télécharger l'étiquette</>
+                            )}
+                          </button>
+                          {labelErrors[transaction.id] && (
+                            <div className="flex items-center gap-1 text-xs text-red-600">
+                              <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                              <span>{labelErrors[transaction.id]}</span>
                             </div>
                           )}
                         </div>
