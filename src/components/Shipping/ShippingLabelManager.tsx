@@ -56,10 +56,6 @@ export function ShippingLabelManager({
         throw new Error(result.error || 'Échec de la génération de l\'étiquette');
       }
 
-      if (result.shipping_label_url) {
-        window.open(result.shipping_label_url, '_blank');
-      }
-
       onUpdate?.();
     } catch (err) {
       setError((err as Error).message);
@@ -150,8 +146,7 @@ export function ShippingLabelManager({
 
           <a
             href={shippingLabelUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+            download="etiquette-expedition.pdf"
             className="flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
             <Download className="w-5 h-5" />
