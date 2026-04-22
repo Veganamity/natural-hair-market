@@ -7,11 +7,47 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-const POLL_INTERVAL_MS = 2000;
-const MAX_ATTEMPTS = 10; // up to 20 seconds
+// Extract a PDF URL from any known Sendcloud response shape
+function extractPdfUrl(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null;
+  const d = data as Record<string, unknown>;
 
-async function getPdfUrlFromSendcloud(id: number, sendcloudAuth: string): Promise<string | null> {
-  // POST /labels triggers generation and returns URL if ready
+  // POST /labels → { label: { normal_printer: [...], label_printer: "..." } }
+  const label = d.label as Record<string, unknown> | undefined;
+  if (label) {
+    const np = label.normal_printer;
+    if (Array.isArray(np) && np.length > 0) return String(np[0]);
+    if (typeof np === "string" && np.length > 0) return np;
+    const lp = label.label_printer;
+    if (typeof lp === "string" && lp.length > 0) return lp;
+  }
+
+  // GET /parcels/{id} → { parcel: { label: { normal_printer: [...] } } }
+  const parcel = d.parcel as Record<string, unknown> | undefined;
+  if (parcel) {
+    const pl = parcel.label as Record<string, unknown> | undefined;
+    if (pl) {
+      const np = pl.normal_printer;
+      if (Array.isArray(np) && np.length > 0) return String(np[0]);
+      if (typeof np === "string" && np.length > 0) return np;
+      const lp = pl.label_printer;
+      if (typeof lp === "string" && lp.length > 0) return lp;
+    }
+  }
+
+  return null;
+}
+
+// Single attempt: trigger label generation and return the PDF binary in one call.
+// Returns null if not ready yet (caller should retry).
+async function tryFetchLabel(
+  parcelId: number,
+  sendcloudAuth: string,
+): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
+  const noCache = { cache: "no-store" as RequestCache };
+
+  // Step 1: POST /labels — triggers async generation and may return URL immediately
+  let pdfUrl: string | null = null;
   try {
     const postRes = await fetch("https://panel.sendcloud.sc/api/v2/labels", {
       method: "POST",
@@ -19,83 +55,74 @@ async function getPdfUrlFromSendcloud(id: number, sendcloudAuth: string): Promis
         "Authorization": `Basic ${sendcloudAuth}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ label: { parcels: [id] } }),
+      body: JSON.stringify({ label: { parcels: [parcelId] } }),
+      ...noCache,
     });
-    console.log("POST /labels status:", postRes.status);
-    if (postRes.ok) {
-      const data = await postRes.json();
-      const url = data.label?.normal_printer?.[0] || data.label?.label_printer || null;
-      if (url) return url;
-    }
+    const postBody = await postRes.json();
+    console.log("POST /labels status:", postRes.status, "body:", JSON.stringify(postBody).slice(0, 300));
+    pdfUrl = extractPdfUrl(postBody);
   } catch (e) {
     console.error("POST /labels error:", e);
   }
 
-  // GET /labels/{id} — JSON metadata with URL
-  try {
-    const getRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${id}`, {
-      headers: { "Authorization": `Basic ${sendcloudAuth}` },
-    });
-    console.log("GET /labels/{id} status:", getRes.status);
-    if (getRes.ok) {
-      const data = await getRes.json();
-      const url = data.label?.normal_printer?.[0] || data.label?.label_printer || null;
-      if (url) return url;
-    }
-  } catch (e) {
-    console.error("GET /labels/{id} error:", e);
-  }
-
-  // Fallback: parcel object embeds label URL
-  try {
-    const parcelRes = await fetch(`https://panel.sendcloud.sc/api/v2/parcels/${id}`, {
-      headers: { "Authorization": `Basic ${sendcloudAuth}` },
-    });
-    console.log("GET /parcels/{id} status:", parcelRes.status);
-    if (parcelRes.ok) {
-      const data = await parcelRes.json();
-      const url = data.parcel?.label?.normal_printer?.[0] || data.parcel?.label?.label_printer || null;
-      if (url) return url;
-    }
-  } catch (e) {
-    console.error("GET /parcels/{id} error:", e);
-  }
-
-  return null;
-}
-
-// Poll Sendcloud until the PDF URL is available (label generation is async)
-async function fetchLabelPdf(parcelId: string, sendcloudAuth: string): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
-  const id = parseInt(parcelId, 10);
-
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    console.log(`Attempt ${attempt}/${MAX_ATTEMPTS} for parcel ${id}`);
-
-    const pdfUrl = await getPdfUrlFromSendcloud(id, sendcloudAuth);
-
-    if (pdfUrl) {
-      console.log("Fetching PDF binary from:", pdfUrl);
-      const pdfRes = await fetch(pdfUrl, {
+  // Step 2: GET /labels/{id} if POST didn't give us a URL
+  if (!pdfUrl) {
+    try {
+      const getRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
         headers: { "Authorization": `Basic ${sendcloudAuth}` },
+        ...noCache,
       });
-      console.log("PDF fetch status:", pdfRes.status);
-
-      if (pdfRes.ok) {
-        const contentType = pdfRes.headers.get("content-type") || "application/pdf";
-        const buffer = await pdfRes.arrayBuffer();
-        return { buffer, contentType };
-      }
-      // URL returned but fetch failed — label may still be generating, keep polling
-      console.warn("PDF URL found but fetch failed:", pdfRes.status, "— will retry");
-    }
-
-    if (attempt < MAX_ATTEMPTS) {
-      await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+      const getBody = await getRes.json();
+      console.log("GET /labels status:", getRes.status, "body:", JSON.stringify(getBody).slice(0, 300));
+      pdfUrl = extractPdfUrl(getBody);
+    } catch (e) {
+      console.error("GET /labels error:", e);
     }
   }
 
-  console.error("Label not ready after", MAX_ATTEMPTS, "attempts for parcel", id);
-  return null;
+  // Step 3: GET /parcels/{id} as last resort
+  if (!pdfUrl) {
+    try {
+      const parcelRes = await fetch(`https://panel.sendcloud.sc/api/v2/parcels/${parcelId}`, {
+        headers: { "Authorization": `Basic ${sendcloudAuth}` },
+        ...noCache,
+      });
+      const parcelBody = await parcelRes.json();
+      console.log("GET /parcels status:", parcelRes.status, "body:", JSON.stringify(parcelBody).slice(0, 400));
+      pdfUrl = extractPdfUrl(parcelBody);
+    } catch (e) {
+      console.error("GET /parcels error:", e);
+    }
+  }
+
+  if (!pdfUrl) {
+    console.log("No PDF URL found for parcel", parcelId);
+    return null;
+  }
+
+  // Step 4: download the actual PDF binary
+  console.log("Downloading PDF from:", pdfUrl);
+  const pdfRes = await fetch(pdfUrl, {
+    headers: { "Authorization": `Basic ${sendcloudAuth}` },
+    ...noCache,
+  });
+  console.log("PDF binary status:", pdfRes.status, "content-type:", pdfRes.headers.get("content-type"), "content-length:", pdfRes.headers.get("content-length"));
+
+  if (!pdfRes.ok) {
+    console.warn("PDF binary fetch failed:", pdfRes.status);
+    return null;
+  }
+
+  const buffer = await pdfRes.arrayBuffer();
+  console.log("PDF buffer size:", buffer.byteLength);
+
+  if (buffer.byteLength < 100) {
+    console.warn("PDF buffer suspiciously small:", buffer.byteLength);
+    return null;
+  }
+
+  const contentType = pdfRes.headers.get("content-type") || "application/pdf";
+  return { buffer, contentType };
 }
 
 Deno.serve(async (req: Request) => {
@@ -112,7 +139,7 @@ Deno.serve(async (req: Request) => {
     if (!transactionId) {
       return new Response(
         JSON.stringify({ error: "transactionId is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -125,14 +152,14 @@ Deno.serve(async (req: Request) => {
     if (!transaction) {
       return new Response(
         JSON.stringify({ error: "Transaction introuvable" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     if (!transaction.sendcloud_parcel_id) {
       return new Response(
-        JSON.stringify({ error: "Aucun colis Sendcloud trouvé pour cette commande. L'étiquette n'a pas encore été générée." }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Aucun colis Sendcloud trouvé pour cette commande." }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -145,12 +172,12 @@ Deno.serve(async (req: Request) => {
 
     console.log("transactionId:", transactionId, "parcelId:", transaction.sendcloud_parcel_id);
 
-    const result = await fetchLabelPdf(transaction.sendcloud_parcel_id, sendcloudAuth);
+    const result = await tryFetchLabel(Number(transaction.sendcloud_parcel_id), sendcloudAuth);
 
     if (!result) {
       return new Response(
-        JSON.stringify({ error: "L'étiquette est en cours de génération chez Sendcloud. Réessayez dans quelques secondes.", retryable: true }),
-        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "L'étiquette est en cours de génération. Réessayez dans quelques secondes.", retryable: true }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -160,13 +187,14 @@ Deno.serve(async (req: Request) => {
         ...corsHeaders,
         "Content-Type": result.contentType,
         "Content-Disposition": `attachment; filename="etiquette-expedition.pdf"`,
+        "Cache-Control": "no-store",
       },
     });
   } catch (error) {
     console.error("download-shipping-label error:", (error as Error).message);
     return new Response(
       JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });

@@ -37,7 +37,7 @@ export function ShippingLabelManager({
   const downloadViaProxy = async () => {
     setLoading(true);
     setError('');
-    const TIMEOUT_MS = 20000;
+    const TIMEOUT_MS = 30000;
     const RETRY_DELAY_MS = 3000;
     const deadline = Date.now() + TIMEOUT_MS;
 
@@ -57,6 +57,7 @@ export function ShippingLabelManager({
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({ transactionId }),
+              cache: 'no-store',
             }
           );
         } catch (networkErr) {

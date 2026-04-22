@@ -100,7 +100,7 @@ export function TransactionsView() {
     setGeneratingLabel(transaction.id);
     setLabelErrors(prev => ({ ...prev, [transaction.id]: '' }));
 
-    const TIMEOUT_MS = 20000;
+    const TIMEOUT_MS = 30000;
     const RETRY_DELAY_MS = 3000;
     const deadline = Date.now() + TIMEOUT_MS;
 
@@ -120,6 +120,7 @@ export function TransactionsView() {
                 'Authorization': `Bearer ${session.access_token}`,
               },
               body: JSON.stringify({ transactionId: transaction.id }),
+              cache: 'no-store',
             }
           );
         } catch (networkErr) {
