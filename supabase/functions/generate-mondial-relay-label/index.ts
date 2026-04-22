@@ -138,14 +138,13 @@ Deno.serve(async (req: Request) => {
     const modeCol = "CCC";
     const modeLiv = "24R";
 
-    // Signature field order must match exactly what WSI2 expects per Mondial Relay docs
+    // Exact field order from Mondial Relay WSI2 official documentation (MR_KEYS)
     const securityFields = [
       enseigne,                                      // Enseigne
       modeCol,                                       // ModeCol
       modeLiv,                                       // ModeLiv
       orderRef,                                      // NDossier
       customerRef,                                   // NClient
-      weightGrams.toString(),                        // Poids
       senderCountry,                                 // Expe_Langage
       sellerLastname,                                // Expe_Ad1
       sellerFirstname,                               // Expe_Ad2
@@ -157,35 +156,35 @@ Deno.serve(async (req: Request) => {
       sellerPhone,                                   // Expe_Tel1
       "",                                            // Expe_Tel2
       (sellerProfile.email || "").substring(0, 70), // Expe_Mail
-      "FR",                                         // Dest_Langage
+      "FR",                                          // Dest_Langage
       buyerLastname,                                 // Dest_Ad1
-      buyerFirstname,                               // Dest_Ad2
-      relayName,                                    // Dest_Ad3
-      relayAddress,                                 // Dest_Ad4
-      recipientCity,                                // Dest_Ville
-      recipientPostCode,                            // Dest_CP
-      "FR",                                         // Dest_Pays
-      buyerPhone,                                   // Dest_Tel1
-      "",                                           // Dest_Tel2
-      (buyerProfile?.email || "").substring(0, 70), // Dest_Mail
-      weightGrams.toString(),                       // Poids (repeated per doc)
-      "",                                           // Longueur
-      "",                                           // Taille
-      "1",                                          // NbColis
-      "0",                                          // CRT_Valeur
-      "",                                           // CRT_Devise
-      "",                                           // EXP_Valeur
-      "",                                           // EXP_Devise
-      "",                                           // COL_Rel_Pays
-      "",                                           // COL_Rel
-      "FR",                                         // LIV_Rel_Pays
-      relayPointId,                                 // LIV_Rel
-      "",                                           // TAvisage
-      "",                                           // TReprise
-      "",                                           // Montage
-      "",                                           // TRDV
-      "0",                                          // Assurance
-      "",                                           // Instructions
+      buyerFirstname,                                // Dest_Ad2
+      relayName,                                     // Dest_Ad3
+      relayAddress,                                  // Dest_Ad4
+      recipientCity,                                 // Dest_Ville
+      recipientPostCode,                             // Dest_CP
+      "FR",                                          // Dest_Pays
+      buyerPhone,                                    // Dest_Tel1
+      "",                                            // Dest_Tel2
+      (buyerProfile?.email || "").substring(0, 70),  // Dest_Mail
+      weightGrams.toString(),                        // Poids
+      "",                                            // Longueur
+      "",                                            // Taille
+      "1",                                           // NbColis
+      "0",                                           // CRT_Valeur
+      "",                                            // CRT_Devise
+      "",                                            // EXP_Valeur
+      "",                                            // EXP_Devise
+      "",                                            // COL_Rel_Pays
+      "",                                            // COL_Rel
+      "FR",                                          // LIV_Rel_Pays
+      relayPointId,                                  // LIV_Rel
+      "",                                            // TAvisage
+      "",                                            // TReprise
+      "",                                            // Montage
+      "",                                            // TRDV
+      "0",                                           // Assurance
+      "",                                            // Instructions
       privateKey,
     ];
 
