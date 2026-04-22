@@ -165,13 +165,26 @@ Deno.serve(async (req: Request) => {
         if (methodsRes.ok) {
           const methodsData = await methodsRes.json();
           const methods: any[] = methodsData.shipping_methods || [];
-          console.log("=== SHIPPING METHODS available:", JSON.stringify(methods.map((m: any) => ({ id: m.id, name: m.name, carrier: m.carrier }))));
+          console.log("=== SHIPPING METHODS available:", JSON.stringify(methods.map((m: any) => ({ id: m.id, name: m.name, carrier: m.carrier, min_weight: m.min_weight, max_weight: m.max_weight }))));
+
+          // Filter to methods whose weight range covers the parcel weight
+          const fitsWeight = (m: any) => {
+            const minW = m.min_weight ?? 0;
+            const maxW = m.max_weight ?? 99999;
+            return weightGrams >= minW && weightGrams <= maxW;
+          };
+
+          const compatible = methods.filter(fitsWeight);
+          console.log("Weight-compatible methods:", JSON.stringify(compatible.map((m: any) => ({ id: m.id, name: m.name, carrier: m.carrier }))));
+
+          // Work from weight-compatible list; fall back to full list if none match
+          const pool = compatible.length > 0 ? compatible : methods;
 
           let picked: any = null;
 
           // 1. Match by the carrier saved from the widget (most reliable)
           if (relayCarrier) {
-            picked = methods.find((m: any) =>
+            picked = pool.find((m: any) =>
               (m.carrier || "").toLowerCase().includes(relayCarrier) ||
               relayCarrier.includes((m.carrier || "").toLowerCase())
             );
@@ -179,11 +192,11 @@ Deno.serve(async (req: Request) => {
 
           // 2. Match by stored sendcloud_method_id if it's in the compatible list
           if (!picked && transaction.sendcloud_method_id) {
-            picked = methods.find((m: any) => m.id === transaction.sendcloud_method_id);
+            picked = pool.find((m: any) => m.id === transaction.sendcloud_method_id);
           }
 
-          // 3. First available method for this service point
-          if (!picked) picked = methods[0];
+          // 3. First weight-compatible method
+          if (!picked) picked = pool[0];
 
           if (picked?.id) {
             sendcloudMethodId = picked.id;
