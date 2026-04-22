@@ -33,24 +33,32 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Fetch transaction with seller and listing — shipping_address is a JSON column, not a FK
     const { data: transaction, error: txError } = await supabase
       .from("transactions")
-      .select(`
-        *,
-        seller:seller_id(full_name, email, address_line1, address_line2, postal_code, city, country, phone),
-        listing:listings(title, hair_weight, price, weight_grams)
-      `)
+      .select("*, listing:listings(title, hair_weight, price, weight_grams)")
       .eq("id", transactionId)
       .maybeSingle();
 
-    if (txError || !transaction) {
+    if (txError) {
       console.error("Transaction fetch error:", txError, "id:", transactionId);
+      return new Response(
+        JSON.stringify({ error: `DB error: ${txError.message}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (!transaction) {
+      console.error("Transaction not found for id:", transactionId);
       return new Response(
         JSON.stringify({ error: "Transaction not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const { data: sellerProfile } = await supabase
+      .from("profiles")
+      .select("full_name, email, address_line1, address_line2, postal_code, city, country, phone")
+      .eq("id", transaction.seller_id)
+      .maybeSingle();
 
     // Label already exists — return it directly
     if (transaction.shipping_label_pdf_url) {
@@ -70,7 +78,7 @@ Deno.serve(async (req: Request) => {
       throw new Error("Sendcloud API credentials not configured");
     }
 
-    const seller = transaction.seller as any;
+    const seller = sellerProfile as any;
     const listing = transaction.listing as any;
     const isMondialRelay = transaction.shipping_method === "mondial_relay";
 
