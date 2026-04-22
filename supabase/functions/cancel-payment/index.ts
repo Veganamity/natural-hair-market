@@ -58,10 +58,6 @@ Deno.serve(async (req: Request) => {
       throw new Error("Unauthorized to cancel this transaction");
     }
 
-    if (transaction.status === "completed") {
-      throw new Error("Cannot cancel a completed transaction");
-    }
-
     if (transaction.status === "refunded" || transaction.status === "cancelled") {
       throw new Error("Transaction already cancelled or refunded");
     }
