@@ -138,30 +138,54 @@ Deno.serve(async (req: Request) => {
     const modeCol = "CCC";
     const modeLiv = "24R";
 
+    // Signature field order must match exactly what WSI2 expects per Mondial Relay docs
     const securityFields = [
-      enseigne,              // Enseigne
-      modeCol,               // ModeCol
-      modeLiv,               // ModeLiv
-      orderRef,              // NDossier
-      customerRef,           // NClient
-      weightGrams.toString(),// Poids
-      senderCountry,         // Expe_Langage
-      sellerLastname,        // Expe_Ad1
-      sellerFirstname,       // Expe_Ad2
-      senderPostCode,        // Expe_CP
-      senderCity,            // Expe_Ville
-      senderCountry,         // Expe_Pays
-      "FR",                  // Dest_Langage
-      buyerLastname,         // Dest_Ad1
-      buyerFirstname,        // Dest_Ad2
-      relayPointId,          // Dest_Ad3 (ID point relais)
-      recipientPostCode,     // Dest_CP
-      recipientCity,         // Dest_Ville
-      "FR",                  // Dest_Pays
-      buyerPhone,            // Dest_Tel1
+      enseigne,                                      // Enseigne
+      modeCol,                                       // ModeCol
+      modeLiv,                                       // ModeLiv
+      orderRef,                                      // NDossier
+      customerRef,                                   // NClient
+      weightGrams.toString(),                        // Poids
+      senderCountry,                                 // Expe_Langage
+      sellerLastname,                                // Expe_Ad1
+      sellerFirstname,                               // Expe_Ad2
+      senderStreet,                                  // Expe_Ad3
+      "",                                            // Expe_Ad4
+      senderCity,                                    // Expe_Ville
+      senderPostCode,                                // Expe_CP
+      senderCountry,                                 // Expe_Pays
+      sellerPhone,                                   // Expe_Tel1
+      "",                                            // Expe_Tel2
+      (sellerProfile.email || "").substring(0, 70), // Expe_Mail
+      "FR",                                         // Dest_Langage
+      buyerLastname,                                 // Dest_Ad1
+      buyerFirstname,                               // Dest_Ad2
+      relayName,                                    // Dest_Ad3
+      relayAddress,                                 // Dest_Ad4
+      recipientCity,                                // Dest_Ville
+      recipientPostCode,                            // Dest_CP
+      "FR",                                         // Dest_Pays
+      buyerPhone,                                   // Dest_Tel1
+      "",                                           // Dest_Tel2
       (buyerProfile?.email || "").substring(0, 70), // Dest_Mail
-      "1",                   // NbColis
-      "0",                   // CRT_Valeur
+      weightGrams.toString(),                       // Poids (repeated per doc)
+      "",                                           // Longueur
+      "",                                           // Taille
+      "1",                                          // NbColis
+      "0",                                          // CRT_Valeur
+      "",                                           // CRT_Devise
+      "",                                           // EXP_Valeur
+      "",                                           // EXP_Devise
+      "",                                           // COL_Rel_Pays
+      "",                                           // COL_Rel
+      "FR",                                         // LIV_Rel_Pays
+      relayPointId,                                 // LIV_Rel
+      "",                                           // TAvisage
+      "",                                           // TReprise
+      "",                                           // Montage
+      "",                                           // TRDV
+      "0",                                          // Assurance
+      "",                                           // Instructions
       privateKey,
     ];
 
