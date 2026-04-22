@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Package, Download, ExternalLink, Loader2, CheckCircle, MapPin, AlertCircle } from 'lucide-react';
+import { Package, Download, ExternalLink, Loader2, CheckCircle, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
 interface ShippingLabelManagerProps {
@@ -11,6 +11,7 @@ interface ShippingLabelManagerProps {
   relayPointAddress?: string | null;
   relayPointId?: string | null;
   shippingMethod?: string | null;
+  sendcloudParcelId?: string | null;
   onUpdate?: () => void;
 }
 
@@ -23,6 +24,7 @@ export function ShippingLabelManager({
   relayPointAddress,
   relayPointId,
   shippingMethod,
+  sendcloudParcelId,
   onUpdate,
 }: ShippingLabelManagerProps) {
   const [loading, setLoading] = useState(false);
@@ -30,17 +32,35 @@ export function ShippingLabelManager({
   const [generatedLabelUrl, setGeneratedLabelUrl] = useState<string | null>(null);
 
   const isMondialRelay = shippingMethod === 'mondial_relay';
-
   const activeLabelUrl = generatedLabelUrl || shippingLabelUrl;
 
-  const handleGenerateLabel = async () => {
-    setLoading(true);
-    setError('');
+  // Label was created (has parcel ID or label_created status) but URL is missing
+  const labelCreatedButMissing = !activeLabelUrl && (sendcloudParcelId || shippingStatus === 'label_created');
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
+  const callGenerateLabel = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
 
+    if (isMondialRelay) {
+      // Mondial Relay uses its own dedicated function
+      if (!relayPointId) throw new Error('Point relais non défini pour cette commande');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-mondial-relay-label`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ transactionId, relayPointId }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Échec de la génération Mondial Relay');
+      return result.labelUrl as string | null;
+    } else {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-shipping-label`,
         {
@@ -54,15 +74,20 @@ export function ShippingLabelManager({
       );
 
       const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Échec de la génération de l'étiquette");
+      return result.shipping_label_url as string | null;
+    }
+  };
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Échec de la génération de l\'étiquette');
+  const handleGenerateLabel = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const labelUrl = await callGenerateLabel();
+      if (labelUrl) {
+        setGeneratedLabelUrl(labelUrl);
       }
-
-      if (result.shipping_label_url) {
-        setGeneratedLabelUrl(result.shipping_label_url);
-      }
-
       onUpdate?.();
     } catch (err) {
       setError((err as Error).message);
@@ -141,7 +166,8 @@ export function ShippingLabelManager({
         </div>
       )}
 
-      {!activeLabelUrl && (
+      {/* No label yet — show generate button */}
+      {!activeLabelUrl && !labelCreatedButMissing && (
         <button
           onClick={handleGenerateLabel}
           disabled={loading}
@@ -161,11 +187,39 @@ export function ShippingLabelManager({
         </button>
       )}
 
+      {/* Label was created but URL missing — show retry button */}
+      {labelCreatedButMissing && (
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2 text-amber-700 bg-amber-50 px-4 py-3 rounded-lg border border-amber-200">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <span className="text-sm font-medium">Étiquette créée — lien de téléchargement indisponible</span>
+          </div>
+          <button
+            onClick={handleGenerateLabel}
+            disabled={loading}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Récupération en cours...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-5 h-5" />
+                <span>Récupérer l'étiquette</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Label URL available — show download button */}
       {activeLabelUrl && (
         <div className="space-y-3">
           <div className="flex items-center space-x-2 text-green-700 bg-green-50 px-4 py-3 rounded-lg">
             <CheckCircle className="w-5 h-5" />
-            <span className="text-sm font-medium">Étiquette d'expédition créée</span>
+            <span className="text-sm font-medium">Étiquette d'expédition prête</span>
           </div>
 
           <button

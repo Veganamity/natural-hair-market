@@ -217,10 +217,34 @@ Deno.serve(async (req: Request) => {
     console.log("Parcel label data:", JSON.stringify(parcel.label));
     console.log("Parcel id:", parcel.id, "tracking:", parcel.tracking_number);
 
-    // normal_printer URLs are directly downloadable PDFs; label_printer requires Sendcloud auth
-    const labelUrl = parcel.label?.normal_printer?.[0] || parcel.label?.label_printer;
-    const trackingNumber = parcel.tracking_number;
     const parcelId = parcel.id;
+    const trackingNumber = parcel.tracking_number;
+
+    // normal_printer URLs are directly downloadable PDFs; label_printer requires Sendcloud auth
+    let labelUrl: string | null = parcel.label?.normal_printer?.[0] || parcel.label?.label_printer || null;
+
+    // Sendcloud generates labels asynchronously — poll the label endpoint if not ready yet
+    if (!labelUrl && parcelId) {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+          const labelRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
+            headers: { "Authorization": `Basic ${sendcloudAuth}` },
+          });
+          if (labelRes.ok) {
+            const labelData = await labelRes.json();
+            console.log(`Label poll attempt ${attempt + 1}:`, JSON.stringify(labelData).substring(0, 300));
+            const normalPrinter = labelData.label?.normal_printer?.[0] || labelData.label?.label_printer;
+            if (normalPrinter) {
+              labelUrl = normalPrinter;
+              break;
+            }
+          }
+        } catch (e) {
+          console.error(`Label poll attempt ${attempt + 1} failed:`, e);
+        }
+      }
+    }
 
     const { error: updateError } = await supabase
       .from("transactions")
