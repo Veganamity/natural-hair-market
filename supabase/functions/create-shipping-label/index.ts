@@ -128,31 +128,42 @@ Deno.serve(async (req: Request) => {
       const relayPointId = transaction.relay_point_id;
       if (!relayPointId) throw new Error("Point relais non défini pour cette commande");
 
-      const relayAddress = transaction.relay_point_address || "";
-      const relayCity = transaction.relay_point_city || "";
-      const relayPostalCode = transaction.relay_point_postal_code || "";
-
-      // Fetch buyer profile for name/phone/email
+      // Fetch buyer profile for name/phone/email as fallback
       const { data: buyerProfile } = await supabase
         .from("profiles")
         .select("full_name, email, phone")
         .eq("id", transaction.buyer_id)
         .maybeSingle();
 
+      // shipping_address holds the buyer's personal address — use it for name/phone/email
+      let shippingAddress: any = transaction.shipping_address;
+      if (typeof shippingAddress === "string") {
+        try { shippingAddress = JSON.parse(shippingAddress); } catch { shippingAddress = null; }
+      }
+
+      const buyerName = shippingAddress?.full_name || buyerProfile?.full_name || "Acheteur";
+      const buyerPhone = shippingAddress?.phone || buyerProfile?.phone || "";
+      const buyerEmail = shippingAddress?.email || buyerProfile?.email || "";
+      const relayCountry = countryNameToCode[shippingAddress?.country || ""] || shippingAddress?.country || "FR";
+
       const sendcloudMethodId = transaction.sendcloud_method_id || 161;
 
+      // to_service_point must be an integer — it's the Sendcloud service point ID
+      const servicePointId = parseInt(relayPointId, 10);
+      if (isNaN(servicePointId)) throw new Error(`ID point relais invalide: ${relayPointId}`);
+
       parcelData = {
-        name: buyerProfile?.full_name || "Acheteur",
-        address: relayAddress.split(",")[0] || "POINT RELAIS",
-        city: relayCity,
-        postal_code: relayPostalCode,
-        country: "FR",
-        telephone: buyerProfile?.phone || seller.phone || "",
-        email: buyerProfile?.email || "",
+        name: buyerName,
+        address: transaction.relay_point_address || "",
+        city: transaction.relay_point_city || "",
+        postal_code: transaction.relay_point_postal_code || "",
+        country: relayCountry,
+        telephone: buyerPhone,
+        email: buyerEmail,
         weight: weightKg,
         order_number: transactionId,
         ...(itemValue >= 2 ? { insured_value: itemValue.toFixed(2) } : {}),
-        to_service_point: parseInt(relayPointId, 10),
+        to_service_point: servicePointId,
         shipment: { id: sendcloudMethodId },
         ...(senderAddressId ? { sender_address: senderAddressId } : {}),
         parcel_items: parcelItems,
