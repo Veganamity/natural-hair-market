@@ -80,11 +80,12 @@ Deno.serve(async (req: Request) => {
 
     const { data: transaction, error: transactionError } = await supabase
       .from("transactions")
-      .select("*, listing:listings(*), relay_point_postal_code, relay_point_city, relay_point_name, relay_point_address")
+      .select("*, listing:listings(*)")
       .eq("id", transactionId)
       .maybeSingle();
 
-    if (transactionError || !transaction) throw new Error("Transaction not found");
+    if (transactionError) throw new Error(`DB error: ${transactionError.message}`);
+    if (!transaction) throw new Error(`Transaction not found for id: ${transactionId}`);
 
     if (!isServiceRole && userId && transaction.seller_id !== userId && transaction.buyer_id !== userId) {
       throw new Error("Unauthorized to access this transaction");
