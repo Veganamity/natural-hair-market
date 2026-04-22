@@ -31,36 +31,35 @@ export function OrderManagement() {
 
     setLoading(true);
 
-    let query = supabase
+    const { data: allData, error: allError } = await supabase
       .from('transactions')
       .select('*, listing:listings(*)')
       .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
       .order('created_at', { ascending: false });
 
-    if (activeTab === 'pending') {
-      query = query.or(
-        'status.in.(pending,processing),' +
-        'and(status.eq.completed,delivery_status.in.(pending,label_created,shipped,in_transit))'
-      );
-    } else {
-      query = query.or(
-        'status.in.(cancelled,refunded,failed),' +
-        'and(status.eq.completed,delivery_status.in.(delivered,cancelled))'
-      );
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching transactions:', error);
+    if (allError) {
+      console.error('Error fetching transactions:', allError);
       setLoading(false);
       return;
     }
 
-    const rawTransactions = data || [];
+    const pendingStatuses = ['pending', 'processing'];
+    const historyStatuses = ['cancelled', 'refunded', 'failed'];
+
+    const filtered = (allData || []).filter(t => {
+      if (activeTab === 'pending') {
+        if (pendingStatuses.includes(t.status)) return true;
+        if (t.status === 'completed' && !['delivered', 'cancelled'].includes(t.delivery_status)) return true;
+        return false;
+      } else {
+        if (historyStatuses.includes(t.status)) return true;
+        if (t.status === 'completed' && ['delivered', 'cancelled'].includes(t.delivery_status)) return true;
+        return false;
+      }
+    });
 
     const allUserIds = new Set<string>();
-    rawTransactions.forEach((t: any) => {
+    filtered.forEach((t: any) => {
       if (t.buyer_id) allUserIds.add(t.buyer_id);
       if (t.seller_id) allUserIds.add(t.seller_id);
     });
@@ -76,7 +75,7 @@ export function OrderManagement() {
       });
     }
 
-    const enriched = rawTransactions.map((t: any) => ({
+    const enriched = filtered.map((t: any) => ({
       ...t,
       buyer: profilesMap[t.buyer_id] || null,
       seller: profilesMap[t.seller_id] || null,
