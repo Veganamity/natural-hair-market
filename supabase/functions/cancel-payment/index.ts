@@ -91,12 +91,18 @@ Deno.serve(async (req: Request) => {
       stripeAction = "cancelled";
       stripeRefId = cancelled.id;
     } else if (paymentIntent.status === "succeeded") {
-      const refund = await stripe.refunds.create({
-        payment_intent: transaction.stripe_payment_intent_id,
-        reason: "requested_by_customer",
-      });
-      stripeAction = "refunded";
-      stripeRefId = refund.id;
+      if (paymentIntent.amount === 0) {
+        // Zero-amount payment intents cannot be refunded via Stripe; just cancel locally
+        stripeAction = "cancelled";
+        stripeRefId = paymentIntent.id;
+      } else {
+        const refund = await stripe.refunds.create({
+          payment_intent: transaction.stripe_payment_intent_id,
+          reason: "requested_by_customer",
+        });
+        stripeAction = "refunded";
+        stripeRefId = refund.id;
+      }
     } else {
       throw new Error(`Cannot cancel payment in status: ${paymentIntent.status}`);
     }
