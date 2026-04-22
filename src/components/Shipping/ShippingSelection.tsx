@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { AddressSelector, ShippingAddress } from '../Payment/AddressSelector';
-import { SendcloudServicePointWidget, ServicePoint } from './SendcloudServicePointWidget';
+import { MondialRelaySelection } from './MondialRelaySelection';
 import { SendcloudMethod, isRelayMethod } from './shippingUtils';
 import { ShippingMethodList } from './ShippingMethodList';
 
@@ -21,39 +21,25 @@ interface ShippingSelectionProps {
   weight?: number;
 }
 
-function carriersParam(method: SendcloudMethod): string {
-  const s = `${method.carrier ?? ''} ${method.name ?? ''}`.toLowerCase();
-  if (s.includes('mondial') || s.includes('relay') || s.includes('relais') || s.includes('locker') || s.includes('shop2shop')) return 'mondial_relay';
-  if (s.includes('ups')) return 'ups';
-  if (s.includes('colissimo')) return 'colissimo';
-  if (s.includes('chronopost') || s.includes('chrono')) return 'chronopost';
-  if (s.includes('dhl')) return 'dhl';
-  if (s.includes('gls')) return 'gls';
-  return method.carrier ?? '';
-}
-
 export function ShippingSelection({ onShippingSelected, weight = 100 }: ShippingSelectionProps) {
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
   const [shippingMethods, setShippingMethods] = useState<SendcloudMethod[]>([]);
   const [loadingMethods, setLoadingMethods] = useState(false);
   const [methodsError, setMethodsError] = useState('');
   const [selectedMethodId, setSelectedMethodId] = useState<number | null>(null);
-  const [selectedServicePoint, setSelectedServicePoint] = useState<ServicePoint | null>(null);
-  const prevCountryRef = useRef<string | null>(null);
+  const [selectedRelayPoint, setSelectedRelayPoint] = useState<{ id: string; name: string; address: string; postalCode: string; city: string } | null>(null);
 
   useEffect(() => {
-    const country = selectedAddress?.country ?? null;
-    if (country && country !== prevCountryRef.current) {
-      prevCountryRef.current = country;
-      fetchMethods(country);
+    if (selectedAddress?.country) {
+      fetchMethods(selectedAddress.country);
     }
-  }, [selectedAddress]);
+  }, [selectedAddress?.country]);
 
   const fetchMethods = async (country: string) => {
     setLoadingMethods(true);
     setMethodsError('');
     setSelectedMethodId(null);
-    setSelectedServicePoint(null);
+    setSelectedRelayPoint(null);
 
     try {
       const response = await fetch(
@@ -83,7 +69,7 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
 
   useEffect(() => {
     emitShipping();
-  }, [selectedMethodId, selectedAddress, selectedServicePoint]);
+  }, [selectedMethodId, selectedAddress, selectedRelayPoint]);
 
   const emitShipping = () => {
     const method = shippingMethods.find(m => m.id === selectedMethodId);
@@ -97,12 +83,12 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
       address: selectedAddress,
     };
 
-    if (isRelay && selectedServicePoint) {
-      data.relayPointId = String(selectedServicePoint.id);
-      data.relayPointName = selectedServicePoint.name;
-      data.relayPointAddress = `${selectedServicePoint.street} ${selectedServicePoint.house_number}`.trim();
-      data.relayPointPostalCode = selectedServicePoint.postal_code;
-      data.relayPointCity = selectedServicePoint.city;
+    if (isRelay && selectedRelayPoint) {
+      data.relayPointId = String(selectedRelayPoint.id);
+      data.relayPointName = selectedRelayPoint.name;
+      data.relayPointAddress = selectedRelayPoint.address;
+      data.relayPointPostalCode = selectedRelayPoint.postalCode;
+      data.relayPointCity = selectedRelayPoint.city;
     }
 
     onShippingSelected(data);
@@ -146,22 +132,22 @@ export function ShippingSelection({ onShippingSelected, weight = 100 }: Shipping
               selectedMethodId={selectedMethodId}
               onSelect={(id) => {
                 setSelectedMethodId(id);
-                setSelectedServicePoint(null);
+                setSelectedRelayPoint(null);
               }}
             />
           )}
         </div>
       )}
 
-      {requiresRelay && selectedAddress && selectedMethodObj && (
+      {requiresRelay && selectedAddress && (
         <div className="space-y-1.5">
           <p className="text-xs font-bold text-gray-800">Point relais</p>
-          <SendcloudServicePointWidget
+          <MondialRelaySelection
             postalCode={selectedAddress.postal_code}
             country={selectedAddress.country}
-            carriers={carriersParam(selectedMethodObj)}
-            onSelect={setSelectedServicePoint}
-            selectedPoint={selectedServicePoint}
+            weight={weight}
+            onSelectPoint={(point) => setSelectedRelayPoint(point)}
+            selectedPointId={selectedRelayPoint?.id}
           />
         </div>
       )}
