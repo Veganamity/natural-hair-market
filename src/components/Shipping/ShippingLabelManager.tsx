@@ -29,6 +29,7 @@ export function ShippingLabelManager({
 }: ShippingLabelManagerProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   const isMondialRelay = !!relayPointId || shippingMethod === 'mondial_relay';
   const hasLabel = !!(shippingLabelUrl || sendcloudParcelId || shippingStatus === 'label_created');
@@ -113,6 +114,7 @@ export function ShippingLabelManager({
   const handleGenerateLabel = async () => {
     setLoading(true);
     setError('');
+    setDebugInfo(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Non authentifié');
@@ -130,9 +132,11 @@ export function ShippingLabelManager({
       );
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Échec de la génération de l'étiquette");
+      if (!response.ok) {
+        if (result.debug) setDebugInfo(result.debug);
+        throw new Error(result.error || "Échec de la génération de l'étiquette");
+      }
       onUpdate?.();
-      // After generating, download via proxy
       await downloadViaProxy();
     } catch (err) {
       setError((err as Error).message);
@@ -187,9 +191,29 @@ export function ShippingLabelManager({
       )}
 
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <span>{error}</span>
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+          {debugInfo && (
+            <div className="mt-3 border-t border-red-200 pt-3 space-y-2">
+              <p className="font-semibold text-red-800 text-xs uppercase tracking-wide">Détails debug Sendcloud</p>
+              <div>
+                <p className="text-xs font-medium text-red-700 mb-1">Statut HTTP : {debugInfo.sendcloud_status}</p>
+                <p className="text-xs font-medium text-red-700 mb-1">Réponse Sendcloud :</p>
+                <pre className="text-xs bg-red-100 rounded p-2 overflow-auto max-h-40 whitespace-pre-wrap break-all">
+                  {JSON.stringify(debugInfo.sendcloud_response, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-red-700 mb-1">Payload envoyé :</p>
+                <pre className="text-xs bg-red-100 rounded p-2 overflow-auto max-h-60 whitespace-pre-wrap break-all">
+                  {JSON.stringify(debugInfo.payload_sent, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
