@@ -78,18 +78,21 @@ Deno.serve(async (req: Request) => {
       { expand: ["latest_charge"] }
     );
 
+    const latestCharge = paymentIntent.latest_charge as any;
+    const amountRefunded = latestCharge?.amount_refunded ?? 0;
+    const amountCaptured = latestCharge?.amount_captured ?? paymentIntent.amount_received ?? 0;
     const alreadyFullyRefunded =
       paymentIntent.status === "succeeded" &&
-      paymentIntent.amount_received > 0 &&
-      paymentIntent.amount_received === (paymentIntent as any).amount_refunded;
+      amountCaptured > 0 &&
+      amountRefunded >= amountCaptured;
 
-    if (
-      paymentIntent.status === "canceled" ||
-      alreadyFullyRefunded
-    ) {
-      // Already cancelled or refunded in Stripe — just sync the DB
-      stripeAction = alreadyFullyRefunded ? "refunded" : "cancelled";
+    if (paymentIntent.status === "canceled") {
+      stripeAction = "cancelled";
       stripeRefId = paymentIntent.id;
+    } else if (alreadyFullyRefunded) {
+      // Already refunded manually in Stripe dashboard — just sync DB
+      stripeAction = "refunded";
+      stripeRefId = latestCharge?.id ?? paymentIntent.id;
     } else if (
       paymentIntent.status === "requires_payment_method" ||
       paymentIntent.status === "requires_confirmation" ||
@@ -104,8 +107,8 @@ Deno.serve(async (req: Request) => {
       stripeAction = "cancelled";
       stripeRefId = cancelled.id;
     } else if (paymentIntent.status === "succeeded") {
-      if (paymentIntent.amount === 0 || paymentIntent.amount_received === 0) {
-        // Zero-amount payment intent — nothing to refund in Stripe
+      if (amountCaptured === 0) {
+        // Zero-amount payment intent — nothing to refund
         stripeAction = "cancelled";
         stripeRefId = paymentIntent.id;
       } else {
