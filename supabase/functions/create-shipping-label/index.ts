@@ -200,6 +200,8 @@ Deno.serve(async (req: Request) => {
       };
     }
 
+    console.log("=== SENDCLOUD PARCEL PAYLOAD ===", JSON.stringify({ parcel: parcelData }));
+
     const sendcloudResponse = await fetch("https://panel.sendcloud.sc/api/v2/parcels", {
       method: "POST",
       headers: {
@@ -210,8 +212,9 @@ Deno.serve(async (req: Request) => {
     });
 
     const responseText = await sendcloudResponse.text();
-    console.log("Sendcloud response status:", sendcloudResponse.status);
-    console.log("Sendcloud response:", responseText.substring(0, 500));
+    console.log("=== SENDCLOUD PARCEL RESPONSE status:", sendcloudResponse.status, "===");
+    // Log full response without truncation to catch hidden errors/warnings
+    console.log("=== SENDCLOUD PARCEL RESPONSE body ===", responseText);
 
     if (!sendcloudResponse.ok) {
       let errorMessage = `Sendcloud erreur (${sendcloudResponse.status})`;
@@ -228,8 +231,9 @@ Deno.serve(async (req: Request) => {
     const sendcloudResult = JSON.parse(responseText);
     const parcel = sendcloudResult.parcel;
 
-    console.log("Parcel label data:", JSON.stringify(parcel.label));
-    console.log("Parcel id:", parcel.id, "tracking:", parcel.tracking_number);
+    console.log("=== PARCEL FULL OBJECT ===", JSON.stringify(parcel));
+    console.log("Parcel status:", parcel.status?.message, "| label:", JSON.stringify(parcel.label));
+    console.log("Parcel id:", parcel.id, "| tracking:", parcel.tracking_number, "| errors:", JSON.stringify(parcel.errors));
 
     const parcelId = parcel.id;
     const trackingNumber = parcel.tracking_number;
