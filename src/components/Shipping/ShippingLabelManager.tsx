@@ -27,8 +27,11 @@ export function ShippingLabelManager({
 }: ShippingLabelManagerProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [generatedLabelUrl, setGeneratedLabelUrl] = useState<string | null>(null);
 
   const isMondialRelay = shippingMethod === 'mondial_relay';
+
+  const activeLabelUrl = generatedLabelUrl || shippingLabelUrl;
 
   const handleGenerateLabel = async () => {
     setLoading(true);
@@ -56,11 +59,32 @@ export function ShippingLabelManager({
         throw new Error(result.error || 'Échec de la génération de l\'étiquette');
       }
 
+      if (result.shipping_label_url) {
+        setGeneratedLabelUrl(result.shipping_label_url);
+      }
+
       onUpdate?.();
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownload = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = 'etiquette-expedition.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(url, '_blank');
     }
   };
 
@@ -117,7 +141,7 @@ export function ShippingLabelManager({
         </div>
       )}
 
-      {!shippingLabelUrl && (
+      {!activeLabelUrl && (
         <button
           onClick={handleGenerateLabel}
           disabled={loading}
@@ -137,21 +161,20 @@ export function ShippingLabelManager({
         </button>
       )}
 
-      {shippingLabelUrl && (
+      {activeLabelUrl && (
         <div className="space-y-3">
           <div className="flex items-center space-x-2 text-green-700 bg-green-50 px-4 py-3 rounded-lg">
             <CheckCircle className="w-5 h-5" />
             <span className="text-sm font-medium">Étiquette d'expédition créée</span>
           </div>
 
-          <a
-            href={shippingLabelUrl}
-            download="etiquette-expedition.pdf"
-            className="flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          <button
+            onClick={() => handleDownload(activeLabelUrl)}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
             <Download className="w-5 h-5" />
             <span>Télécharger l'étiquette (PDF)</span>
-          </a>
+          </button>
 
           {trackingNumber && (
             <div className="border-t border-gray-200 pt-4 mt-4">
