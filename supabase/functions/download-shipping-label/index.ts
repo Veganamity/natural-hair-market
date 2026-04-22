@@ -7,27 +7,27 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-// Always fetch a fresh URL from Sendcloud — stored URLs expire
+// Fetch a fresh label URL from Sendcloud using the correct API routes.
+// Stored URLs expire — always re-fetch from Sendcloud.
 async function getFreshLabelUrl(parcelId: string, sendcloudAuth: string): Promise<string | null> {
-  // Step 1: GET /labels/{parcelId} — fastest, returns URL if already generated
+  const id = parseInt(parcelId, 10);
+
+  // Route 1: GET /labels/normal_printer?ids={id} — the correct route per Sendcloud API
   try {
-    const getRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
+    const url = `https://panel.sendcloud.sc/api/v2/labels/normal_printer?ids=${id}&start_from=0`;
+    const res = await fetch(url, {
       headers: { "Authorization": `Basic ${sendcloudAuth}` },
     });
-    if (getRes.ok) {
-      const data = await getRes.json();
-      const url = data.label?.normal_printer?.[0] || data.label?.label_printer || null;
-      if (url) {
-        console.log("Got fresh URL via GET /labels/", parcelId);
-        return url;
-      }
+    console.log("GET normal_printer status:", res.status);
+    if (res.ok) {
+      // This endpoint returns the PDF directly — return the URL itself for download
+      return url;
     }
-    console.log("GET /labels status:", getRes.status);
   } catch (e) {
-    console.error("GET /labels error:", e);
+    console.error("GET normal_printer error:", e);
   }
 
-  // Step 2: POST /labels to (re-)trigger generation
+  // Route 2: POST /labels to (re-)trigger generation, then get the URL
   try {
     const postRes = await fetch("https://panel.sendcloud.sc/api/v2/labels", {
       method: "POST",
@@ -35,54 +35,31 @@ async function getFreshLabelUrl(parcelId: string, sendcloudAuth: string): Promis
         "Authorization": `Basic ${sendcloudAuth}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ label: { parcels: [parseInt(parcelId, 10)] } }),
+      body: JSON.stringify({ label: { parcels: [id] } }),
     });
+    console.log("POST /labels status:", postRes.status);
     if (postRes.ok) {
       const data = await postRes.json();
-      const url = data.label?.normal_printer?.[0] || data.label?.label_printer || null;
-      if (url) {
-        console.log("Got fresh URL via POST /labels");
-        return url;
-      }
+      const labelUrl = data.label?.normal_printer?.[0] || data.label?.label_printer || null;
+      if (labelUrl) return labelUrl;
     }
-    console.log("POST /labels status:", postRes.status);
   } catch (e) {
     console.error("POST /labels error:", e);
   }
 
-  // Step 3: Poll GET /labels/{parcelId} up to 4 times (async generation)
-  for (let i = 0; i < 4; i++) {
-    await new Promise(r => setTimeout(r, 2000));
-    try {
-      const pollRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
-        headers: { "Authorization": `Basic ${sendcloudAuth}` },
-      });
-      if (pollRes.ok) {
-        const data = await pollRes.json();
-        const url = data.label?.normal_printer?.[0] || data.label?.label_printer || null;
-        if (url) {
-          console.log("Got fresh URL via poll attempt", i + 1);
-          return url;
-        }
-      }
-    } catch (e) {
-      console.error(`Poll attempt ${i + 1} error:`, e);
-    }
-  }
-
-  // Step 4: fallback — GET /parcels/{parcelId}
+  // Route 3: GET /parcels/{id} — label URL may be embedded in parcel object
   try {
-    const parcelRes = await fetch(`https://panel.sendcloud.sc/api/v2/parcels/${parcelId}`, {
+    const parcelRes = await fetch(`https://panel.sendcloud.sc/api/v2/parcels/${id}`, {
       headers: { "Authorization": `Basic ${sendcloudAuth}` },
     });
+    console.log("GET /parcels status:", parcelRes.status);
     if (parcelRes.ok) {
       const data = await parcelRes.json();
-      const url = data.parcel?.label?.normal_printer?.[0] || data.parcel?.label?.label_printer || null;
-      if (url) console.log("Got fresh URL via GET /parcels fallback");
-      return url;
+      const labelUrl = data.parcel?.label?.normal_printer?.[0] || data.parcel?.label?.label_printer || null;
+      if (labelUrl) return labelUrl;
     }
   } catch (e) {
-    console.error("Parcel fallback error:", e);
+    console.error("GET /parcels error:", e);
   }
 
   return null;
@@ -128,11 +105,10 @@ Deno.serve(async (req: Request) => {
 
     let labelUrl: string | null = null;
 
-    // Always prefer a fresh URL from Sendcloud if we have a parcel ID
+    // Always get a fresh URL from Sendcloud when we have a parcel ID
     if (transaction.sendcloud_parcel_id) {
       labelUrl = await getFreshLabelUrl(transaction.sendcloud_parcel_id, sendcloudAuth);
       if (labelUrl) {
-        // Keep stored URL up to date
         await supabase
           .from("transactions")
           .update({ shipping_label_pdf_url: labelUrl })
@@ -140,7 +116,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // No parcel ID — try the stored URL as last resort
+    // Fallback: use stored URL (only if no parcel_id)
     if (!labelUrl) {
       labelUrl = transaction.shipping_label_pdf_url || null;
     }
@@ -152,14 +128,15 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Fetch the PDF bytes server-side with Sendcloud credentials
+    // Fetch PDF bytes server-side with Sendcloud credentials
     const pdfRes = await fetch(labelUrl, {
       headers: { "Authorization": `Basic ${sendcloudAuth}` },
     });
 
+    console.log("PDF fetch status:", pdfRes.status, "url:", labelUrl.substring(0, 120));
+
     if (!pdfRes.ok) {
-      console.error("PDF fetch failed:", pdfRes.status, labelUrl.substring(0, 120));
-      // URL may have expired despite being fresh — clear it and tell the user to retry
+      // Clear stale stored URL so next attempt re-fetches
       await supabase
         .from("transactions")
         .update({ shipping_label_pdf_url: null })
