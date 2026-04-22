@@ -266,7 +266,7 @@ export function OrderManagement() {
           const otherParty = isSellerView ? transaction.buyer : transaction.seller;
           const canConfirm = isSellerView && transaction.status === 'processing';
           const notYetShipped = !['shipped', 'delivered'].includes(transaction.delivery_status);
-          const canCancel = ['pending', 'processing'].includes(transaction.status) && notYetShipped;
+          const canCancel = ['pending', 'processing', 'completed'].includes(transaction.status) && notYetShipped;
           const hasPaymentIntent = !!transaction.stripe_payment_intent_id;
 
           return (
