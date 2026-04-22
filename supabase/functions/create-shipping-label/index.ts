@@ -214,7 +214,11 @@ Deno.serve(async (req: Request) => {
     const sendcloudResult = JSON.parse(responseText);
     const parcel = sendcloudResult.parcel;
 
-    const labelUrl = parcel.label?.label_printer || parcel.label?.normal_printer?.[0];
+    console.log("Parcel label data:", JSON.stringify(parcel.label));
+    console.log("Parcel id:", parcel.id, "tracking:", parcel.tracking_number);
+
+    // normal_printer URLs are directly downloadable PDFs; label_printer requires Sendcloud auth
+    const labelUrl = parcel.label?.normal_printer?.[0] || parcel.label?.label_printer;
     const trackingNumber = parcel.tracking_number;
     const parcelId = parcel.id;
 
