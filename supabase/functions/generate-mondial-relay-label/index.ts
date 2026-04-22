@@ -72,10 +72,10 @@ Deno.serve(async (req: Request) => {
     }
 
     const body = await req.json();
-    const { transactionId, relayPointId, debug } = body;
+    const { transactionId, debug } = body;
 
-    if (!transactionId || !relayPointId) {
-      throw new Error("Transaction ID and relay point ID are required");
+    if (!transactionId) {
+      throw new Error("Transaction ID is required");
     }
 
     const { data: transaction, error: transactionError } = await supabase
@@ -132,6 +132,18 @@ Deno.serve(async (req: Request) => {
     const recipientCity = sanitize(transaction.relay_point_city || senderCity, 30);
     const relayAddress = sanitize(transaction.relay_point_address || "POINT RELAIS", 32);
     const relayName = sanitize(transaction.relay_point_name || "POINT RELAIS", 32);
+
+    // Use relay_point_id from DB. Sendcloud IDs are long numeric strings (>6 digits) — reject them.
+    const rawRelayId = (transaction.relay_point_id || "").trim();
+    if (!rawRelayId) throw new Error("Point relais non défini pour cette commande.");
+    if (/^\d{7,}$/.test(rawRelayId)) {
+      throw new Error(
+        `L'ID du point relais (${rawRelayId}) est un identifiant Sendcloud, pas un code Mondial Relay natif. ` +
+        `Veuillez recréer la commande en sélectionnant le point relais depuis le nouveau sélecteur.`
+      );
+    }
+    const relayPointId = rawRelayId;
+
     const orderRef = transaction.id.substring(0, 15).replace(/-/g, "").toUpperCase();
     const customerRef = (userId || transaction.seller_id).substring(0, 9).replace(/-/g, "").toUpperCase();
 
