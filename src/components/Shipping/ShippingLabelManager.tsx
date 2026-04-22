@@ -31,7 +31,8 @@ export function ShippingLabelManager({
   const [error, setError] = useState('');
   const [generatedLabelUrl, setGeneratedLabelUrl] = useState<string | null>(null);
 
-  const isMondialRelay = shippingMethod === 'mondial_relay';
+  // Service point delivery whenever a relay point ID is stored
+  const isMondialRelay = !!relayPointId || shippingMethod === 'mondial_relay';
   const activeLabelUrl = generatedLabelUrl || shippingLabelUrl;
 
   // Label was created (has parcel ID or label_created status) but URL is missing

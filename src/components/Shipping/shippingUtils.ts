@@ -9,15 +9,18 @@ export interface SendcloudMethod {
 }
 
 export function isRelayMethod(method: SendcloudMethod): boolean {
-  const n = method.name?.toLowerCase() ?? '';
-  return (
-    method.service_point_input === 'required' ||
-    n.includes('relay') ||
-    n.includes('relais') ||
-    n.includes('shop2shop') ||
-    n.includes('locker') ||
-    n.includes('service point') ||
-    n.includes('point retrait') ||
-    method.carrier?.toLowerCase().includes('mondial')
-  );
+  return method.service_point_input === 'required';
+}
+
+// Returns the carrier slug to pass to the Sendcloud service point widget
+export function getCarrierSlug(method: SendcloudMethod): string {
+  const carrier = method.carrier?.toLowerCase() ?? '';
+  const name = method.name?.toLowerCase() ?? '';
+  if (carrier.includes('mondial') || name.includes('mondial') || name.includes('shop2shop')) return 'mondial_relay';
+  if (carrier.includes('chronopost') || name.includes('chrono')) return 'chronopost';
+  if (carrier.includes('colissimo') || name.includes('colissimo')) return 'colissimo';
+  if (carrier.includes('ups') || name.includes('ups')) return 'ups';
+  if (carrier.includes('dhl') || name.includes('dhl')) return 'dhl';
+  if (carrier.includes('gls') || name.includes('gls')) return 'gls';
+  return carrier || name;
 }

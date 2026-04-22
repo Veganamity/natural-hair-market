@@ -7,6 +7,60 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
+async function getLabelUrl(parcelId: string, sendcloudAuth: string): Promise<string | null> {
+  // Step 1: try POST /labels to trigger generation
+  try {
+    const genRes = await fetch("https://panel.sendcloud.sc/api/v2/labels", {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${sendcloudAuth}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ label: { parcels: [parseInt(parcelId, 10)] } }),
+    });
+    if (genRes.ok) {
+      const genData = await genRes.json();
+      const url = genData.label?.normal_printer?.[0] || genData.label?.label_printer || null;
+      if (url) return url;
+    }
+    console.log("POST /labels status:", genRes.status);
+  } catch (e) {
+    console.error("POST /labels error:", e);
+  }
+
+  // Step 2: poll GET /labels/{parcelId} up to 5 times
+  for (let i = 0; i < 5; i++) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const pollRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
+        headers: { "Authorization": `Basic ${sendcloudAuth}` },
+      });
+      if (pollRes.ok) {
+        const pollData = await pollRes.json();
+        const url = pollData.label?.normal_printer?.[0] || pollData.label?.label_printer || null;
+        if (url) return url;
+      }
+    } catch (e) {
+      console.error(`Poll attempt ${i + 1} error:`, e);
+    }
+  }
+
+  // Step 3: fallback — check parcel object directly
+  try {
+    const parcelRes = await fetch(`https://panel.sendcloud.sc/api/v2/parcels/${parcelId}`, {
+      headers: { "Authorization": `Basic ${sendcloudAuth}` },
+    });
+    if (parcelRes.ok) {
+      const parcelData = await parcelRes.json();
+      return parcelData.parcel?.label?.normal_printer?.[0] || parcelData.parcel?.label?.label_printer || null;
+    }
+  } catch (e) {
+    console.error("Parcel fallback error:", e);
+  }
+
+  return null;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -47,40 +101,10 @@ Deno.serve(async (req: Request) => {
 
     let labelUrl: string | null = transaction.shipping_label_pdf_url || null;
 
-    // No stored URL — fetch from Sendcloud API using parcel ID
+    // No stored URL — generate/fetch from Sendcloud
     if (!labelUrl && transaction.sendcloud_parcel_id) {
-      const parcelId = transaction.sendcloud_parcel_id;
+      labelUrl = await getLabelUrl(transaction.sendcloud_parcel_id, sendcloudAuth);
 
-      // Try label endpoint first
-      const labelRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
-        headers: { "Authorization": `Basic ${sendcloudAuth}` },
-      });
-      if (labelRes.ok) {
-        const labelData = await labelRes.json();
-        const normalPrinter = labelData.label?.normal_printer?.[0];
-        const labelPrinter = labelData.label?.label_printer;
-        labelUrl = normalPrinter || labelPrinter || null;
-        console.log("Label API response:", JSON.stringify(labelData).substring(0, 400));
-      } else {
-        console.log("Label endpoint status:", labelRes.status);
-      }
-
-      // If still no URL, try fetching the parcel directly
-      if (!labelUrl) {
-        const parcelRes = await fetch(`https://panel.sendcloud.sc/api/v2/parcels/${parcelId}`, {
-          headers: { "Authorization": `Basic ${sendcloudAuth}` },
-        });
-        if (parcelRes.ok) {
-          const parcelData = await parcelRes.json();
-          const parcel = parcelData.parcel;
-          const normalPrinter = parcel?.label?.normal_printer?.[0];
-          const labelPrinter = parcel?.label?.label_printer;
-          labelUrl = normalPrinter || labelPrinter || null;
-          console.log("Parcel label data:", JSON.stringify(parcel?.label));
-        }
-      }
-
-      // Persist if found
       if (labelUrl) {
         await supabase
           .from("transactions")
@@ -91,37 +115,29 @@ Deno.serve(async (req: Request) => {
 
     if (!labelUrl) {
       return new Response(
-        JSON.stringify({ error: "Étiquette non disponible. Sendcloud génère les étiquettes de façon asynchrone, réessayez dans quelques secondes." }),
+        JSON.stringify({ error: "Étiquette non disponible. Réessayez dans quelques secondes." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Proxy the PDF through this function with Sendcloud auth
+    // Sendcloud label URLs always require Basic auth
+    let pdfBuffer: ArrayBuffer | null = null;
+    let contentType = "application/pdf";
+
     const pdfRes = await fetch(labelUrl, {
       headers: { "Authorization": `Basic ${sendcloudAuth}` },
     });
-
-    console.log("PDF fetch status:", pdfRes.status, "url:", labelUrl.substring(0, 80));
-
-    if (!pdfRes.ok) {
-      // If the URL is a signed/public URL, try without auth
-      const pdfRes2 = await fetch(labelUrl);
-      if (!pdfRes2.ok) {
-        throw new Error(`Impossible de télécharger l'étiquette (${pdfRes.status})`);
-      }
-      const blob2 = await pdfRes2.arrayBuffer();
-      return new Response(blob2, {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/pdf",
-          "Content-Disposition": `attachment; filename="etiquette-expedition.pdf"`,
-        },
-      });
+    if (pdfRes.ok) {
+      contentType = pdfRes.headers.get("content-type") || "application/pdf";
+      pdfBuffer = await pdfRes.arrayBuffer();
+    } else {
+      console.log("PDF fetch with auth failed:", pdfRes.status, labelUrl.substring(0, 100));
+      throw new Error(`Impossible de télécharger le PDF (${pdfRes.status})`);
     }
 
-    const contentType = pdfRes.headers.get("content-type") || "application/pdf";
-    const pdfBuffer = await pdfRes.arrayBuffer();
+    if (!pdfBuffer) {
+      throw new Error(`Impossible de télécharger le PDF depuis Sendcloud`);
+    }
 
     return new Response(pdfBuffer, {
       status: 200,

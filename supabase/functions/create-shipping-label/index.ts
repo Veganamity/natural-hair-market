@@ -80,7 +80,8 @@ Deno.serve(async (req: Request) => {
 
     const seller = sellerProfile as any;
     const listing = transaction.listing as any;
-    const isMondialRelay = transaction.shipping_method === "mondial_relay";
+    // Use service point flow whenever a relay point ID is stored, regardless of carrier name
+    const isServicePoint = !!transaction.relay_point_id;
 
     if (!seller) throw new Error("Seller information missing");
 
@@ -123,7 +124,7 @@ Deno.serve(async (req: Request) => {
 
     let parcelData: Record<string, any>;
 
-    if (isMondialRelay) {
+    if (isServicePoint) {
       const relayPointId = transaction.relay_point_id;
       if (!relayPointId) throw new Error("Point relais non défini pour cette commande");
 
@@ -220,25 +221,42 @@ Deno.serve(async (req: Request) => {
     const parcelId = parcel.id;
     const trackingNumber = parcel.tracking_number;
 
-    // normal_printer URLs are directly downloadable PDFs; label_printer requires Sendcloud auth
+    // Parcel created — now request label generation via POST /labels
     let labelUrl: string | null = parcel.label?.normal_printer?.[0] || parcel.label?.label_printer || null;
 
-    // Sendcloud generates labels asynchronously — poll the label endpoint if not ready yet
     if (!labelUrl && parcelId) {
-      for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const labelGenRes = await fetch("https://panel.sendcloud.sc/api/v2/labels", {
+          method: "POST",
+          headers: {
+            "Authorization": `Basic ${sendcloudAuth}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ label: { parcels: [parcelId] } }),
+        });
+        const labelGenText = await labelGenRes.text();
+        console.log("Label generation response:", labelGenRes.status, labelGenText.substring(0, 500));
+        if (labelGenRes.ok) {
+          const labelGenData = JSON.parse(labelGenText);
+          labelUrl = labelGenData.label?.normal_printer?.[0] || labelGenData.label?.label_printer || null;
+        }
+      } catch (e) {
+        console.error("Label generation failed:", e);
+      }
+    }
+
+    // If still no URL, poll a few times (async generation)
+    if (!labelUrl && parcelId) {
+      for (let attempt = 0; attempt < 4; attempt++) {
         await new Promise(r => setTimeout(r, 2000));
         try {
-          const labelRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
+          const pollRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
             headers: { "Authorization": `Basic ${sendcloudAuth}` },
           });
-          if (labelRes.ok) {
-            const labelData = await labelRes.json();
-            console.log(`Label poll attempt ${attempt + 1}:`, JSON.stringify(labelData).substring(0, 300));
-            const normalPrinter = labelData.label?.normal_printer?.[0] || labelData.label?.label_printer;
-            if (normalPrinter) {
-              labelUrl = normalPrinter;
-              break;
-            }
+          if (pollRes.ok) {
+            const pollData = await pollRes.json();
+            const url = pollData.label?.normal_printer?.[0] || pollData.label?.label_printer;
+            if (url) { labelUrl = url; break; }
           }
         } catch (e) {
           console.error(`Label poll attempt ${attempt + 1} failed:`, e);

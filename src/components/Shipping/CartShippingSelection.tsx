@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { AddressSelector, ShippingAddress } from '../Payment/AddressSelector';
 import { SendcloudServicePointWidget, ServicePoint } from './SendcloudServicePointWidget';
-import { SendcloudMethod, isRelayMethod } from './shippingUtils';
+import { SendcloudMethod, isRelayMethod, getCarrierSlug } from './shippingUtils';
 import { ShippingMethodList } from './ShippingMethodList';
 
 interface CartShippingSelectionProps {
@@ -19,17 +19,6 @@ interface CartShippingSelectionProps {
   }) => void;
   selectedMethod?: string;
   totalWeightGrams: number;
-}
-
-function carriersParam(method: SendcloudMethod): string {
-  const s = `${method.carrier ?? ''} ${method.name ?? ''}`.toLowerCase();
-  if (s.includes('mondial') || s.includes('relay') || s.includes('relais') || s.includes('locker') || s.includes('shop2shop')) return 'mondial_relay';
-  if (s.includes('ups')) return 'ups';
-  if (s.includes('colissimo')) return 'colissimo';
-  if (s.includes('chronopost') || s.includes('chrono')) return 'chronopost';
-  if (s.includes('dhl')) return 'dhl';
-  if (s.includes('gls')) return 'gls';
-  return method.carrier ?? '';
 }
 
 export function CartShippingSelection({
@@ -101,7 +90,7 @@ export function CartShippingSelection({
 
     const isRelay = isRelayMethod(method);
     const data: any = {
-      method: isRelay ? 'mondial_relay' : method.carrier?.toLowerCase() ?? method.name?.toLowerCase(),
+      method: getCarrierSlug(method),
       sendcloudMethodId: method.id,
       cost: method.price ?? 0,
       address: selectedAddress,
@@ -174,7 +163,7 @@ export function CartShippingSelection({
           <SendcloudServicePointWidget
             postalCode={selectedAddress.postal_code}
             country={selectedAddress.country}
-            carriers={carriersParam(selectedMethodObj)}
+            carriers={getCarrierSlug(selectedMethodObj)}
             onSelect={setSelectedServicePoint}
             selectedPoint={selectedServicePoint}
           />
