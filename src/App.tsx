@@ -58,7 +58,7 @@ function AppContent() {
     const paymentIntentId = searchParams.get('payment_intent');
     const redirectStatus = searchParams.get('redirect_status');
     if (paymentIntentId && redirectStatus === 'succeeded') {
-      setPaymentSuccessMessage('Votre paiement a bien été effectué ! Votre commande est confirmée.');
+      setPaymentSuccessMessage(t('payment.successMessage'));
       window.history.replaceState({}, '', '#orders');
       setCurrentView('orders');
       setTimeout(() => setPaymentSuccessMessage(null), 8000);
@@ -361,7 +361,7 @@ function AppContent() {
                     </span>
                   )}
                 </div>
-                Panier
+                {t('nav.cart')}
               </button>
 
               <div className="relative">
@@ -374,7 +374,7 @@ function AppContent() {
                   }`}
                 >
                   <User className="w-4 h-4" />
-                  Mon Compte
+                  {t('nav.myAccount')}
                   <ChevronDown className={`w-4 h-4 transition-transform ${accountMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -444,7 +444,7 @@ function AppContent() {
                       }`}
                     >
                       <Package className="w-4 h-4" />
-                      Commandes
+                      {t('nav.orders')}
                     </button>
                     <button
                       onClick={() => {
@@ -458,7 +458,7 @@ function AppContent() {
                       }`}
                     >
                       <Receipt className="w-4 h-4" />
-                      Historique
+                      {t('nav.history')}
                     </button>
                   </div>
                 )}
@@ -537,7 +537,7 @@ function AppContent() {
                     </span>
                   )}
                 </div>
-                Panier
+                {t('nav.cart')}
                 {cartCount > 0 && (
                   <span className="ml-auto bg-emerald-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {cartCount > 9 ? '9+' : cartCount}

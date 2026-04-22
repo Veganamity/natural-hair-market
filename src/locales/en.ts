@@ -36,7 +36,10 @@ export const en = {
     "logout": "Logout",
     "signup": "Sign Up",
     "backToMarketplace": "Back to Marketplace",
-    "backToHome": "Back to home"
+    "backToHome": "Back to home",
+    "cart": "Cart",
+    "myAccount": "My Account",
+    "history": "History"
   },
   "auth": {
     "email": "Email",
@@ -189,6 +192,9 @@ export const en = {
     "transparentDesc": "Direct, simple and transparent transactions. No hidden costs, no intermediaries",
     "quality": "Quality",
     "qualityDesc": "European natural hair, colored, gray, blonde, brown, chestnut, red, straight or curly"
+  },
+  "payment": {
+    "successMessage": "Your payment was successful! Your order is confirmed."
   },
   "faq": {
     "title": "Frequently Asked Questions",

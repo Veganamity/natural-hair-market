@@ -37,6 +37,9 @@ export const fr = {
     signup: 'Inscription',
     backToMarketplace: 'Retour au Marketplace',
     backToHome: "Retour à l'accueil",
+    cart: 'Panier',
+    myAccount: 'Mon Compte',
+    history: 'Historique',
   },
   auth: {
     email: 'Email',
@@ -189,6 +192,9 @@ export const fr = {
     transparentDesc: 'Transactions directes, simples et transparentes. Aucun coût caché, aucun intermédiaire',
     quality: 'Qualité',
     qualityDesc: 'Cheveux européens naturels, colorés, gris, blonds, bruns, châtains, roux, lisses ou bouclés',
+  },
+  payment: {
+    successMessage: 'Votre paiement a bien été effectué ! Votre commande est confirmée.',
   },
   faq: {
     title: 'Questions Fréquentes',
