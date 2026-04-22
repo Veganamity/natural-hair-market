@@ -7,10 +7,29 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-async function getLabelUrl(parcelId: string, sendcloudAuth: string): Promise<string | null> {
-  // Step 1: try POST /labels to trigger generation
+// Always fetch a fresh URL from Sendcloud — stored URLs expire
+async function getFreshLabelUrl(parcelId: string, sendcloudAuth: string): Promise<string | null> {
+  // Step 1: GET /labels/{parcelId} — fastest, returns URL if already generated
   try {
-    const genRes = await fetch("https://panel.sendcloud.sc/api/v2/labels", {
+    const getRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
+      headers: { "Authorization": `Basic ${sendcloudAuth}` },
+    });
+    if (getRes.ok) {
+      const data = await getRes.json();
+      const url = data.label?.normal_printer?.[0] || data.label?.label_printer || null;
+      if (url) {
+        console.log("Got fresh URL via GET /labels/", parcelId);
+        return url;
+      }
+    }
+    console.log("GET /labels status:", getRes.status);
+  } catch (e) {
+    console.error("GET /labels error:", e);
+  }
+
+  // Step 2: POST /labels to (re-)trigger generation
+  try {
+    const postRes = await fetch("https://panel.sendcloud.sc/api/v2/labels", {
       method: "POST",
       headers: {
         "Authorization": `Basic ${sendcloudAuth}`,
@@ -18,41 +37,49 @@ async function getLabelUrl(parcelId: string, sendcloudAuth: string): Promise<str
       },
       body: JSON.stringify({ label: { parcels: [parseInt(parcelId, 10)] } }),
     });
-    if (genRes.ok) {
-      const genData = await genRes.json();
-      const url = genData.label?.normal_printer?.[0] || genData.label?.label_printer || null;
-      if (url) return url;
+    if (postRes.ok) {
+      const data = await postRes.json();
+      const url = data.label?.normal_printer?.[0] || data.label?.label_printer || null;
+      if (url) {
+        console.log("Got fresh URL via POST /labels");
+        return url;
+      }
     }
-    console.log("POST /labels status:", genRes.status);
+    console.log("POST /labels status:", postRes.status);
   } catch (e) {
     console.error("POST /labels error:", e);
   }
 
-  // Step 2: poll GET /labels/{parcelId} up to 5 times
-  for (let i = 0; i < 5; i++) {
+  // Step 3: Poll GET /labels/{parcelId} up to 4 times (async generation)
+  for (let i = 0; i < 4; i++) {
     await new Promise(r => setTimeout(r, 2000));
     try {
       const pollRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
         headers: { "Authorization": `Basic ${sendcloudAuth}` },
       });
       if (pollRes.ok) {
-        const pollData = await pollRes.json();
-        const url = pollData.label?.normal_printer?.[0] || pollData.label?.label_printer || null;
-        if (url) return url;
+        const data = await pollRes.json();
+        const url = data.label?.normal_printer?.[0] || data.label?.label_printer || null;
+        if (url) {
+          console.log("Got fresh URL via poll attempt", i + 1);
+          return url;
+        }
       }
     } catch (e) {
       console.error(`Poll attempt ${i + 1} error:`, e);
     }
   }
 
-  // Step 3: fallback — check parcel object directly
+  // Step 4: fallback — GET /parcels/{parcelId}
   try {
     const parcelRes = await fetch(`https://panel.sendcloud.sc/api/v2/parcels/${parcelId}`, {
       headers: { "Authorization": `Basic ${sendcloudAuth}` },
     });
     if (parcelRes.ok) {
-      const parcelData = await parcelRes.json();
-      return parcelData.parcel?.label?.normal_printer?.[0] || parcelData.parcel?.label?.label_printer || null;
+      const data = await parcelRes.json();
+      const url = data.parcel?.label?.normal_printer?.[0] || data.parcel?.label?.label_printer || null;
+      if (url) console.log("Got fresh URL via GET /parcels fallback");
+      return url;
     }
   } catch (e) {
     console.error("Parcel fallback error:", e);
@@ -87,7 +114,7 @@ Deno.serve(async (req: Request) => {
 
     if (!transaction) {
       return new Response(
-        JSON.stringify({ error: "Transaction not found" }),
+        JSON.stringify({ error: "Transaction introuvable" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -99,18 +126,23 @@ Deno.serve(async (req: Request) => {
     }
     const sendcloudAuth = btoa(`${sendcloudApiKey}:${sendcloudApiSecret}`);
 
-    let labelUrl: string | null = transaction.shipping_label_pdf_url || null;
+    let labelUrl: string | null = null;
 
-    // No stored URL — generate/fetch from Sendcloud
-    if (!labelUrl && transaction.sendcloud_parcel_id) {
-      labelUrl = await getLabelUrl(transaction.sendcloud_parcel_id, sendcloudAuth);
-
+    // Always prefer a fresh URL from Sendcloud if we have a parcel ID
+    if (transaction.sendcloud_parcel_id) {
+      labelUrl = await getFreshLabelUrl(transaction.sendcloud_parcel_id, sendcloudAuth);
       if (labelUrl) {
+        // Keep stored URL up to date
         await supabase
           .from("transactions")
           .update({ shipping_label_pdf_url: labelUrl })
           .eq("id", transactionId);
       }
+    }
+
+    // No parcel ID — try the stored URL as last resort
+    if (!labelUrl) {
+      labelUrl = transaction.shipping_label_pdf_url || null;
     }
 
     if (!labelUrl) {
@@ -120,24 +152,23 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Sendcloud label URLs always require Basic auth
-    let pdfBuffer: ArrayBuffer | null = null;
-    let contentType = "application/pdf";
-
+    // Fetch the PDF bytes server-side with Sendcloud credentials
     const pdfRes = await fetch(labelUrl, {
       headers: { "Authorization": `Basic ${sendcloudAuth}` },
     });
-    if (pdfRes.ok) {
-      contentType = pdfRes.headers.get("content-type") || "application/pdf";
-      pdfBuffer = await pdfRes.arrayBuffer();
-    } else {
-      console.log("PDF fetch with auth failed:", pdfRes.status, labelUrl.substring(0, 100));
-      throw new Error(`Impossible de télécharger le PDF (${pdfRes.status})`);
+
+    if (!pdfRes.ok) {
+      console.error("PDF fetch failed:", pdfRes.status, labelUrl.substring(0, 120));
+      // URL may have expired despite being fresh — clear it and tell the user to retry
+      await supabase
+        .from("transactions")
+        .update({ shipping_label_pdf_url: null })
+        .eq("id", transactionId);
+      throw new Error(`Impossible de télécharger le PDF (${pdfRes.status}). Réessayez.`);
     }
 
-    if (!pdfBuffer) {
-      throw new Error(`Impossible de télécharger le PDF depuis Sendcloud`);
-    }
+    const contentType = pdfRes.headers.get("content-type") || "application/pdf";
+    const pdfBuffer = await pdfRes.arrayBuffer();
 
     return new Response(pdfBuffer, {
       status: 200,
