@@ -41,42 +41,21 @@ export function ShippingLabelManager({
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('Not authenticated');
 
-    if (isMondialRelay) {
-      // Mondial Relay uses its own dedicated function
-      if (!relayPointId) throw new Error('Point relais non défini pour cette commande');
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-shipping-label`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transactionId }),
+      }
+    );
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-mondial-relay-label`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ transactionId, relayPointId }),
-        }
-      );
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Échec de la génération Mondial Relay');
-      return result.labelUrl as string | null;
-    } else {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-shipping-label`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ transactionId }),
-        }
-      );
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Échec de la génération de l'étiquette");
-      return result.shipping_label_url as string | null;
-    }
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Échec de la génération de l'étiquette");
+    return result.shipping_label_url as string | null;
   };
 
   const handleGenerateLabel = async () => {
