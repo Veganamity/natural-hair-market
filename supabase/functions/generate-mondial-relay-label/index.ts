@@ -290,7 +290,8 @@ Deno.serve(async (req: Request) => {
       let errorMsg = `Erreur Mondial Relay (code ${statCode})`;
       if (statCode === "62") errorMsg = "Erreur de sécurité (code 62). Vérifiez vos identifiants Mondial Relay.";
       else if (statCode === "38") errorMsg = "Données expéditeur invalides. Vérifiez votre adresse dans votre profil.";
-      else if (statCode === "79") errorMsg = "Point relais invalide ou non trouvé. Veuillez resélectionner un point relais.";
+      else if (statCode === "70" || statCode === "79") errorMsg = "Point relais invalide ou non trouvé. Veuillez resélectionner un point relais.";
+      else if (statCode === "92") errorMsg = "Solde insuffisant sur votre compte Mondial Relay. Veuillez recharger votre compte sur le portail Mondial Relay Pro.";
       throw new Error(errorMsg);
     }
 
