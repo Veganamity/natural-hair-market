@@ -146,7 +146,41 @@ Deno.serve(async (req: Request) => {
       const buyerEmail = shippingAddress?.email || buyerProfile?.email || "";
       const relayCountry = countryNameToCode[shippingAddress?.country || ""] || shippingAddress?.country || "FR";
 
-      const sendcloudMethodId = transaction.sendcloud_method_id || 161;
+      // Resolve the Sendcloud shipping method ID compatible with this service point.
+      // If not stored on the transaction, query the API to find a Mondial Relay method.
+      let sendcloudMethodId: number = transaction.sendcloud_method_id ?? 0;
+      if (!sendcloudMethodId) {
+        try {
+          const senderPostal = seller.postal_code || "";
+          const senderCountry = sellerCountryCode;
+          const methodsUrl = new URL("https://panel.sendcloud.sc/api/v2/shipping_methods");
+          methodsUrl.searchParams.set("service_point_id", String(parseInt(relayPointId, 10)));
+          if (senderPostal) methodsUrl.searchParams.set("from_postal_code", senderPostal);
+          methodsUrl.searchParams.set("from_country", senderCountry);
+          methodsUrl.searchParams.set("to_country", relayCountry);
+          const methodsRes = await fetch(methodsUrl.toString(), {
+            headers: { "Authorization": `Basic ${sendcloudAuth}` },
+          });
+          console.log("=== SHIPPING METHODS (service point) status:", methodsRes.status, "url:", methodsUrl.toString());
+          if (methodsRes.ok) {
+            const methodsData = await methodsRes.json();
+            console.log("=== SHIPPING METHODS body ===", JSON.stringify(methodsData).substring(0, 1000));
+            const methods: any[] = methodsData.shipping_methods || [];
+            // Pick the first method that includes "Mondial Relay" or "mondial" in its name/carrier
+            const mrMethod = methods.find((m: any) =>
+              (m.name || "").toLowerCase().includes("mondial") ||
+              (m.carrier || "").toLowerCase().includes("mondial")
+            ) || methods[0];
+            if (mrMethod?.id) {
+              sendcloudMethodId = mrMethod.id;
+              console.log("Resolved Mondial Relay method:", mrMethod.id, mrMethod.name);
+            }
+          }
+        } catch (e) {
+          console.error("Could not resolve shipping method for service point:", e);
+        }
+      }
+      if (!sendcloudMethodId) throw new Error("Impossible de déterminer la méthode d'expédition Mondial Relay pour ce point relais. Veuillez re-créer la commande en sélectionnant une méthode d'expédition.");
 
       // to_service_point must be an integer — it's the Sendcloud service point ID
       const servicePointId = parseInt(relayPointId, 10);
