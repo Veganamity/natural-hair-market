@@ -40,33 +40,23 @@ function extractPdfUrl(data: unknown): string | null {
   return null;
 }
 
-// Download PDF binary from a Sendcloud label URL.
-// Handles manual redirect so auth header is re-sent on each hop within sendcloud.sc,
-// but dropped for external (e.g. S3) redirects.
-async function fetchPdfBinary(
-  pdfUrl: string,
+// Follow redirects manually (re-sending auth on sendcloud.sc hops) and return the
+// final Response. Returns null if too many hops or a redirect has no Location.
+async function followRedirects(
+  startUrl: string,
   authHeader: string,
-): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
+): Promise<Response | null> {
   const noStore = { cache: "no-store" as RequestCache };
-  let currentUrl = pdfUrl;
+  let currentUrl = startUrl;
   const MAX_HOPS = 5;
 
   for (let hop = 0; hop < MAX_HOPS; hop++) {
     const isSendcloud = currentUrl.includes("sendcloud.sc") || currentUrl.includes("sendcloud.com");
-    const headers: Record<string, string> = isSendcloud
-      ? { "Authorization": authHeader }
-      : {};
+    const headers: Record<string, string> = isSendcloud ? { "Authorization": authHeader } : {};
 
-    console.log(`Hop ${hop + 1}: GET ${currentUrl} (auth=${isSendcloud})`);
-
-    const res = await fetch(currentUrl, {
-      headers,
-      redirect: "manual",
-      ...noStore,
-    });
-
+    const res = await fetch(currentUrl, { headers, redirect: "manual", ...noStore });
     console.log(
-      `Hop ${hop + 1} response: status=${res.status} content-type=${res.headers.get("content-type")} content-length=${res.headers.get("content-length")} location=${res.headers.get("location")}`,
+      `Hop ${hop + 1}: status=${res.status} url=${currentUrl} content-type=${res.headers.get("content-type")} location=${res.headers.get("location")}`,
     );
 
     if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) {
@@ -75,15 +65,43 @@ async function fetchPdfBinary(
         console.error("Redirect with no Location header at hop", hop + 1);
         return null;
       }
-      currentUrl = location.startsWith("http")
-        ? location
-        : `https://panel.sendcloud.sc${location}`;
+      currentUrl = location.startsWith("http") ? location : `https://panel.sendcloud.sc${location}`;
+      continue;
+    }
+
+    return res;
+  }
+
+  console.error("Too many redirects for URL:", startUrl);
+  return null;
+}
+
+// Download PDF binary from a Sendcloud label URL.
+// Retries on 404 (label not yet generated) with a delay between attempts.
+async function fetchPdfBinary(
+  pdfUrl: string,
+  authHeader: string,
+): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
+  const MAX_RETRIES = 5;
+  const RETRY_DELAY_MS = 2000;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    console.log(`fetchPdfBinary attempt ${attempt}/${MAX_RETRIES}`);
+
+    const res = await followRedirects(pdfUrl, authHeader);
+    if (!res) return null;
+
+    // 404 means the label file isn't generated yet — wait and retry
+    if (res.status === 404 && attempt < MAX_RETRIES) {
+      const errText = await res.text();
+      console.warn(`404 on attempt ${attempt} (label not ready yet):`, errText.slice(0, 200));
+      await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
       continue;
     }
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error(`Fetch failed at hop ${hop + 1} with status ${res.status}:`, errText.slice(0, 600));
+      console.error(`PDF fetch failed with status ${res.status}:`, errText.slice(0, 600));
       return null;
     }
 
@@ -99,7 +117,7 @@ async function fetchPdfBinary(
     return { buffer, contentType };
   }
 
-  console.error("Too many redirects for URL:", pdfUrl);
+  console.error("Label still not ready after", MAX_RETRIES, "attempts");
   return null;
 }
 
