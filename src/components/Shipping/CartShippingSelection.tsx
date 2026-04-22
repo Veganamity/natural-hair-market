@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { AddressSelector, ShippingAddress } from '../Payment/AddressSelector';
-import { MondialRelaySelection } from './MondialRelaySelection';
+import { SendcloudServicePointWidget, ServicePoint } from './SendcloudServicePointWidget';
 import { SendcloudMethod, isRelayMethod } from './shippingUtils';
 import { ShippingMethodList } from './ShippingMethodList';
 
@@ -21,6 +21,17 @@ interface CartShippingSelectionProps {
   totalWeightGrams: number;
 }
 
+function carriersParam(method: SendcloudMethod): string {
+  const s = `${method.carrier ?? ''} ${method.name ?? ''}`.toLowerCase();
+  if (s.includes('mondial') || s.includes('relay') || s.includes('relais') || s.includes('locker') || s.includes('shop2shop')) return 'mondial_relay';
+  if (s.includes('ups')) return 'ups';
+  if (s.includes('colissimo')) return 'colissimo';
+  if (s.includes('chronopost') || s.includes('chrono')) return 'chronopost';
+  if (s.includes('dhl')) return 'dhl';
+  if (s.includes('gls')) return 'gls';
+  return method.carrier ?? '';
+}
+
 export function CartShippingSelection({
   onShippingSelected,
   totalWeightGrams,
@@ -30,7 +41,7 @@ export function CartShippingSelection({
   const [loadingMethods, setLoadingMethods] = useState(false);
   const [methodsError, setMethodsError] = useState('');
   const [selectedMethodId, setSelectedMethodId] = useState<number | null>(null);
-  const [selectedRelayPoint, setSelectedRelayPoint] = useState<any | null>(null);
+  const [selectedServicePoint, setSelectedServicePoint] = useState<ServicePoint | null>(null);
   const prevCountryRef = useRef<string | null>(null);
   const prevWeightRef = useRef<number>(totalWeightGrams);
 
@@ -52,7 +63,7 @@ export function CartShippingSelection({
     setLoadingMethods(true);
     setMethodsError('');
     setSelectedMethodId(null);
-    setSelectedRelayPoint(null);
+    setSelectedServicePoint(null);
 
     try {
       const response = await fetch(
@@ -82,7 +93,7 @@ export function CartShippingSelection({
 
   useEffect(() => {
     emitShipping();
-  }, [selectedMethodId, selectedAddress, selectedRelayPoint]);
+  }, [selectedMethodId, selectedAddress, selectedServicePoint]);
 
   const emitShipping = () => {
     const method = shippingMethods.find(m => m.id === selectedMethodId);
@@ -96,12 +107,12 @@ export function CartShippingSelection({
       address: selectedAddress,
     };
 
-    if (isRelay && selectedRelayPoint) {
-      data.relayPointId = String(selectedRelayPoint.id);
-      data.relayPointName = selectedRelayPoint.name;
-      data.relayPointAddress = selectedRelayPoint.address;
-      data.relayPointPostalCode = selectedRelayPoint.postalCode;
-      data.relayPointCity = selectedRelayPoint.city;
+    if (isRelay && selectedServicePoint) {
+      data.relayPointId = String(selectedServicePoint.id);
+      data.relayPointName = selectedServicePoint.name;
+      data.relayPointAddress = `${selectedServicePoint.street} ${selectedServicePoint.house_number}`.trim();
+      data.relayPointPostalCode = selectedServicePoint.postal_code;
+      data.relayPointCity = selectedServicePoint.city;
     }
 
     onShippingSelected(data);
@@ -150,7 +161,7 @@ export function CartShippingSelection({
               selectedMethodId={selectedMethodId}
               onSelect={(id) => {
                 setSelectedMethodId(id);
-                setSelectedRelayPoint(null);
+                setSelectedServicePoint(null);
               }}
             />
           )}
@@ -160,12 +171,12 @@ export function CartShippingSelection({
       {requiresRelay && selectedAddress && selectedMethodObj && (
         <div className="space-y-1.5">
           <p className="text-xs font-bold text-gray-800">Point relais</p>
-          <MondialRelaySelection
+          <SendcloudServicePointWidget
             postalCode={selectedAddress.postal_code}
             country={selectedAddress.country}
-            weight={totalWeightGrams}
-            onSelectPoint={(point) => setSelectedRelayPoint(point)}
-            selectedPointId={selectedRelayPoint?.id}
+            carriers={carriersParam(selectedMethodObj)}
+            onSelect={setSelectedServicePoint}
+            selectedPoint={selectedServicePoint}
           />
         </div>
       )}
