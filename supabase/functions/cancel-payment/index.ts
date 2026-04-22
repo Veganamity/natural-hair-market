@@ -108,16 +108,29 @@ Deno.serve(async (req: Request) => {
       stripeRefId = cancelled.id;
     } else if (paymentIntent.status === "succeeded") {
       if (amountCaptured === 0) {
-        // Zero-amount payment intent — nothing to refund
         stripeAction = "cancelled";
         stripeRefId = paymentIntent.id;
       } else {
-        const refund = await stripe.refunds.create({
-          payment_intent: transaction.stripe_payment_intent_id,
-          reason: "requested_by_customer",
-        });
-        stripeAction = "refunded";
-        stripeRefId = refund.id;
+        try {
+          const refund = await stripe.refunds.create({
+            payment_intent: transaction.stripe_payment_intent_id,
+            reason: "requested_by_customer",
+          });
+          stripeAction = "refunded";
+          stripeRefId = refund.id;
+        } catch (refundErr: any) {
+          // Fonds déjà transférés au vendeur (Stripe Connect) — annulation locale uniquement
+          if (
+            refundErr?.code === "insufficient_funds" ||
+            refundErr?.raw?.code === "insufficient_funds" ||
+            (refundErr?.message || "").includes("Insufficient funds")
+          ) {
+            stripeAction = "cancelled";
+            stripeRefId = paymentIntent.id;
+          } else {
+            throw refundErr;
+          }
+        }
       }
     } else {
       throw new Error(`Cannot cancel payment in status: ${paymentIntent.status}`);
