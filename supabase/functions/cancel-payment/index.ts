@@ -74,10 +74,23 @@ Deno.serve(async (req: Request) => {
     }
 
     const paymentIntent = await stripe.paymentIntents.retrieve(
-      transaction.stripe_payment_intent_id
+      transaction.stripe_payment_intent_id,
+      { expand: ["latest_charge"] }
     );
 
+    const alreadyFullyRefunded =
+      paymentIntent.status === "succeeded" &&
+      paymentIntent.amount_received > 0 &&
+      paymentIntent.amount_received === (paymentIntent as any).amount_refunded;
+
     if (
+      paymentIntent.status === "canceled" ||
+      alreadyFullyRefunded
+    ) {
+      // Already cancelled or refunded in Stripe — just sync the DB
+      stripeAction = alreadyFullyRefunded ? "refunded" : "cancelled";
+      stripeRefId = paymentIntent.id;
+    } else if (
       paymentIntent.status === "requires_payment_method" ||
       paymentIntent.status === "requires_confirmation" ||
       paymentIntent.status === "requires_action" ||
@@ -91,8 +104,8 @@ Deno.serve(async (req: Request) => {
       stripeAction = "cancelled";
       stripeRefId = cancelled.id;
     } else if (paymentIntent.status === "succeeded") {
-      if (paymentIntent.amount === 0) {
-        // Zero-amount payment intents cannot be refunded via Stripe; just cancel locally
+      if (paymentIntent.amount === 0 || paymentIntent.amount_received === 0) {
+        // Zero-amount payment intent — nothing to refund in Stripe
         stripeAction = "cancelled";
         stripeRefId = paymentIntent.id;
       } else {
