@@ -37,54 +37,70 @@ export function ShippingLabelManager({
   const downloadViaProxy = async () => {
     setLoading(true);
     setError('');
-    const MAX_RETRIES = 8;
+    const TIMEOUT_MS = 20000;
     const RETRY_DELAY_MS = 3000;
+    const deadline = Date.now() + TIMEOUT_MS;
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Non authentifié');
 
-      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-shipping-label`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${session.access_token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ transactionId }),
-          }
-        );
-
-        const contentType = response.headers.get('content-type') || '';
-
-        // Retryable: label not yet ready on Sendcloud side
-        if (response.status === 503 || (response.ok && !contentType.includes('pdf'))) {
-          if (attempt < MAX_RETRIES) {
-            await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
-            continue;
-          }
-          throw new Error("L'étiquette n'est pas encore disponible. Réessayez dans quelques secondes.");
+      while (Date.now() < deadline) {
+        let response: Response;
+        try {
+          response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-shipping-label`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ transactionId }),
+            }
+          );
+        } catch (networkErr) {
+          console.error('Network error during label fetch:', networkErr);
+          throw new Error('Erreur réseau lors du téléchargement.');
         }
 
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+        console.log('download-shipping-label response status:', response.status, 'content-type:', response.headers.get('content-type'));
+
+        // Success: backend returned a binary file
+        if (response.ok) {
+          const blob = await response.blob();
+          console.log('Blob size:', blob.size, 'type:', blob.type);
+          // If size > 0 it's a real file (PDF or octet-stream), not a JSON error body
+          if (blob.size > 100) {
+            const objectUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = objectUrl;
+            a.download = 'etiquette-expedition.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(objectUrl);
+            onUpdate?.();
+            return;
+          }
+          // Tiny blob likely means an empty/error JSON — fall through to retry
+          console.warn('Blob too small, retrying...');
+        } else if (response.status === 503) {
+          // Label still generating — retry
+          console.log('503: label not ready yet, retrying...');
+        } else {
+          // Hard error: 4xx etc.
+          const err = await response.json().catch(() => ({ error: `Erreur ${response.status}` }));
           throw new Error(err.error || `Erreur ${response.status}`);
         }
 
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = objectUrl;
-        a.download = 'etiquette-expedition.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(objectUrl);
-        onUpdate?.();
-        return;
+        // Wait before next attempt
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) break;
+        await new Promise(r => setTimeout(r, Math.min(RETRY_DELAY_MS, remaining)));
       }
+
+      throw new Error("Délai d'attente dépassé. L'étiquette n'est pas encore disponible, réessayez dans quelques instants.");
     } catch (err) {
       setError((err as Error).message);
     } finally {
