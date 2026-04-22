@@ -259,7 +259,18 @@ Deno.serve(async (req: Request) => {
       } catch {
         errorMessage = `Sendcloud: ${responseText.substring(0, 300)}`;
       }
-      throw new Error(errorMessage);
+      // Return payload + Sendcloud response in error body for easier debugging
+      return new Response(
+        JSON.stringify({
+          error: errorMessage,
+          debug: {
+            sendcloud_status: sendcloudResponse.status,
+            sendcloud_response: (() => { try { return JSON.parse(responseText); } catch { return responseText; } })(),
+            payload_sent: { parcel: parcelData },
+          },
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const sendcloudResult = JSON.parse(responseText);
