@@ -12,13 +12,14 @@ function extractPdfUrl(data: unknown): string | null {
   if (!data || typeof data !== "object") return null;
   const d = data as Record<string, unknown>;
 
-  // POST /labels → { label: { normal_printer: [...], label_printer: "..." } }
+  // POST /labels or GET /labels → { label: { normal_printer: [...], label_printer: "..." } }
   const label = d.label as Record<string, unknown> | undefined;
   if (label) {
     const np = label.normal_printer;
     if (Array.isArray(np) && np.length > 0) return String(np[0]);
     if (typeof np === "string" && np.length > 0) return np;
     const lp = label.label_printer;
+    if (Array.isArray(lp) && lp.length > 0) return String(lp[0]);
     if (typeof lp === "string" && lp.length > 0) return lp;
   }
 
@@ -31,6 +32,7 @@ function extractPdfUrl(data: unknown): string | null {
       if (Array.isArray(np) && np.length > 0) return String(np[0]);
       if (typeof np === "string" && np.length > 0) return np;
       const lp = pl.label_printer;
+      if (Array.isArray(lp) && lp.length > 0) return String(lp[0]);
       if (typeof lp === "string" && lp.length > 0) return lp;
     }
   }
@@ -38,58 +40,123 @@ function extractPdfUrl(data: unknown): string | null {
   return null;
 }
 
-// Single attempt: trigger label generation and return the PDF binary in one call.
-// Returns null if not ready yet (caller should retry).
+// Download PDF binary from a Sendcloud label URL.
+// Handles manual redirect so auth header is re-sent on each hop within sendcloud.sc,
+// but dropped for external (e.g. S3) redirects.
+async function fetchPdfBinary(
+  pdfUrl: string,
+  authHeader: string,
+): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
+  const noStore = { cache: "no-store" as RequestCache };
+  let currentUrl = pdfUrl;
+  const MAX_HOPS = 5;
+
+  for (let hop = 0; hop < MAX_HOPS; hop++) {
+    const isSendcloud = currentUrl.includes("sendcloud.sc") || currentUrl.includes("sendcloud.com");
+    const headers: Record<string, string> = isSendcloud
+      ? { "Authorization": authHeader }
+      : {};
+
+    console.log(`Hop ${hop + 1}: GET ${currentUrl} (auth=${isSendcloud})`);
+
+    const res = await fetch(currentUrl, {
+      headers,
+      redirect: "manual",
+      ...noStore,
+    });
+
+    console.log(
+      `Hop ${hop + 1} response: status=${res.status} content-type=${res.headers.get("content-type")} content-length=${res.headers.get("content-length")} location=${res.headers.get("location")}`,
+    );
+
+    if (res.status === 301 || res.status === 302 || res.status === 307 || res.status === 308) {
+      const location = res.headers.get("location");
+      if (!location) {
+        console.error("Redirect with no Location header at hop", hop + 1);
+        return null;
+      }
+      currentUrl = location.startsWith("http")
+        ? location
+        : `https://panel.sendcloud.sc${location}`;
+      continue;
+    }
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`Fetch failed at hop ${hop + 1} with status ${res.status}:`, errText.slice(0, 600));
+      return null;
+    }
+
+    const buffer = await res.arrayBuffer();
+    console.log("PDF buffer size:", buffer.byteLength);
+
+    if (buffer.byteLength < 100) {
+      console.warn("PDF buffer suspiciously small:", buffer.byteLength);
+      return null;
+    }
+
+    const contentType = res.headers.get("content-type") || "application/pdf";
+    return { buffer, contentType };
+  }
+
+  console.error("Too many redirects for URL:", pdfUrl);
+  return null;
+}
+
+// Single attempt per edge function invocation: ask Sendcloud for the label URL then
+// download it. Returns null if the label is not ready yet (front-end will retry).
 async function tryFetchLabel(
   parcelId: number,
-  sendcloudAuth: string,
+  apiKey: string,
+  apiSecret: string,
 ): Promise<{ buffer: ArrayBuffer; contentType: string } | null> {
-  const noCache = { cache: "no-store" as RequestCache };
+  const authHeader = `Basic ${btoa(`${apiKey}:${apiSecret}`)}`;
+  const noStore = { cache: "no-store" as RequestCache };
 
-  // Step 1: POST /labels — triggers async generation and may return URL immediately
+  console.log("Auth key prefix:", apiKey.slice(0, 6), "| secret prefix:", apiSecret.slice(0, 4));
+
   let pdfUrl: string | null = null;
+
+  // Step 1: POST /labels — triggers generation and returns URL when ready
   try {
-    const postRes = await fetch("https://panel.sendcloud.sc/api/v2/labels", {
+    const res = await fetch("https://panel.sendcloud.sc/api/v2/labels", {
       method: "POST",
-      headers: {
-        "Authorization": `Basic ${sendcloudAuth}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Authorization": authHeader, "Content-Type": "application/json" },
       body: JSON.stringify({ label: { parcels: [parcelId] } }),
-      ...noCache,
+      ...noStore,
     });
-    const postBody = await postRes.json();
-    console.log("POST /labels status:", postRes.status, "body:", JSON.stringify(postBody).slice(0, 300));
-    pdfUrl = extractPdfUrl(postBody);
+    const body = await res.json();
+    console.log("POST /labels status:", res.status, "| body:", JSON.stringify(body).slice(0, 400));
+    pdfUrl = extractPdfUrl(body);
   } catch (e) {
     console.error("POST /labels error:", e);
   }
 
-  // Step 2: GET /labels/{id} if POST didn't give us a URL
+  // Step 2: GET /labels/{id}
   if (!pdfUrl) {
     try {
-      const getRes = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
-        headers: { "Authorization": `Basic ${sendcloudAuth}` },
-        ...noCache,
+      const res = await fetch(`https://panel.sendcloud.sc/api/v2/labels/${parcelId}`, {
+        headers: { "Authorization": authHeader },
+        ...noStore,
       });
-      const getBody = await getRes.json();
-      console.log("GET /labels status:", getRes.status, "body:", JSON.stringify(getBody).slice(0, 300));
-      pdfUrl = extractPdfUrl(getBody);
+      const body = await res.json();
+      console.log("GET /labels status:", res.status, "| body:", JSON.stringify(body).slice(0, 400));
+      pdfUrl = extractPdfUrl(body);
     } catch (e) {
       console.error("GET /labels error:", e);
     }
   }
 
-  // Step 3: GET /parcels/{id} as last resort
+  // Step 3: GET /parcels/{id} as fallback
   if (!pdfUrl) {
     try {
-      const parcelRes = await fetch(`https://panel.sendcloud.sc/api/v2/parcels/${parcelId}`, {
-        headers: { "Authorization": `Basic ${sendcloudAuth}` },
-        ...noCache,
+      const res = await fetch(`https://panel.sendcloud.sc/api/v2/parcels/${parcelId}`, {
+        headers: { "Authorization": authHeader },
+        ...noStore,
       });
-      const parcelBody = await parcelRes.json();
-      console.log("GET /parcels status:", parcelRes.status, "body:", JSON.stringify(parcelBody).slice(0, 400));
-      pdfUrl = extractPdfUrl(parcelBody);
+      const body = await res.json();
+      console.log("GET /parcels status:", res.status, "| body:", JSON.stringify(body).slice(0, 500));
+      pdfUrl = extractPdfUrl(body);
     } catch (e) {
       console.error("GET /parcels error:", e);
     }
@@ -100,29 +167,7 @@ async function tryFetchLabel(
     return null;
   }
 
-  // Step 4: download the actual PDF binary
-  console.log("Downloading PDF from:", pdfUrl);
-  const pdfRes = await fetch(pdfUrl, {
-    headers: { "Authorization": `Basic ${sendcloudAuth}` },
-    ...noCache,
-  });
-  console.log("PDF binary status:", pdfRes.status, "content-type:", pdfRes.headers.get("content-type"), "content-length:", pdfRes.headers.get("content-length"));
-
-  if (!pdfRes.ok) {
-    console.warn("PDF binary fetch failed:", pdfRes.status);
-    return null;
-  }
-
-  const buffer = await pdfRes.arrayBuffer();
-  console.log("PDF buffer size:", buffer.byteLength);
-
-  if (buffer.byteLength < 100) {
-    console.warn("PDF buffer suspiciously small:", buffer.byteLength);
-    return null;
-  }
-
-  const contentType = pdfRes.headers.get("content-type") || "application/pdf";
-  return { buffer, contentType };
+  return fetchPdfBinary(pdfUrl, authHeader);
 }
 
 Deno.serve(async (req: Request) => {
@@ -168,11 +213,14 @@ Deno.serve(async (req: Request) => {
     if (!sendcloudApiKey || !sendcloudApiSecret) {
       throw new Error("Sendcloud credentials not configured");
     }
-    const sendcloudAuth = btoa(`${sendcloudApiKey}:${sendcloudApiSecret}`);
 
-    console.log("transactionId:", transactionId, "parcelId:", transaction.sendcloud_parcel_id);
+    console.log("transactionId:", transactionId, "| parcelId:", transaction.sendcloud_parcel_id);
 
-    const result = await tryFetchLabel(Number(transaction.sendcloud_parcel_id), sendcloudAuth);
+    const result = await tryFetchLabel(
+      Number(transaction.sendcloud_parcel_id),
+      sendcloudApiKey,
+      sendcloudApiSecret,
+    );
 
     if (!result) {
       return new Response(
