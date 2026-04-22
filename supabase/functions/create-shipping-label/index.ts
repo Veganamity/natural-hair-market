@@ -92,17 +92,23 @@ Deno.serve(async (req: Request) => {
     const sellerCountryCode = countryNameToCode[seller.country] || seller.country || "FR";
     const itemValue = Number(listing?.price ?? transaction.amount ?? 0);
 
-    const senderAddress = {
-      name: seller.full_name || "Vendeur",
-      company_name: seller.full_name || "Vendeur",
-      address: (seller.address_line1 || "").trim(),
-      address_2: (seller.address_line2 || "").trim(),
-      city: (seller.city || "").trim(),
-      postal_code: (seller.postal_code || "").replace(/\s/g, ""),
-      country: sellerCountryCode,
-      email: seller.email || "",
-      telephone: seller.phone || "",
-    };
+    // Fetch the default sender address ID from Sendcloud (required as numeric ID, not object)
+    const sendcloudAuth = btoa(`${sendcloudApiKey}:${sendcloudApiSecret}`);
+    let senderAddressId: number | null = null;
+    try {
+      const senderRes = await fetch("https://panel.sendcloud.sc/api/v2/user/addresses/sender", {
+        headers: { "Authorization": `Basic ${sendcloudAuth}` },
+      });
+      if (senderRes.ok) {
+        const senderData = await senderRes.json();
+        const addresses = senderData.sender_addresses || [];
+        // prefer default address, fallback to first
+        const defaultAddr = addresses.find((a: any) => a.is_default) || addresses[0];
+        if (defaultAddr?.id) senderAddressId = defaultAddr.id;
+      }
+    } catch (e) {
+      console.error("Could not fetch sender addresses:", e);
+    }
 
     const parcelItems = [
       {
@@ -147,7 +153,7 @@ Deno.serve(async (req: Request) => {
         insured_value: itemValue.toFixed(2),
         to_service_point: parseInt(relayPointId, 10),
         shipment: { id: sendcloudMethodId },
-        sender_address: senderAddress,
+        ...(senderAddressId ? { sender_address: senderAddressId } : {}),
         parcel_items: parcelItems,
       };
     } else {
@@ -175,12 +181,10 @@ Deno.serve(async (req: Request) => {
         order_number: transactionId,
         insured_value: itemValue.toFixed(2),
         shipment: { id: sendcloudMethodId },
-        sender_address: senderAddress,
+        ...(senderAddressId ? { sender_address: senderAddressId } : {}),
         parcel_items: parcelItems,
       };
     }
-
-    const sendcloudAuth = btoa(`${sendcloudApiKey}:${sendcloudApiSecret}`);
 
     const sendcloudResponse = await fetch("https://panel.sendcloud.sc/api/v2/parcels", {
       method: "POST",
