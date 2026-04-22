@@ -13,7 +13,9 @@ export function GoogleButton({ text = 'Continuer avec Google' }: GoogleButtonPro
     setLoading(true);
     setError(null);
     try {
-      const redirectUrl = `${window.location.origin}/#marketplace`;
+      // Flag so App.tsx knows to check session after OAuth redirect
+      sessionStorage.setItem('oauth_callback', '1');
+      const redirectUrl = `${window.location.origin}/`;
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
