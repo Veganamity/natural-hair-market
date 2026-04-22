@@ -85,20 +85,15 @@ function AppContent() {
     }
   }, []);
 
+  // Navigate to marketplace when user signs in (including OAuth callback)
   useEffect(() => {
-    // If returning from OAuth (access_token was in hash), check session immediately
-    // in case SIGNED_IN event already fired before this listener was registered
-    const wasOAuthCallback = sessionStorage.getItem('oauth_callback');
-    if (wasOAuthCallback) {
-      sessionStorage.removeItem('oauth_callback');
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          setCurrentView('marketplace');
-          window.history.replaceState({ view: 'marketplace' }, '', '#marketplace');
-        }
-      });
+    if (!loading && user && currentView === 'landing') {
+      setCurrentView('marketplace');
+      window.history.replaceState({ view: 'marketplace' }, '', '#marketplace');
     }
+  }, [user, loading]);
 
+  useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsPasswordReset(true);
@@ -145,11 +140,10 @@ function AppContent() {
     window.addEventListener('popstate', handlePopState);
 
     const hash = window.location.hash;
-    if (hash && hash.includes('access_token')) {
-      // OAuth callback — mark for session check and clean the URL
-      sessionStorage.setItem('oauth_callback', '1');
-      window.history.replaceState({}, '', window.location.pathname);
-    } else if (hash && !hash.includes('error')) {
+    // If the hash contains OAuth tokens, let Supabase detectSessionInUrl handle it first.
+    // onAuthStateChange will fire SIGNED_IN and navigate to marketplace.
+    // Don't touch the hash here so Supabase can read it.
+    if (!hash.includes('access_token') && !hash.includes('error')) {
       const view = parseHash(hash);
       if (view) {
         setCurrentView(view);
