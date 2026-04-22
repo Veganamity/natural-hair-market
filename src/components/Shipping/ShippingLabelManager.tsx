@@ -29,56 +29,35 @@ export function ShippingLabelManager({
 }: ShippingLabelManagerProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [generatedLabelUrl, setGeneratedLabelUrl] = useState<string | null>(null);
 
-  // Service point delivery whenever a relay point ID is stored
   const isMondialRelay = !!relayPointId || shippingMethod === 'mondial_relay';
-  const activeLabelUrl = generatedLabelUrl || shippingLabelUrl;
+  const hasLabel = !!(shippingLabelUrl || sendcloudParcelId || shippingStatus === 'label_created');
 
-  // Label was created (has parcel ID or label_created status) but URL is missing
-  const labelCreatedButMissing = !activeLabelUrl && (sendcloudParcelId || shippingStatus === 'label_created');
-
-  const callGenerateLabel = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Not authenticated');
-
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-shipping-label`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ transactionId }),
-      }
-    );
-
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Échec de la génération de l'étiquette");
-    return result.shipping_label_url as string | null;
-  };
-
-  const handleGenerateLabel = async () => {
+  // Always proxy through download-shipping-label — never open Sendcloud URLs directly
+  const downloadViaProxy = async () => {
     setLoading(true);
     setError('');
-
     try {
-      const labelUrl = await callGenerateLabel();
-      if (labelUrl) {
-        setGeneratedLabelUrl(labelUrl);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-shipping-label`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ transactionId }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+        throw new Error(err.error || `Erreur ${response.status}`);
       }
-      onUpdate?.();
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleDownload = async (url: string) => {
-    try {
-      const response = await fetch(url);
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -88,8 +67,42 @@ export function ShippingLabelManager({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(objectUrl);
-    } catch {
-      window.open(url, '_blank');
+      onUpdate?.();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Generate label first, then download
+  const handleGenerateLabel = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Non authentifié');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-shipping-label`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ transactionId }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Échec de la génération de l'étiquette");
+      onUpdate?.();
+      // After generating, download via proxy
+      await downloadViaProxy();
+    } catch (err) {
+      setError((err as Error).message);
+      setLoading(false);
     }
   };
 
@@ -146,8 +159,8 @@ export function ShippingLabelManager({
         </div>
       )}
 
-      {/* No label yet — show generate button */}
-      {!activeLabelUrl && !labelCreatedButMissing && (
+      {/* No label yet — generate */}
+      {!hasLabel && (
         <button
           onClick={handleGenerateLabel}
           disabled={loading}
@@ -167,35 +180,8 @@ export function ShippingLabelManager({
         </button>
       )}
 
-      {/* Label was created but URL missing — show retry button */}
-      {labelCreatedButMissing && (
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2 text-amber-700 bg-amber-50 px-4 py-3 rounded-lg border border-amber-200">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span className="text-sm font-medium">Étiquette créée — lien de téléchargement indisponible</span>
-          </div>
-          <button
-            onClick={handleGenerateLabel}
-            disabled={loading}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Récupération en cours...</span>
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-5 h-5" />
-                <span>Récupérer l'étiquette</span>
-              </>
-            )}
-          </button>
-        </div>
-      )}
-
-      {/* Label URL available — show download button */}
-      {activeLabelUrl && (
+      {/* Label exists — download via proxy */}
+      {hasLabel && (
         <div className="space-y-3">
           <div className="flex items-center space-x-2 text-green-700 bg-green-50 px-4 py-3 rounded-lg">
             <CheckCircle className="w-5 h-5" />
@@ -203,11 +189,21 @@ export function ShippingLabelManager({
           </div>
 
           <button
-            onClick={() => handleDownload(activeLabelUrl)}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            onClick={downloadViaProxy}
+            disabled={loading}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Download className="w-5 h-5" />
-            <span>Télécharger l'étiquette (PDF)</span>
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Téléchargement en cours...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5" />
+                <span>Télécharger l'étiquette (PDF)</span>
+              </>
+            )}
           </button>
 
           {trackingNumber && (
@@ -239,6 +235,29 @@ export function ShippingLabelManager({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Retry if label missing despite status */}
+      {!hasLabel && shippingStatus === 'label_created' && (
+        <div className="mt-3">
+          <button
+            onClick={downloadViaProxy}
+            disabled={loading}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Récupération en cours...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-5 h-5" />
+                <span>Récupérer l'étiquette</span>
+              </>
+            )}
+          </button>
         </div>
       )}
     </div>
