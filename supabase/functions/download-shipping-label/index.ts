@@ -149,8 +149,8 @@ Deno.serve(async (req: Request) => {
 
     if (!result) {
       return new Response(
-        JSON.stringify({ error: "L'étiquette est en cours de génération chez Sendcloud. Réessayez dans quelques secondes." }),
-        { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "L'étiquette est en cours de génération chez Sendcloud. Réessayez dans quelques secondes.", retryable: true }),
+        { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

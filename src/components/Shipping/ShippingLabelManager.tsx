@@ -33,41 +33,58 @@ export function ShippingLabelManager({
   const isMondialRelay = !!relayPointId || shippingMethod === 'mondial_relay';
   const hasLabel = !!(shippingLabelUrl || sendcloudParcelId || shippingStatus === 'label_created');
 
-  // Always proxy through download-shipping-label — never open Sendcloud URLs directly
+  // Poll download-shipping-label until a real PDF is returned (Sendcloud generates async)
   const downloadViaProxy = async () => {
     setLoading(true);
     setError('');
+    const MAX_RETRIES = 8;
+    const RETRY_DELAY_MS = 3000;
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Non authentifié');
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-shipping-label`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ transactionId }),
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-shipping-label`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ transactionId }),
+          }
+        );
+
+        const contentType = response.headers.get('content-type') || '';
+
+        // Retryable: label not yet ready on Sendcloud side
+        if (response.status === 503 || (response.ok && !contentType.includes('pdf'))) {
+          if (attempt < MAX_RETRIES) {
+            await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+            continue;
+          }
+          throw new Error("L'étiquette n'est pas encore disponible. Réessayez dans quelques secondes.");
         }
-      );
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
-        throw new Error(err.error || `Erreur ${response.status}`);
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+          throw new Error(err.error || `Erreur ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objectUrl;
+        a.download = 'etiquette-expedition.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(objectUrl);
+        onUpdate?.();
+        return;
       }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = objectUrl;
-      a.download = 'etiquette-expedition.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(objectUrl);
-      onUpdate?.();
     } catch (err) {
       setError((err as Error).message);
     } finally {
