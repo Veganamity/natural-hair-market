@@ -30,7 +30,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
-        .limit(6);
+        .limit(5);
 
       if (error) throw error;
       setFeaturedListings(data || []);
