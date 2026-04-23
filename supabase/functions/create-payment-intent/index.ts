@@ -9,6 +9,19 @@ const corsHeaders = {
 };
 
 const MARKETPLACE_COMMISSION_RATE = 0.10;
+// Délai max pour expédier (jours ouvrables approximatifs)
+const SHIPPING_DEADLINE_DAYS = 5;
+
+function addBusinessDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  let added = 0;
+  while (added < days) {
+    result.setDate(result.getDate() + 1);
+    const dow = result.getDay();
+    if (dow !== 0 && dow !== 6) added++;
+  }
+  return result;
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -97,17 +110,21 @@ Deno.serve(async (req: Request) => {
       shippingMethod: shippingData?.method || "colissimo",
     };
 
+    // Capture manuelle : les fonds sont bloqués jusqu'à confirmation de livraison
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(totalAmount * 100),
       currency: "eur",
       automatic_payment_methods: { enabled: true },
-      capture_method: "automatic",
+      capture_method: "manual",
       application_fee_amount: commissionAmount,
       transfer_data: {
         destination: sellerProfile.stripe_account_id,
       },
       metadata,
     });
+
+    const now = new Date();
+    const shippingDeadline = addBusinessDays(now, SHIPPING_DEADLINE_DAYS);
 
     const transactionData: Record<string, unknown> = {
       listing_id: listingId,
@@ -121,8 +138,9 @@ Deno.serve(async (req: Request) => {
       stripe_payment_intent_id: paymentIntent.id,
       status: "pending",
       payment_method: "card",
-      capture_method: "automatic",
+      capture_method: "manual",
       delivery_status: "pending",
+      shipping_deadline_at: shippingDeadline.toISOString(),
     };
 
     if (sellerProfile && (sellerProfile.address_line1 || sellerProfile.city)) {
