@@ -37,13 +37,49 @@ import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, ArrowL
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
+// Pages légales accessibles via une URL propre (sans #)
+const LEGAL_PATHS: Record<string, string> = {
+  '/privacy': 'privacy',
+  '/terms': 'terms',
+  '/sales': 'sales',
+  '/refund': 'refund',
+  '/safety': 'safety',
+  '/seller-rules': 'seller-rules',
+  '/buyer-rules': 'buyer-rules',
+  '/faq': 'faq',
+  '/about': 'about',
+};
+
+type ViewName =
+  | 'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers'
+  | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales'
+  | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about'
+  | 'admin-salons' | 'admin-listings' | 'salon-certifie' | 'seller-store';
+
+const HASH_VIEWS = new Set<string>([
+  'landing', 'marketplace', 'profile', 'favorites', 'offers', 'transactions',
+  'orders', 'cart', 'privacy', 'terms', 'sales', 'refund', 'safety',
+  'seller-rules', 'buyer-rules', 'faq', 'about', 'admin-salons',
+  'admin-listings', 'salon-certifie',
+]);
+
+function getInitialView(): ViewName {
+  // Chemin propre (/privacy, /terms, etc.) — priorité absolue
+  const pathView = LEGAL_PATHS[window.location.pathname];
+  if (pathView) return pathView as ViewName;
+  // Hash legacy (#marketplace, etc.)
+  const hash = window.location.hash.slice(1).split('?')[0].split('&')[0];
+  if (hash && HASH_VIEWS.has(hash)) return hash as ViewName;
+  return 'landing';
+}
+
 function AppContent() {
   const { user, loading, signOut } = useAuth();
   const { t } = useLanguage();
   const { unreadCount } = useUnreadOffersCount();
   const { cartCount } = useCart();
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'forgot-password' | 'reset-password'>('login');
-  const [currentView, setCurrentView] = useState<'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers' | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about' | 'admin-salons' | 'admin-listings' | 'salon-certifie' | 'seller-store'>('landing');
+  const [currentView, setCurrentView] = useState<ViewName>(getInitialView);
   const [showCreateListing, setShowCreateListing] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
@@ -85,7 +121,6 @@ function AppContent() {
     }
   }, []);
 
-  // Navigate to marketplace when user signs in (including OAuth callback)
   useEffect(() => {
     if (!loading && user && currentView === 'landing') {
       setCurrentView('marketplace');
@@ -111,48 +146,28 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    const validViews = ['landing', 'marketplace', 'profile', 'favorites', 'offers', 'transactions', 'orders', 'cart', 'privacy', 'terms', 'sales', 'refund', 'safety', 'seller-rules', 'buyer-rules', 'faq', 'about', 'admin-salons', 'admin-listings', 'salon-certifie'];
-
-    const parseHash = (hash: string): typeof currentView | null => {
-      const cleanHash = hash.slice(1).split('?')[0].split('&')[0];
-      if (cleanHash.includes('access_token') || cleanHash.includes('error')) {
-        return null;
-      }
-      if (validViews.includes(cleanHash)) {
-        return cleanHash as typeof currentView;
-      }
-      return null;
-    };
-
     const handlePopState = (event: PopStateEvent) => {
-      if (event.state && event.state.view) {
+      if (event.state?.view) {
         setCurrentView(event.state.view);
+        return;
+      }
+      // Chemin propre (/privacy, etc.)
+      const pathView = LEGAL_PATHS[window.location.pathname];
+      if (pathView) {
+        setCurrentView(pathView as ViewName);
+        return;
+      }
+      // Hash legacy
+      const hash = window.location.hash.slice(1).split('?')[0].split('&')[0];
+      if (hash && !hash.includes('access_token') && !hash.includes('error') && HASH_VIEWS.has(hash)) {
+        setCurrentView(hash as ViewName);
       } else {
-        const view = parseHash(window.location.hash);
-        if (view) {
-          setCurrentView(view);
-        } else {
-          setCurrentView('landing');
-        }
+        setCurrentView('landing');
       }
     };
 
     window.addEventListener('popstate', handlePopState);
-
-    const hash = window.location.hash;
-    // If the hash contains OAuth tokens, let Supabase detectSessionInUrl handle it first.
-    // onAuthStateChange will fire SIGNED_IN and navigate to marketplace.
-    // Don't touch the hash here so Supabase can read it.
-    if (!hash.includes('access_token') && !hash.includes('error')) {
-      const view = parseHash(hash);
-      if (view) {
-        setCurrentView(view);
-      }
-    }
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   useEffect(() => {
@@ -169,12 +184,17 @@ function AppContent() {
     };
   }, [accountMenuOpen]);
 
-  const navigateToView = (view: typeof currentView, listingId?: string | null) => {
+  // Navigation : pages légales → URL propre (/privacy), autres → hash (#marketplace)
+  const navigateToView = (view: ViewName, listingId?: string | null) => {
     if (view === 'marketplace' && listingId === undefined) {
       setPreselectedListingId(null);
     }
     setCurrentView(view);
-    window.history.pushState({ view }, '', `#${view}`);
+    if (LEGAL_PATHS[`/${view}`] !== undefined) {
+      window.history.pushState({ view }, '', `/${view}`);
+    } else {
+      window.history.pushState({ view }, '', `#${view}`);
+    }
   };
 
   const navigateToSellerStore = (sellerId: string) => {
@@ -201,7 +221,7 @@ function AppContent() {
       />;
     }
 
-    if (currentView === 'privacy' || currentView === 'terms' || currentView === 'sales' || currentView === 'refund' || currentView === 'safety' || currentView === 'seller-rules' || currentView === 'buyer-rules' || currentView === 'faq' || currentView === 'about') {
+    if (LEGAL_PATHS[`/${currentView}`] !== undefined) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
           <nav className="bg-white shadow-md sticky top-0 z-40">
@@ -212,12 +232,13 @@ function AppContent() {
                     NaturalHairMarket
                   </h1>
                 </div>
-                <button
-                  onClick={() => navigateToView('landing')}
+                <a
+                  href="/"
+                  onClick={(e) => { e.preventDefault(); setCurrentView('landing'); window.history.pushState({}, '', '/'); }}
                   className="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0"
                 >
                   {t('common.back')}
-                </button>
+                </a>
               </div>
             </div>
           </nav>
@@ -229,8 +250,8 @@ function AppContent() {
             {currentView === 'safety' && <SafetyQuality />}
             {currentView === 'seller-rules' && <SellerRules />}
             {currentView === 'buyer-rules' && <BuyerRules />}
-            {currentView === 'faq' && <FAQ onClose={() => navigateToView('landing')} />}
-            {currentView === 'about' && <AboutUs onClose={() => navigateToView('landing')} />}
+            {currentView === 'faq' && <FAQ onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
+            {currentView === 'about' && <AboutUs onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
           </main>
         </div>
       );
@@ -381,42 +402,27 @@ function AppContent() {
                 {accountMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <button
-                      onClick={() => {
-                        navigateToView('profile');
-                        setAccountMenuOpen(false);
-                      }}
+                      onClick={() => { navigateToView('profile'); setAccountMenuOpen(false); }}
                       className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                        currentView === 'profile'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'text-gray-700 hover:bg-gray-50'
+                        currentView === 'profile' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'
                       }`}
                     >
                       <User className="w-4 h-4" />
                       {t('nav.profile')}
                     </button>
                     <button
-                      onClick={() => {
-                        navigateToView('favorites');
-                        setAccountMenuOpen(false);
-                      }}
+                      onClick={() => { navigateToView('favorites'); setAccountMenuOpen(false); }}
                       className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                        currentView === 'favorites'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'text-gray-700 hover:bg-gray-50'
+                        currentView === 'favorites' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'
                       }`}
                     >
                       <Heart className="w-4 h-4" />
                       {t('nav.favorites')}
                     </button>
                     <button
-                      onClick={() => {
-                        navigateToView('offers');
-                        setAccountMenuOpen(false);
-                      }}
+                      onClick={() => { navigateToView('offers'); setAccountMenuOpen(false); }}
                       className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                        currentView === 'offers'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'text-gray-700 hover:bg-gray-50'
+                        currentView === 'offers' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'
                       }`}
                     >
                       <div className="relative">
@@ -433,28 +439,18 @@ function AppContent() {
                       )}
                     </button>
                     <button
-                      onClick={() => {
-                        navigateToView('orders');
-                        setAccountMenuOpen(false);
-                      }}
+                      onClick={() => { navigateToView('orders'); setAccountMenuOpen(false); }}
                       className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                        currentView === 'orders'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'text-gray-700 hover:bg-gray-50'
+                        currentView === 'orders' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'
                       }`}
                     >
                       <Package className="w-4 h-4" />
                       {t('nav.orders')}
                     </button>
                     <button
-                      onClick={() => {
-                        navigateToView('transactions');
-                        setAccountMenuOpen(false);
-                      }}
+                      onClick={() => { navigateToView('transactions'); setAccountMenuOpen(false); }}
                       className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                        currentView === 'transactions'
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'text-gray-700 hover:bg-gray-50'
+                        currentView === 'transactions' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700 hover:bg-gray-50'
                       }`}
                     >
                       <Receipt className="w-4 h-4" />
@@ -494,10 +490,7 @@ function AppContent() {
               </div>
               {currentView !== 'marketplace' && (
                 <button
-                  onClick={() => {
-                    navigateToView('marketplace');
-                    setMobileMenuOpen(false);
-                  }}
+                  onClick={() => { navigateToView('marketplace'); setMobileMenuOpen(false); }}
                   className="w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-gray-600 hover:bg-gray-100 border-b border-gray-200 pb-3"
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -505,28 +498,18 @@ function AppContent() {
                 </button>
               )}
               <button
-                onClick={() => {
-                  navigateToView('marketplace');
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => { navigateToView('marketplace'); setMobileMenuOpen(false); }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  currentView === 'marketplace'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  currentView === 'marketplace' ? 'bg-emerald-100 text-emerald-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <Home className="w-5 h-5" />
                 {t('nav.marketplace')}
               </button>
               <button
-                onClick={() => {
-                  navigateToView('cart');
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => { navigateToView('cart'); setMobileMenuOpen(false); }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  currentView === 'cart'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  currentView === 'cart' ? 'bg-emerald-100 text-emerald-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <div className="relative">
@@ -545,28 +528,18 @@ function AppContent() {
                 )}
               </button>
               <button
-                onClick={() => {
-                  navigateToView('favorites');
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => { navigateToView('favorites'); setMobileMenuOpen(false); }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  currentView === 'favorites'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  currentView === 'favorites' ? 'bg-emerald-100 text-emerald-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <Heart className="w-5 h-5" />
                 {t('nav.favorites')}
               </button>
               <button
-                onClick={() => {
-                  navigateToView('offers');
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => { navigateToView('offers'); setMobileMenuOpen(false); }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  currentView === 'offers'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  currentView === 'offers' ? 'bg-emerald-100 text-emerald-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <div className="relative">
@@ -583,52 +556,34 @@ function AppContent() {
                 )}
               </button>
               <button
-                onClick={() => {
-                  navigateToView('orders');
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => { navigateToView('orders'); setMobileMenuOpen(false); }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  currentView === 'orders'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  currentView === 'orders' ? 'bg-emerald-100 text-emerald-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <Package className="w-5 h-5" />
                 {t('nav.orders')}
               </button>
               <button
-                onClick={() => {
-                  navigateToView('transactions');
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => { navigateToView('transactions'); setMobileMenuOpen(false); }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  currentView === 'transactions'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  currentView === 'transactions' ? 'bg-emerald-100 text-emerald-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <Receipt className="w-5 h-5" />
                 {t('nav.transactions')}
               </button>
               <button
-                onClick={() => {
-                  navigateToView('profile');
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => { navigateToView('profile'); setMobileMenuOpen(false); }}
                 className={`w-full px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  currentView === 'profile'
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                  currentView === 'profile' ? 'bg-emerald-100 text-emerald-700' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <User className="w-5 h-5" />
                 {t('nav.profile')}
               </button>
               <button
-                onClick={() => {
-                  setShowCreateListing(true);
-                  setMobileMenuOpen(false);
-                }}
+                onClick={() => { setShowCreateListing(true); setMobileMenuOpen(false); }}
                 className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
@@ -676,7 +631,7 @@ function AppContent() {
         {currentView === 'offers' && <OffersView />}
         {currentView === 'orders' && <OrderManagement />}
         {currentView === 'transactions' && <TransactionsView />}
-        {currentView === 'profile' && <ProfileView onNavigate={(view) => navigateToView(view as any)} />}
+        {currentView === 'profile' && <ProfileView onNavigate={(view) => navigateToView(view as ViewName)} />}
         {currentView === 'admin-salons' && <SalonVerificationAdmin />}
         {currentView === 'admin-listings' && (
           <ListingAdmin
@@ -715,30 +670,34 @@ function AppContent() {
               © 2025 Marketplace de cheveux humains naturels & colorés. Tous droits réservés.
             </p>
             <div className="flex gap-4">
-              <button
-                onClick={() => setCurrentView('about')}
+              <a
+                href="/about"
+                onClick={(e) => { e.preventDefault(); navigateToView('about'); }}
                 className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
               >
                 À propos
-              </button>
-              <button
-                onClick={() => setCurrentView('faq')}
+              </a>
+              <a
+                href="/faq"
+                onClick={(e) => { e.preventDefault(); navigateToView('faq'); }}
                 className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
               >
                 FAQ
-              </button>
-              <button
-                onClick={() => setCurrentView('terms')}
+              </a>
+              <a
+                href="/terms"
+                onClick={(e) => { e.preventDefault(); navigateToView('terms'); }}
                 className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
               >
                 Conditions d'utilisation
-              </button>
-              <button
-                onClick={() => setCurrentView('privacy')}
+              </a>
+              <a
+                href="/privacy"
+                onClick={(e) => { e.preventDefault(); navigateToView('privacy'); }}
                 className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
               >
                 Politique de confidentialité
-              </button>
+              </a>
             </div>
           </div>
         </div>
