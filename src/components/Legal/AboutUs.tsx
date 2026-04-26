@@ -337,8 +337,8 @@ export function AboutUs({ onClose }: AboutUsProps) {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 font-medium">Téléphone</p>
-                  <a href="tel:0972216948" className="text-emerald-600 font-semibold hover:underline">
-                    09 72 21 69 48
+                  <a href="tel:0784898647" className="text-emerald-600 font-semibold hover:underline">
+                    07 84 89 86 47
                   </a>
                 </div>
               </div>
