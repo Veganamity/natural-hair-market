@@ -50,6 +50,7 @@ const LEGAL_PATHS: Record<string, string> = {
   '/buyer-rules': 'buyer-rules',
   '/faq': 'faq',
   '/about': 'about',
+  '/sell-my-hair': 'sell-my-hair',
 };
 
 type ViewName =
@@ -223,7 +224,8 @@ function AppContent() {
       />;
     }
 
-    if (LEGAL_PATHS[`/${currentView}`] !== undefined) {
+    const PUBLIC_VIEWS = new Set(['faq', 'about', 'sell-my-hair']);
+    if (LEGAL_PATHS[`/${currentView}`] !== undefined || PUBLIC_VIEWS.has(currentView)) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
           <nav className="bg-white shadow-md sticky top-0 z-40">
