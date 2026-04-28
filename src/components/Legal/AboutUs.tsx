@@ -334,7 +334,7 @@ export function AboutUs({ onClose }: AboutUsProps) {
           <section className="bg-white border-2 border-emerald-600 rounded-xl p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-3 italic">Le mot de la fondatrice</h2>
             <p className="text-gray-600 leading-relaxed italic mb-4">
-              « J'ai créé NaturalHairMarket pour mettre fin au gaspillage des cheveux coupés en salon, pour offrir une alternative aux importations douteuses, et pour permettre à chacun de vendre ses cheveux dans un cadre juste et sécurisé. Aujourd'hui, c'est la première plateforme française qui protège à la fois les vendeurs et les acheteurs. »
+              « J'ai créé NaturalHairMarket pour mettre fin au gaspillage des cheveux coupés en salon, pour offrir une alternative aux importations, et pour permettre à chacun de vendre ses cheveux dans un cadre juste et sécurisé. Aujourd'hui, c'est la première plateforme française qui protège à la fois les vendeurs et les acheteurs. »
             </p>
             <p className="text-gray-800 font-semibold text-right">— Fondatrice de NaturalHairMarket</p>
           </section>
