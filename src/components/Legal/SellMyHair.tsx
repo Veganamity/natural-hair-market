@@ -61,7 +61,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Paiement : quand et comment ?",
-    a: "Le paiement est effectue via la plateforme NaturalHairMarket de facon securisee. Les fonds sont liberes au vendeur apres confirmation de reception par l'acheteur ou a l'expiration du delai de protection automatique. Le paiement hors plateforme est strictement interdit.",
+    a: "Le paiement est effectue via la plateforme NaturalHairMarket de facon securisee. Les fonds sont proteges jusqu'a confirmation de reception par l'acheteur. Le versement au vendeur intervient selon les conditions affichees dans l'interface. Tout paiement hors plateforme est strictement interdit.",
   },
   {
     q: "Que se passe-t-il si mes cheveux ne sont pas acceptes ?",
@@ -153,13 +153,13 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               {
                 num: 4,
                 title: "Validation et envoi",
-                body: "Une fois la commande confirmee, vous recevez une notification pour proceder a l'expedition. Vous disposez de 3 jours ouvrables pour envoyer le colis avec un numero de suivi valide.",
+                body: "Une fois la commande confirmee, vous recevez une notification pour proceder a l'expedition. Le delai d'expedition est indique dans l'interface au moment de la commande. Assurez-vous d'envoyer le colis avec un numero de suivi valide.",
                 icon: <Package className="w-5 h-5 text-emerald-600" />,
               },
               {
                 num: 5,
-                title: "Paiement (selon validation de la reception)",
-                body: "Les fonds sont securises sur la plateforme jusqu'a confirmation de reception par l'acheteur ou expiration du delai de protection automatique. Le versement est ensuite effectue selon les conditions en vigueur.",
+                title: "Paiement securise (selon validation de la reception)",
+                body: "Les fonds sont securises sur la plateforme jusqu'a confirmation de reception par l'acheteur. Le versement est ensuite effectue selon les conditions en vigueur. Toute transaction hors plateforme est interdite.",
                 icon: <Shield className="w-5 h-5 text-emerald-600" />,
               },
             ].map((step) => (
@@ -261,7 +261,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               <div>
                 <h3 className="font-semibold text-gray-800 mb-1">Le vendeur fixe son prix librement</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Il n&apos;existe pas de grille tarifaire imposee sur NaturalHairMarket. Vous etes libre de proposer le prix que vous estimez juste. Le prix affiche dans votre annonce est celui que l&apos;acheteur voit et accepte (ou negocie via une offre).
+                  Il n&apos;existe pas de grille tarifaire imposee sur NaturalHairMarket. Vous etes libre de proposer le prix que vous estimez juste. Le prix affiche correspond a votre demande. L&apos;acheteur peut proposer une offre ; vous pouvez l&apos;accepter ou la refuser.
                 </p>
               </div>
             </div>
