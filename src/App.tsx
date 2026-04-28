@@ -19,6 +19,7 @@ import { SalesTerms } from './components/Legal/SalesTerms';
 import { RefundPolicy } from './components/Legal/RefundPolicy';
 import { SafetyQuality } from './components/Legal/SafetyQuality';
 import { SellerRules } from './components/Legal/SellerRules';
+import { SellMyHair } from './components/Legal/SellMyHair';
 import { BuyerRules } from './components/Legal/BuyerRules';
 import { FAQ } from './components/Legal/FAQ';
 import { AboutUs } from './components/Legal/AboutUs';
@@ -45,6 +46,7 @@ const LEGAL_PATHS: Record<string, string> = {
   '/refund': 'refund',
   '/safety': 'safety',
   '/seller-rules': 'seller-rules',
+  '/vendre-mes-cheveux': 'sell-my-hair',
   '/buyer-rules': 'buyer-rules',
   '/faq': 'faq',
   '/about': 'about',
@@ -53,13 +55,13 @@ const LEGAL_PATHS: Record<string, string> = {
 type ViewName =
   | 'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers'
   | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales'
-  | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'faq' | 'about'
+  | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'faq' | 'about'
   | 'admin-salons' | 'admin-listings' | 'salon-certifie' | 'seller-store';
 
 const HASH_VIEWS = new Set<string>([
   'landing', 'marketplace', 'profile', 'favorites', 'offers', 'transactions',
   'orders', 'cart', 'privacy', 'terms', 'sales', 'refund', 'safety',
-  'seller-rules', 'buyer-rules', 'faq', 'about', 'admin-salons',
+  'seller-rules', 'sell-my-hair', 'buyer-rules', 'faq', 'about', 'admin-salons',
   'admin-listings', 'salon-certifie',
 ]);
 
@@ -249,6 +251,7 @@ function AppContent() {
             {currentView === 'refund' && <RefundPolicy />}
             {currentView === 'safety' && <SafetyQuality />}
             {currentView === 'seller-rules' && <SellerRules />}
+            {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
             {currentView === 'buyer-rules' && <BuyerRules />}
             {currentView === 'faq' && <FAQ onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
             {currentView === 'about' && <AboutUs onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
@@ -648,6 +651,7 @@ function AppContent() {
         {currentView === 'refund' && <RefundPolicy />}
         {currentView === 'safety' && <SafetyQuality />}
         {currentView === 'seller-rules' && <SellerRules />}
+        {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => navigateToView('marketplace')} />}
         {currentView === 'buyer-rules' && <BuyerRules />}
         {currentView === 'faq' && <FAQ onClose={() => navigateToView('marketplace')} />}
         {currentView === 'about' && <AboutUs onClose={() => navigateToView('marketplace')} />}
@@ -676,6 +680,13 @@ function AppContent() {
                 className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
               >
                 À propos
+              </a>
+              <a
+                href="/vendre-mes-cheveux"
+                onClick={(e) => { e.preventDefault(); navigateToView('sell-my-hair'); }}
+                className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
+              >
+                Vendre mes cheveux
               </a>
               <a
                 href="/faq"

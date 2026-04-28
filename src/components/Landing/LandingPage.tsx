@@ -10,7 +10,7 @@ type Listing = Database['public']['Tables']['listings']['Row'];
 
 interface LandingPageProps {
   onGetStarted: () => void;
-  onNavigate?: (view: 'faq' | 'about' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'buyer-rules' | 'privacy') => void;
+  onNavigate?: (view: 'faq' | 'about' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'privacy') => void;
 }
 
 export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
@@ -639,6 +639,12 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
                   className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
                 >
                   Sécurité & Qualité
+                </button>
+                <button
+                  onClick={() => onNavigate('sell-my-hair')}
+                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
+                >
+                  Vendre mes cheveux
                 </button>
                 <button
                   onClick={() => onNavigate('seller-rules')}
