@@ -10,10 +10,11 @@ type Listing = Database['public']['Tables']['listings']['Row'];
 
 interface LandingPageProps {
   onGetStarted: () => void;
+  onLogin?: () => void;
   onNavigate?: (view: 'faq' | 'about' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'privacy') => void;
 }
 
-export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
+export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPageProps) {
   const { t } = useLanguage();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -554,7 +555,7 @@ export function LandingPage({ onGetStarted, onNavigate }: LandingPageProps) {
             </p>
           </div>
           <button
-            onClick={onGetStarted}
+            onClick={onLogin ?? onGetStarted}
             className="bg-white text-emerald-700 px-6 py-3 rounded-lg text-base font-bold hover:bg-gray-50 transition-all transform hover:scale-105 shadow-xl"
           >
             Se connecter

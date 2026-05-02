@@ -220,6 +220,10 @@ function AppContent() {
         onGetStarted={() => {
           navigateToView('marketplace');
         }}
+        onLogin={() => {
+          setAuthMode('login');
+          setCurrentView('auth' as ViewName);
+        }}
         onNavigate={(view) => navigateToView(view)}
       />;
     }
