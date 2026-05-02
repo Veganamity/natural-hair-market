@@ -126,6 +126,19 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
 
+        {/* Grille tarifaire */}
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Grille tarifaire – Prix conseilles pour vendre ses cheveux</h2>
+          <p className="text-gray-500 mb-4 text-sm">Ces prix sont indicatifs. Sur NaturalHairMarket, c&apos;est vous qui fixez votre prix librement. Cette grille vous aide a vous positionner selon la longueur, la couleur et la qualite de vos cheveux.</p>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <img
+              src="/ab1b549f-6bc6-4966-b017-7d9be074b365.png"
+              alt="Grille tarifaire des cheveux bruts sur NaturalHairMarket - prix conseilles par longueur et couleur"
+              className="w-full h-auto"
+            />
+          </div>
+        </section>
+
         {/* Comment ca se passe */}
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Comment ca se passe ?</h2>
