@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { X, Upload, Image } from 'lucide-react';
+import { X, Upload, Image, ShieldCheck } from 'lucide-react';
 
 interface CreateListingFormProps {
   onClose: () => void;
