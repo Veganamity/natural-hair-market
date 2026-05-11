@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { X, Upload, Image, ShieldCheck } from 'lucide-react';
+import { X, Upload, Image } from 'lucide-react';
 
 interface CreateListingFormProps {
   onClose: () => void;
@@ -15,8 +15,6 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
   const [error, setError] = useState('');
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [lengthUnit, setLengthUnit] = useState<'cm' | 'inches'>('cm');
-  const [isVerifiedSalon, setIsVerifiedSalon] = useState<boolean | null>(null);
-  const [checkingVerification, setCheckingVerification] = useState(true);
 
   const [formData, setFormData] = useState({
     price: '',
@@ -35,31 +33,6 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
 
   const cmToInches = (cm: number) => Math.round(cm / 2.54);
   const inchesToCm = (inches: number) => Math.round(inches * 2.54);
-
-  useEffect(() => {
-    const checkSalonVerification = async () => {
-      if (!user) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_verified_salon, is_certified_salon')
-          .eq('id', user.id)
-          .single();
-
-        if (error) throw error;
-
-        setIsVerifiedSalon(data.is_verified_salon || data.is_certified_salon || false);
-      } catch (err) {
-        console.error('Error checking salon verification:', err);
-        setIsVerifiedSalon(false);
-      } finally {
-        setCheckingVerification(false);
-      }
-    };
-
-    checkSalonVerification();
-  }, [user]);
 
   const generateTitle = () => {
     const parts = [];
@@ -172,61 +145,6 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
       setLoading(false);
     }
   };
-
-  if (checkingVerification) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Vérification en cours...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isVerifiedSalon) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 mb-4">
-              <ShieldCheck className="h-8 w-8 text-amber-600" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              Certification Salon Requise
-            </h3>
-            <p className="text-gray-700 mb-6 text-left">
-              Pour garantir la qualité et l'authenticité des cheveux vendus sur notre plateforme, <strong>seuls les salons de coiffure certifiés</strong> peuvent publier des annonces.
-            </p>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
-              <h4 className="font-semibold text-blue-900 mb-2">Comment devenir salon certifié :</h4>
-              <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
-                <li>Allez dans votre <strong>Profil</strong></li>
-                <li>Cliquez sur <strong>"Demander la certification salon"</strong></li>
-                <li>Remplissez le formulaire avec votre <strong>numéro SIRET</strong></li>
-                <li>Téléchargez les documents justificatifs demandés</li>
-                <li>Attendez l'approbation de l'administrateur (24-48h)</li>
-              </ol>
-            </div>
-
-            <p className="text-sm text-gray-600 mb-6">
-              Une fois certifié, vous pourrez créer des annonces et vendre vos cheveux en toute sécurité.
-            </p>
-
-            <button
-              onClick={onClose}
-              className="w-full bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-            >
-              J'ai compris
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
