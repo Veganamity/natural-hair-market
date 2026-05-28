@@ -153,6 +153,9 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
 
       <section className="py-8 md:py-10 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
+          <p className="text-center text-gray-700 text-base md:text-lg mb-6 max-w-2xl mx-auto">
+            Bienvenue sur <strong>Natural Hair Market</strong>, la plateforme de référence pour l'<strong>achat</strong> et la <strong>vente</strong> de cheveux naturels.
+          </p>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
