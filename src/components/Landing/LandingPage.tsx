@@ -77,7 +77,7 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
             />
           </div>
           <h1 className="text-lg sm:text-xl md:text-2xl mb-2 font-bold leading-tight">
-            La 1ère Marketplace dédiée à l'achat et la vente de cheveux naturels
+            Achat et Vente de Cheveux Naturels Humains et Européens
           </h1>
           <p className="text-sm sm:text-base md:text-base mb-2 font-medium max-w-2xl mx-auto leading-relaxed opacity-90">
             Vous êtes un particulier ou un salon&nbsp;? Vendez vos cheveux naturels au meilleur prix. Vous êtes perruquier ou pro des extensions&nbsp;? Trouvez des cheveux de haute qualité en direct.
