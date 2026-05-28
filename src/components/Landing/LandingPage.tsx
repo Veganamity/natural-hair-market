@@ -1,4 +1,4 @@
-import { Search, Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield } from 'lucide-react';
+import { Search, Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Database } from '../../lib/database.types';
@@ -19,6 +19,22 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const faqItems = [
+    {
+      question: "Quels types de cheveux puis-je acheter ou vendre ?",
+      answer: "Sur Natural Hair Market, vous pouvez acheter et vendre tous types de cheveux humains : cheveux européens, cheveux brésiliens, cheveux indiens, lisses, bouclés, ou même des cheveux naturels colorés. La seule règle est de proposer des cheveux de qualité."
+    },
+    {
+      question: "La plateforme est-elle sécurisée pour les acheteurs et les vendeurs ?",
+      answer: "Absolument. Notre marketplace met en relation les acheteurs et les vendeurs dans un environnement de confiance, conçu spécifiquement pour le marché des cheveux naturels."
+    },
+    {
+      question: "Pourquoi choisir des cheveux humains naturels ?",
+      answer: "Les cheveux humains naturels offrent une durée de vie beaucoup plus longue, un aspect indétectable et peuvent être coiffés, lissés ou colorés exactement comme vos propres cheveux, contrairement aux fibres synthétiques."
+    }
+  ];
 
   useEffect(() => {
     fetchFeaturedListings();
@@ -470,56 +486,73 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
         </div>
       </section>
 
-      <section className="py-8 md:py-10 px-4 bg-gray-50">
+      <section className="py-12 md:py-16 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-6">
-            Comment fonctionne la Marketplace ?
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-bold text-emerald-600 mb-4">Pour les vendeurs</h3>
-              <ol className="space-y-4">
-                <li className="flex gap-3">
-                  <span className="font-bold text-emerald-600">1.</span>
-                  <span className="text-gray-700">Photographiez la mèche</span>
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
+              Comment fonctionne notre Marketplace ?
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Une plateforme simple et sécurisée pour mettre en relation vendeurs et acheteurs de cheveux humains naturels.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-white p-8 rounded-2xl shadow-lg border border-emerald-100 hover:shadow-xl transition-shadow">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800">Pour les Vendeurs</h3>
+              </div>
+              <p className="text-gray-600 leading-relaxed mb-6">
+                Vendez vos cheveux humains naturels facilement. Créez votre annonce en quelques clics, fixez votre prix et touchez des milliers d'acheteurs potentiels à la recherche de cheveux européens ou de cheveux naturels colorés.
+              </p>
+              <ol className="space-y-3">
+                <li className="flex gap-3 items-start">
+                  <span className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">1</span>
+                  <span className="text-gray-700">Photographiez et décrivez votre mèche</span>
                 </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-emerald-600">2.</span>
-                  <span className="text-gray-700">Remplissez les informations</span>
+                <li className="flex gap-3 items-start">
+                  <span className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">2</span>
+                  <span className="text-gray-700">Fixez votre prix librement</span>
                 </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-emerald-600">3.</span>
-                  <span className="text-gray-700">Publiez gratuitement</span>
+                <li className="flex gap-3 items-start">
+                  <span className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">3</span>
+                  <span className="text-gray-700">Publiez gratuitement en quelques secondes</span>
                 </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-emerald-600">4.</span>
-                  <span className="text-gray-700">Recevez des offres d'acheteurs</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-emerald-600">5.</span>
-                  <span className="text-gray-700">Vous encaissez 100% du prix</span>
+                <li className="flex gap-3 items-start">
+                  <span className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">4</span>
+                  <span className="text-gray-700">Encaissez 100% du montant demandé</span>
                 </li>
               </ol>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-lg">
-              <h3 className="text-xl font-bold text-teal-600 mb-4">Pour les acheteurs</h3>
-              <ol className="space-y-4">
-                <li className="flex gap-3">
-                  <span className="font-bold text-teal-600">1.</span>
-                  <span className="text-gray-700">Trouvez votre mèche idéale</span>
+            <div className="bg-white p-8 rounded-2xl shadow-lg border border-teal-100 hover:shadow-xl transition-shadow">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <ShoppingBag className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800">Pour les Acheteurs</h3>
+              </div>
+              <p className="text-gray-600 leading-relaxed mb-6">
+                Trouvez les cheveux parfaits. Parcourez nos annonces sécurisées pour acheter des extensions de cheveux naturels de haute qualité, directement auprès de particuliers ou de professionnels.
+              </p>
+              <ol className="space-y-3">
+                <li className="flex gap-3 items-start">
+                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">1</span>
+                  <span className="text-gray-700">Parcourez les annonces et filtrez selon vos critères</span>
                 </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-teal-600">2.</span>
-                  <span className="text-gray-700">Achat immédiat ou offre d'achat</span>
+                <li className="flex gap-3 items-start">
+                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">2</span>
+                  <span className="text-gray-700">Achat immédiat ou faites une offre</span>
                 </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-teal-600">3.</span>
-                  <span className="text-gray-700">Payez la mèche + 10% de commission</span>
+                <li className="flex gap-3 items-start">
+                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">3</span>
+                  <span className="text-gray-700">Payez en toute sécurité (prix + 10% de commission)</span>
                 </li>
-                <li className="flex gap-3">
-                  <span className="font-bold text-teal-600">4.</span>
-                  <span className="text-gray-700">Réceptionnez chez vous</span>
+                <li className="flex gap-3 items-start">
+                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">4</span>
+                  <span className="text-gray-700">Recevez vos cheveux naturels à domicile</span>
                 </li>
               </ol>
             </div>
@@ -560,6 +593,45 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
           >
             Se connecter
           </button>
+        </div>
+      </section>
+
+      <section className="py-12 md:py-16 px-4 bg-white">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
+              Foire Aux Questions (FAQ)
+            </h2>
+            <p className="text-gray-600">
+              Tout ce que vous devez savoir sur l'achat et la vente de cheveux naturels.
+            </p>
+          </div>
+          <div className="space-y-3">
+            {faqItems.map((item, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                  className="w-full flex items-center justify-between px-6 py-5 text-left bg-white hover:bg-gray-50 transition-colors"
+                  aria-expanded={openFaq === index}
+                >
+                  <span className="font-semibold text-gray-800 pr-4">{item.question}</span>
+                  <ChevronDown
+                    className={`w-5 h-5 text-emerald-600 flex-shrink-0 transition-transform duration-300 ${openFaq === index ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${openFaq === index ? 'max-h-96' : 'max-h-0'}`}
+                >
+                  <div className="px-6 pb-5 pt-1 text-gray-600 leading-relaxed border-t border-gray-100 bg-gray-50">
+                    {item.answer}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
