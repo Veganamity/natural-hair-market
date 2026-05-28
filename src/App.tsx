@@ -23,6 +23,7 @@ import { SellMyHair } from './components/Legal/SellMyHair';
 import { BuyerRules } from './components/Legal/BuyerRules';
 import { FAQ } from './components/Legal/FAQ';
 import { AboutUs } from './components/Legal/AboutUs';
+import { GuideCoupe } from './components/Legal/GuideCoupe';
 import SalonVerificationAdmin from './components/Admin/SalonVerificationAdmin';
 import ListingAdmin from './components/Admin/ListingAdmin';
 import SalonCertificationForm from './components/Salon/SalonCertificationForm';
@@ -51,19 +52,21 @@ const LEGAL_PATHS: Record<string, string> = {
   '/faq': 'faq',
   '/about': 'about',
   '/sell-my-hair': 'sell-my-hair',
+  '/guide-coupe-conservation': 'guide-coupe',
 };
 
 type ViewName =
   | 'landing' | 'marketplace' | 'profile' | 'favorites' | 'offers'
   | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales'
   | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'faq' | 'about'
+  | 'guide-coupe'
   | 'admin-salons' | 'admin-listings' | 'salon-certifie' | 'seller-store';
 
 const HASH_VIEWS = new Set<string>([
   'landing', 'marketplace', 'profile', 'favorites', 'offers', 'transactions',
   'orders', 'cart', 'privacy', 'terms', 'sales', 'refund', 'safety',
-  'seller-rules', 'sell-my-hair', 'buyer-rules', 'faq', 'about', 'admin-salons',
-  'admin-listings', 'salon-certifie',
+  'seller-rules', 'sell-my-hair', 'buyer-rules', 'faq', 'about', 'guide-coupe',
+  'admin-salons', 'admin-listings', 'salon-certifie',
 ]);
 
 function getInitialView(): ViewName {
@@ -228,7 +231,7 @@ function AppContent() {
       />;
     }
 
-    const PUBLIC_VIEWS = new Set(['faq', 'about', 'sell-my-hair']);
+    const PUBLIC_VIEWS = new Set(['faq', 'about', 'sell-my-hair', 'guide-coupe']);
     if (LEGAL_PATHS[`/${currentView}`] !== undefined || PUBLIC_VIEWS.has(currentView)) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
@@ -261,6 +264,7 @@ function AppContent() {
             {currentView === 'buyer-rules' && <BuyerRules />}
             {currentView === 'faq' && <FAQ onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
             {currentView === 'about' && <AboutUs onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
+            {currentView === 'guide-coupe' && <GuideCoupe onStartSelling={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
           </main>
         </div>
       );
@@ -661,6 +665,7 @@ function AppContent() {
         {currentView === 'buyer-rules' && <BuyerRules />}
         {currentView === 'faq' && <FAQ onClose={() => navigateToView('marketplace')} />}
         {currentView === 'about' && <AboutUs onClose={() => navigateToView('marketplace')} />}
+        {currentView === 'guide-coupe' && <GuideCoupe onStartSelling={() => navigateToView('sell-my-hair')} />}
       </main>
 
       {showCreateListing && (
@@ -693,6 +698,13 @@ function AppContent() {
                 className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
               >
                 Vendre mes cheveux
+              </a>
+              <a
+                href="/guide-coupe-conservation"
+                onClick={(e) => { e.preventDefault(); navigateToView('guide-coupe'); }}
+                className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
+              >
+                Guide de coupe et conservation
               </a>
               <a
                 href="/faq"
