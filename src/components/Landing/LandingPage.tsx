@@ -674,72 +674,20 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
             </div>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 mb-6">
-            {onNavigate && (
-              <>
-                <button
-                  onClick={() => onNavigate('about')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  À propos
-                </button>
-                <button
-                  onClick={() => onNavigate('faq')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  FAQ
-                </button>
-                <button
-                  onClick={() => onNavigate('terms')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  CGU
-                </button>
-                <button
-                  onClick={() => onNavigate('sales')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  CGV
-                </button>
-                <button
-                  onClick={() => onNavigate('refund')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  Remboursements
-                </button>
-                <button
-                  onClick={() => onNavigate('safety')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  Sécurité & Qualité
-                </button>
-                <button
-                  onClick={() => onNavigate('sell-my-hair')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  Vendre mes cheveux
-                </button>
-                <button
-                  onClick={() => onNavigate('seller-rules')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  Règlement vendeur
-                </button>
-                <button
-                  onClick={() => onNavigate('buyer-rules')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  Règlement acheteur
-                </button>
-                <button
-                  onClick={() => onNavigate('privacy')}
-                  className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
-                >
-                  Politique de confidentialité
-                </button>
-              </>
-            )}
-          </div>
+          <nav className="flex flex-wrap justify-center gap-4 mb-6">
+            <a href="/a-propos" onClick={(e) => { e.preventDefault(); onNavigate?.('about'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">À propos</a>
+            <a href="/contact" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Contact</a>
+            <a href="/mentions-legales" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Mentions légales</a>
+            <a href="/faq" onClick={(e) => { e.preventDefault(); onNavigate?.('faq'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">FAQ</a>
+            <a href="/cgu" onClick={(e) => { e.preventDefault(); onNavigate?.('terms'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">CGU</a>
+            <a href="/cgv" onClick={(e) => { e.preventDefault(); onNavigate?.('sales'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">CGV</a>
+            <a href="/remboursements" onClick={(e) => { e.preventDefault(); onNavigate?.('refund'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Remboursements</a>
+            <a href="/securite-qualite" onClick={(e) => { e.preventDefault(); onNavigate?.('safety'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Sécurité & Qualité</a>
+            <a href="/vendre-mes-cheveux" onClick={(e) => { e.preventDefault(); onNavigate?.('sell-my-hair'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Vendre mes cheveux</a>
+            <a href="/reglement-vendeur" onClick={(e) => { e.preventDefault(); onNavigate?.('seller-rules'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Règlement vendeur</a>
+            <a href="/reglement-acheteur" onClick={(e) => { e.preventDefault(); onNavigate?.('buyer-rules'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Règlement acheteur</a>
+            <a href="/politique-de-confidentialite" onClick={(e) => { e.preventDefault(); onNavigate?.('privacy'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Politique de confidentialité</a>
+          </nav>
 
           <p className="text-sm text-gray-400 text-center">
             © 2025 Marketplace de cheveux humains naturels & colorés. Tous droits réservés.
