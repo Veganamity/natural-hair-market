@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { X, Upload, Image, ShieldCheck } from 'lucide-react';
+import { X, Upload, Image, ShieldCheck, FileText } from 'lucide-react';
 
 interface CreateListingFormProps {
   onClose: () => void;
@@ -34,6 +34,56 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
   const cmToInches = (cm: number) => Math.round(cm / 2.54);
   const inchesToCm = (inches: number) => Math.round(inches * 2.54);
 
+  const hairTypeLabels: Record<string, string> = {
+    straight: 'raides',
+    wavy: 'ondulés',
+    curly: 'bouclés',
+    coily: 'frisés',
+  };
+
+  const conditionLabels: Record<string, string> = {
+    excellent: 'excellent',
+    good: 'bon',
+    fair: 'moyen',
+  };
+
+  const generateDescription = (): string => {
+    const lengthCm = formData.hair_length ? parseInt(formData.hair_length.replace('cm', '')) : null;
+    const lengthInches = lengthCm ? cmToInches(lengthCm) : null;
+    const weightNum = formData.hair_weight ? formData.hair_weight.replace('g', '') : null;
+    const type = hairTypeLabels[formData.hair_type] || formData.hair_type;
+    const condition = conditionLabels[formData.condition] || formData.condition;
+
+    const parts: string[] = [];
+
+    parts.push(
+      `Cette annonce propose des cheveux ${type}${formData.hair_color ? ` de couleur ${formData.hair_color}` : ''}.`
+    );
+
+    if (lengthCm && lengthInches && weightNum) {
+      parts.push(`D'une longueur de ${lengthCm} cm (${lengthInches} pouces), cette pièce pèse environ ${weightNum} g.`);
+    } else if (lengthCm && lengthInches) {
+      parts.push(`D'une longueur de ${lengthCm} cm (${lengthInches} pouces).`);
+    }
+
+    const textureStr = formData.hair_texture ? `La texture est ${formData.hair_texture} et l'` : "L'";
+    parts.push(`${textureStr}article est dans un état ${condition}.`);
+
+    if (formData.country) {
+      parts.push(`Provenance : ${formData.country}.`);
+    }
+
+    if (formData.is_natural_color) {
+      parts.push('Ces cheveux sont naturels.');
+    }
+
+    if (formData.is_dyed || formData.is_treated) {
+      parts.push('Note : Cheveux colorés ou traités.');
+    }
+
+    return parts.join(' ');
+  };
+
   const generateTitle = () => {
     const parts = [];
 
@@ -41,12 +91,6 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
       parts.push(formData.hair_length);
     }
 
-    const hairTypeLabels: Record<string, string> = {
-      straight: 'raides',
-      wavy: 'ondulés',
-      curly: 'bouclés',
-      coily: 'frisés',
-    };
     parts.push(hairTypeLabels[formData.hair_type]);
 
     if (formData.hair_color) {
@@ -108,7 +152,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
 
     try {
       const title = generateTitle();
-      const description = `Cheveux ${formData.hair_type} de ${formData.hair_length}, couleur ${formData.hair_color}${formData.is_natural_color ? ' (naturelle)' : ''}${formData.is_dyed ? ', colorés' : ''}${formData.is_treated ? ', traités' : ''}. État: ${formData.condition}.`;
+      const description = generateDescription();
 
       if (!formData.certification_accepted) {
         throw new Error('Vous devez certifier l\'authenticité des cheveux pour publier cette annonce.');
@@ -517,6 +561,17 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 </label>
               </div>
             </div>
+          </div>
+
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm font-semibold text-gray-700">Aperçu de la description SEO</span>
+              <span className="text-xs text-gray-400 ml-auto">Générée automatiquement — lecture seule</span>
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed bg-white border border-gray-100 rounded-lg px-4 py-3 select-none">
+              {generateDescription() || <span className="text-gray-400 italic">Remplissez les champs ci-dessus pour voir la description générée.</span>}
+            </p>
           </div>
 
           <div className="flex gap-3 pt-4">

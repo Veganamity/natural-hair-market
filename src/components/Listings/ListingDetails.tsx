@@ -55,6 +55,19 @@ export function ListingDetails({
     fetchSeller();
   }, [listing.seller_id]);
 
+  useEffect(() => {
+    if (!listing.description) return;
+    const metaDesc = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    const prevContent = metaDesc?.getAttribute('content') ?? '';
+    if (metaDesc) metaDesc.setAttribute('content', listing.description.slice(0, 160));
+    const prevTitle = document.title;
+    document.title = `${listing.title} | Natural Hair Market`;
+    return () => {
+      if (metaDesc) metaDesc.setAttribute('content', prevContent);
+      document.title = prevTitle;
+    };
+  }, [listing.description, listing.title]);
+
   const hairTypeLabels: Record<string, string> = {
     straight: 'Raides',
     wavy: 'Ondulés',
