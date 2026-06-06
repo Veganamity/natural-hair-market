@@ -9,8 +9,6 @@
 
 import { useState } from 'react';
 import {
-  CheckCircle,
-  XCircle,
   ChevronDown,
   ChevronUp,
   Camera,
@@ -299,35 +297,38 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           </div>
         </section>
 
-        {/* Que faire avant l'envoi */}
+        {/* Processus de collecte - infographie */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Que faire avant l&apos;envoi ?</h2>
-          <p className="text-gray-500 mb-6 text-sm">Quelques precautions pour que votre colis arrive en parfait etat.</p>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              {[
-                { ok: true, text: "Attacher les cheveux en queue ou en tresse simple avant de les couper ou de les emballer" },
-                { ok: true, text: "Envelopper dans du papier de soie ou une pochette plastique pour eviter l'humidite" },
-                { ok: true, text: "Placer dans une enveloppe rigide ou une petite boite pour eviter l'ecrasement" },
-                { ok: true, text: "Utiliser un mode d'envoi avec suivi et numero de tracking valide" },
-                { ok: false, text: "Ne pas envoyer des cheveux humides ou mouilles (risque de moisissure)" },
-                { ok: false, text: "Ne pas plier la queue de cheval en deux si les cheveux sont longs" },
-                { ok: false, text: "Ne pas melanger plusieurs lots dans le meme emballage sans le preciser" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-start gap-3 text-sm text-gray-700">
-                  {item.ok
-                    ? <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                    : <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                  }
-                  {item.text}
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Le processus de collecte de cheveux</h2>
+          <p className="text-gray-500 mb-6 text-sm">Suivez ces 5 etapes pour preparer vos cheveux dans les meilleures conditions et maximiser leur valeur.</p>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <img
+              src="/398249a7-e404-4b31-8512-bf2eac66a382.png"
+              alt="Le processus de collecte de cheveux en 5 etapes : lavage, sechage, preparation des queues de cheval, mesure et coupe, tressage et mise en sac"
+              className="w-full h-auto"
+            />
+          </div>
+          <div className="mt-4 grid sm:grid-cols-5 gap-3">
+            {[
+              { num: 1, title: "Lavage", desc: "Laver pour nettoyer et desinfecter" },
+              { num: 2, title: "Sechage", desc: "Secher completement au seche-cheveux sans lisser" },
+              { num: 3, title: "Queues de cheval", desc: "Separer et securiser en queues individuelles" },
+              { num: 4, title: "Mesure & coupe", desc: "Minimum 15 cm, puis couper" },
+              { num: 5, title: "Mise en sac", desc: "Tresser et placer dans un sac congelation a fermeture" },
+            ].map((step) => (
+              <div key={step.num} className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
+                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white text-sm font-bold flex items-center justify-center mx-auto mb-2">
+                  {step.num}
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <p className="text-amber-800 text-sm">
-                <strong>Bon a savoir :</strong> Les cheveux envoyes doivent correspondre fidelement aux photos et a la description de l&apos;annonce. Tout ecart constate par l&apos;acheteur peut donner lieu a un litige.
-              </p>
-            </div>
+                <p className="text-xs font-semibold text-emerald-800 mb-1">{step.title}</p>
+                <p className="text-xs text-gray-600 leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <p className="text-amber-800 text-sm">
+              <strong>Longueur minimale&nbsp;: 15 cm.</strong> Pas de lissage, juste seche. Les cheveux envoyes doivent correspondre fidelement aux photos et a la description de l&apos;annonce.
+            </p>
           </div>
         </section>
 
