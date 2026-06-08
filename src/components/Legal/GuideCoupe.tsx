@@ -127,6 +127,21 @@ export function GuideCoupe({ onStartSelling }: GuideCoupeProps) {
         })}
       </div>
 
+      {/* Visual process infographic */}
+      <div className="bg-white rounded-2xl border border-emerald-200 shadow-sm overflow-hidden mb-8">
+        <div className="bg-emerald-50 border-b border-emerald-100 px-6 py-4">
+          <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <Scissors className="w-5 h-5 text-emerald-600" />
+            Le processus en un coup d'oeil
+          </h2>
+        </div>
+        <img
+          src="/398249a7-e404-4b31-8512-bf2eac66a382 copy copy.png"
+          alt="Le processus de collecte de cheveux en 5 étapes : lavage, séchage, préparation des queues de cheval, mesure et coupe, tressage et mise en sac"
+          className="w-full h-auto"
+        />
+      </div>
+
       {/* Summary checklist */}
       <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:p-8 mb-10">
         <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
