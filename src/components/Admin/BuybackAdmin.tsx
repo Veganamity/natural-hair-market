@@ -148,6 +148,31 @@ export default function BuybackAdmin() {
     setActionLoading(null);
   };
 
+  const openLabelPdf = async (id: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-buyback-label`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ buybackId: id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Erreur inconnue' }));
+        throw new Error(err.error || "Impossible de telecharger l'etiquette");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      showToast('error', (err as Error).message || "Erreur lors du telechargement de l'etiquette.");
+    }
+  };
+
   const generateLabel = async (id: string) => {
     setLabelLoading(id);
     try {
@@ -170,9 +195,9 @@ export default function BuybackAdmin() {
         label_generated_at: new Date().toISOString(),
       } : r));
       showToast('success', 'Etiquette generee avec succes !');
-      if (data.shipping_label_url) window.open(data.shipping_label_url, '_blank');
+      await openLabelPdf(id);
     } catch (err) {
-      showToast('error', (err as Error).message || 'Erreur lors de la generation de l\'etiquette.');
+      showToast('error', (err as Error).message || "Erreur lors de la generation de l'etiquette.");
     }
     setLabelLoading(null);
   };
@@ -547,15 +572,13 @@ export default function BuybackAdmin() {
                                   <p className="text-xs text-gray-500 font-mono mt-0.5">Suivi : {req.shipping_tracking_number}</p>
                                 )}
                               </div>
-                              <a
-                                href={req.shipping_label_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <button
+                                onClick={() => openLabelPdf(req.id)}
                                 className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
                               >
                                 <ExternalLink className="w-3.5 h-3.5" />
                                 Ouvrir PDF
-                              </a>
+                              </button>
                             </div>
                           </div>
                         ) : (
