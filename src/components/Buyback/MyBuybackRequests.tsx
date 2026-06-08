@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import {
-  Scissors, Clock, CheckCircle, XCircle, Banknote, Package,
-  Calendar, ExternalLink, Truck, ChevronLeft, Palette, Ruler,
+  Scissors, Clock, CheckCircle, XCircle, Banknote,
+  Calendar, ChevronLeft, Palette, Ruler,
 } from 'lucide-react';
 
 interface BuybackRequest {
@@ -176,76 +176,22 @@ export default function MyBuybackRequests({ onBack }: Props) {
                   )}
 
                   {req.status === 'accepted' && (
-                    <div className="space-y-3">
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800">
-                        Demande acceptee ! Le virement bancaire sera effectue dans les 5 jours ouvrables sur votre IBAN.
-                      </div>
-                      {req.shipping_label_url ? (
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between gap-3">
-                          <div>
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <Truck className="w-3.5 h-3.5 text-emerald-600" />
-                              <p className="text-xs font-semibold text-emerald-700">Etiquette d'expedition disponible</p>
-                            </div>
-                            {req.shipping_tracking_number && (
-                              <p className="text-xs text-gray-500 font-mono">Suivi : {req.shipping_tracking_number}</p>
-                            )}
-                            <p className="text-xs text-gray-500 mt-0.5">Imprimez et collez cette etiquette sur votre colis.</p>
-                          </div>
-                          <a
-                            href={req.shipping_label_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-shrink-0 flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            PDF
-                          </a>
-                        </div>
-                      ) : (
-                        <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex items-center gap-2 text-sm text-gray-600">
-                          <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          L'etiquette d'expedition sera disponible ici une fois generee par notre equipe.
-                        </div>
-                      )}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800">
+                      Demande acceptee ! Le virement bancaire sera effectue dans les 5 jours ouvrables sur votre IBAN. Vous recevrez l'etiquette d'expedition par email.
                     </div>
                   )}
 
                   {req.status === 'paid' && (
-                    <div className="space-y-3">
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <CheckCircle className="w-4 h-4 text-emerald-600" />
-                          <p className="text-sm font-semibold text-emerald-700">Virement effectue</p>
-                        </div>
-                        {req.final_price != null && (
-                          <p className="text-sm text-gray-700">Montant : <span className="font-bold text-gray-900">{req.final_price} €</span></p>
-                        )}
-                        {req.paid_at && (
-                          <p className="text-xs text-gray-500 mt-0.5">Le {formatDate(req.paid_at)}</p>
-                        )}
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        <p className="text-sm font-semibold text-emerald-700">Virement effectue</p>
                       </div>
-                      {req.shipping_label_url && (
-                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-1.5">
-                            <Truck className="w-3.5 h-3.5 text-gray-500" />
-                            <div>
-                              <p className="text-xs font-semibold text-gray-700">Etiquette d'expedition</p>
-                              {req.shipping_tracking_number && (
-                                <p className="text-xs text-gray-500 font-mono">Suivi : {req.shipping_tracking_number}</p>
-                              )}
-                            </div>
-                          </div>
-                          <a
-                            href={req.shipping_label_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-shrink-0 flex items-center gap-1.5 bg-gray-700 hover:bg-gray-800 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            PDF
-                          </a>
-                        </div>
+                      {req.final_price != null && (
+                        <p className="text-sm text-gray-700">Montant : <span className="font-bold text-gray-900">{req.final_price} €</span></p>
+                      )}
+                      {req.paid_at && (
+                        <p className="text-xs text-gray-500 mt-0.5">Le {formatDate(req.paid_at)}</p>
                       )}
                     </div>
                   )}
