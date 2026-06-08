@@ -178,12 +178,16 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
     e.preventDefault();
     setSubmitError('');
 
-    if (!condition || !length) {
-      setSubmitError('Veuillez d\'abord utiliser le calculateur pour choisir votre type de cheveux et la longueur.');
+    if (!condition) {
+      setSubmitError('Veuillez selectionner l\'etat de vos cheveux.');
       return;
     }
-    if (!calculatedPrice) {
-      setSubmitError('Veuillez selectionner une couleur dans le calculateur.');
+    if (condition === 'natural' && !colorType) {
+      setSubmitError('Veuillez selectionner la couleur de vos cheveux.');
+      return;
+    }
+    if (!length) {
+      setSubmitError('Veuillez selectionner la longueur de vos cheveux.');
       return;
     }
 
@@ -217,7 +221,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           hair_condition: condition,
           hair_color: condition === 'natural' ? colorType || null : null,
           hair_length: length,
-          calculated_price: calculatedPrice,
+          calculated_price: calculatedPrice || 'Non calcule',
           status: 'pending',
         });
 
@@ -460,25 +464,87 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              {/* Recap calculateur */}
-              {calculatedPrice && (
-                <div className="mb-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
-                  <div>
-                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Vos cheveux selectionnés</p>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {condition === 'natural' ? 'Naturels' : 'Colores/Meches'}
-                      {condition === 'natural' && colorType ? ` — ${colorType === 'chestnut' ? 'Chatain/Brun' : 'Blond/Roux/Gris'}` : ''}
-                      {length ? ` — ${length}` : ''}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Estimation</p>
-                    <p className="text-lg font-black text-emerald-700">{calculatedPrice}</p>
-                  </div>
-                </div>
-              )}
+              <form onSubmit={handleSubmit} className="space-y-5">
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Caracteristiques des cheveux */}
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-4">
+                  <p className="text-sm font-bold text-emerald-800">Caracteristiques de vos cheveux</p>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">Etat <span className="text-red-500">*</span></label>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      {[
+                        { value: 'natural', label: 'Naturels (Vierges)', desc: 'Jamais colores ni traites' },
+                        { value: 'colored', label: 'Colores / Meches', desc: 'Coloration ou decoloration' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => { setCondition(opt.value as Condition); setColorType(''); setLength(''); }}
+                          className={`p-3 rounded-xl border-2 text-left transition-all ${
+                            condition === opt.value
+                              ? 'border-emerald-500 bg-white'
+                              : 'border-gray-200 bg-white hover:border-emerald-300'
+                          }`}
+                        >
+                          <p className={`font-semibold text-xs ${condition === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {condition === 'natural' && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">Couleur naturelle <span className="text-red-500">*</span></label>
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        {[
+                          { value: 'chestnut', label: 'Chatain / Brun', dot: 'bg-amber-800' },
+                          { value: 'blond_roux_gris', label: 'Blond / Roux / Gris', dot: 'bg-yellow-300 border border-yellow-400' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => { setColorType(opt.value as ColorType); setLength(''); }}
+                            className={`p-3 rounded-xl border-2 text-left transition-all flex items-center gap-2 ${
+                              colorType === opt.value
+                                ? 'border-emerald-500 bg-white'
+                                : 'border-gray-200 bg-white hover:border-emerald-300'
+                            }`}
+                          >
+                            <div className={`w-5 h-5 rounded-full flex-shrink-0 ${opt.dot}`} />
+                            <p className={`font-semibold text-xs ${colorType === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(condition === 'colored' || (condition === 'natural' && colorType)) && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">Longueur <span className="text-red-500">*</span></label>
+                      <select
+                        value={length}
+                        onChange={(e) => setLength(e.target.value)}
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-emerald-500 outline-none text-sm bg-white"
+                      >
+                        <option value="">-- Choisir une longueur --</option>
+                        {availableLengths.map((l) => (
+                          <option key={l} value={l}>{l}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {calculatedPrice && (
+                    <div className={`rounded-xl p-3 flex items-center justify-between gap-3 ${isPriceOnDemand(calculatedPrice) ? 'bg-amber-50 border border-amber-300' : 'bg-white border border-emerald-300'}`}>
+                      <p className="text-xs text-gray-600">Estimation de rachat</p>
+                      <p className={`text-lg font-black ${isPriceOnDemand(calculatedPrice) ? 'text-amber-700' : 'text-emerald-700'}`}>{calculatedPrice}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Coordonnees */}
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1.5">Prenom <span className="text-red-500">*</span></label>
