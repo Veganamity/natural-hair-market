@@ -27,6 +27,7 @@ import { GuideCoupe } from './components/Legal/GuideCoupe';
 import SalonVerificationAdmin from './components/Admin/SalonVerificationAdmin';
 import ListingAdmin from './components/Admin/ListingAdmin';
 import BuybackAdmin from './components/Admin/BuybackAdmin';
+import MyBuybackRequests from './components/Buyback/MyBuybackRequests';
 import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
 import { CartView } from './components/Cart/CartView';
@@ -103,7 +104,8 @@ type ViewName =
   | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales'
   | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'faq' | 'about'
   | 'guide-coupe'
-  | 'admin-salons' | 'admin-listings' | 'admin-buybacks' | 'salon-certifie' | 'seller-store';
+  | 'admin-salons' | 'admin-listings' | 'admin-buybacks' | 'salon-certifie' | 'seller-store'
+  | 'my-buybacks';
 
 function getInitialView(): ViewName {
   const pathname = window.location.pathname;
@@ -675,6 +677,7 @@ function AppContent() {
         {currentView === 'profile' && <ProfileView onNavigate={(view) => navigateToView(view as ViewName)} />}
         {currentView === 'admin-salons' && <SalonVerificationAdmin />}
         {currentView === 'admin-buybacks' && <BuybackAdmin />}
+        {currentView === 'my-buybacks' && <MyBuybackRequests onBack={() => navigateToView('profile')} />}
         {currentView === 'admin-listings' && (
           <ListingAdmin
             onViewListing={(listingId) => {

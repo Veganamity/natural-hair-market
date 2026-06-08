@@ -640,6 +640,28 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         )}
       </div>
 
+      {/* Mes demandes de rachat */}
+      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl shadow-md p-6 mb-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center">
+              <Scissors className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">Mes demandes de rachat</h2>
+              <p className="text-sm text-gray-600">Suivez le statut de vos demandes et recuperez vos etiquettes d'envoi</p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigate?.('my-buybacks')}
+            className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+          >
+            <Scissors className="w-5 h-5" />
+            Voir mes demandes
+          </button>
+        </div>
+      </div>
+
       {!profile.is_certified_salon && (
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl shadow-md p-6 mb-6">
           <div className="flex items-center justify-between">

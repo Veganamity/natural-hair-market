@@ -561,14 +561,13 @@ export default function BuybackAdmin() {
                         ) : (
                           <button
                             onClick={() => generateLabel(req.id)}
-                            disabled={labelLoading === req.id || !req.address_line1}
+                            disabled={labelLoading === req.id}
                             className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-900 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
-                            title={!req.address_line1 ? "Adresse du vendeur manquante" : ""}
                           >
                             {labelLoading === req.id
                               ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                               : <Package className="w-4 h-4" />}
-                            {!req.address_line1 ? 'Adresse manquante – etiquette impossible' : 'Generer l\'etiquette Sendcloud'}
+                            Generer l'etiquette Sendcloud
                           </button>
                         )}
                       </div>
