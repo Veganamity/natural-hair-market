@@ -39,8 +39,16 @@ import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, ArrowL
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-// Pages légales accessibles via une URL propre (sans #)
-const LEGAL_PATHS: Record<string, string> = {
+// Mapping complet path → view (toutes les vues ont une vraie URL propre)
+const PATH_TO_VIEW: Record<string, string> = {
+  '/': 'landing',
+  '/marketplace': 'marketplace',
+  '/profile': 'profile',
+  '/favorites': 'favorites',
+  '/offers': 'offers',
+  '/transactions': 'transactions',
+  '/orders': 'orders',
+  '/cart': 'cart',
   '/privacy': 'privacy',
   '/terms': 'terms',
   '/sales': 'sales',
@@ -48,11 +56,42 @@ const LEGAL_PATHS: Record<string, string> = {
   '/safety': 'safety',
   '/seller-rules': 'seller-rules',
   '/vendre-mes-cheveux': 'sell-my-hair',
+  '/sell-my-hair': 'sell-my-hair',
   '/buyer-rules': 'buyer-rules',
   '/faq': 'faq',
   '/about': 'about',
-  '/sell-my-hair': 'sell-my-hair',
   '/guide-coupe-conservation': 'guide-coupe',
+  '/admin-salons': 'admin-salons',
+  '/admin-listings': 'admin-listings',
+  '/salon-certifie': 'salon-certifie',
+  '/seller-store': 'seller-store',
+};
+
+// Mapping view → URL canonique
+const VIEW_TO_PATH: Record<string, string> = {
+  landing: '/',
+  marketplace: '/marketplace',
+  profile: '/profile',
+  favorites: '/favorites',
+  offers: '/offers',
+  transactions: '/transactions',
+  orders: '/orders',
+  cart: '/cart',
+  privacy: '/privacy',
+  terms: '/terms',
+  sales: '/sales',
+  refund: '/refund',
+  safety: '/safety',
+  'seller-rules': '/seller-rules',
+  'sell-my-hair': '/vendre-mes-cheveux',
+  'buyer-rules': '/buyer-rules',
+  faq: '/faq',
+  about: '/about',
+  'guide-coupe': '/guide-coupe-conservation',
+  'admin-salons': '/admin-salons',
+  'admin-listings': '/admin-listings',
+  'salon-certifie': '/salon-certifie',
+  'seller-store': '/seller-store',
 };
 
 type ViewName =
@@ -62,20 +101,13 @@ type ViewName =
   | 'guide-coupe'
   | 'admin-salons' | 'admin-listings' | 'salon-certifie' | 'seller-store';
 
-const HASH_VIEWS = new Set<string>([
-  'landing', 'marketplace', 'profile', 'favorites', 'offers', 'transactions',
-  'orders', 'cart', 'privacy', 'terms', 'sales', 'refund', 'safety',
-  'seller-rules', 'sell-my-hair', 'buyer-rules', 'faq', 'about', 'guide-coupe',
-  'admin-salons', 'admin-listings', 'salon-certifie',
-]);
-
 function getInitialView(): ViewName {
-  // Chemin propre (/privacy, /terms, etc.) — priorité absolue
-  const pathView = LEGAL_PATHS[window.location.pathname];
-  if (pathView) return pathView as ViewName;
-  // Hash legacy (#marketplace, etc.)
+  const pathname = window.location.pathname;
+  // Support legacy hash URLs lors d'une première visite
   const hash = window.location.hash.slice(1).split('?')[0].split('&')[0];
-  if (hash && HASH_VIEWS.has(hash)) return hash as ViewName;
+  const pathView = PATH_TO_VIEW[pathname];
+  if (pathView) return pathView as ViewName;
+  if (hash && PATH_TO_VIEW[`/${hash}`]) return PATH_TO_VIEW[`/${hash}`] as ViewName;
   return 'landing';
 }
 
@@ -101,7 +133,7 @@ function AppContent() {
     const redirectStatus = searchParams.get('redirect_status');
     if (paymentIntentId && redirectStatus === 'succeeded') {
       setPaymentSuccessMessage(t('payment.successMessage'));
-      window.history.replaceState({}, '', '#orders');
+      window.history.replaceState({ view: 'orders' }, '', '/orders');
       setCurrentView('orders');
       setTimeout(() => setPaymentSuccessMessage(null), 8000);
 
@@ -130,7 +162,7 @@ function AppContent() {
   useEffect(() => {
     if (!loading && user && currentView === 'landing') {
       setCurrentView('marketplace');
-      window.history.replaceState({ view: 'marketplace' }, '', '#marketplace');
+      window.history.replaceState({ view: 'marketplace' }, '', '/marketplace');
     }
   }, [user, loading]);
 
@@ -142,7 +174,7 @@ function AppContent() {
       }
       if (event === 'SIGNED_IN') {
         setCurrentView('marketplace');
-        window.history.replaceState({ view: 'marketplace' }, '', '#marketplace');
+        window.history.replaceState({ view: 'marketplace' }, '', '/marketplace');
       }
     });
 
@@ -154,22 +186,15 @@ function AppContent() {
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (event.state?.view) {
-        setCurrentView(event.state.view);
+        setCurrentView(event.state.view as ViewName);
         return;
       }
-      // Chemin propre (/privacy, etc.)
-      const pathView = LEGAL_PATHS[window.location.pathname];
+      const pathView = PATH_TO_VIEW[window.location.pathname];
       if (pathView) {
         setCurrentView(pathView as ViewName);
         return;
       }
-      // Hash legacy
-      const hash = window.location.hash.slice(1).split('?')[0].split('&')[0];
-      if (hash && !hash.includes('access_token') && !hash.includes('error') && HASH_VIEWS.has(hash)) {
-        setCurrentView(hash as ViewName);
-      } else {
-        setCurrentView('landing');
-      }
+      setCurrentView('landing');
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -190,23 +215,19 @@ function AppContent() {
     };
   }, [accountMenuOpen]);
 
-  // Navigation : pages légales → URL propre (/privacy), autres → hash (#marketplace)
   const navigateToView = (view: ViewName, listingId?: string | null) => {
     if (view === 'marketplace' && listingId === undefined) {
       setPreselectedListingId(null);
     }
     setCurrentView(view);
-    if (LEGAL_PATHS[`/${view}`] !== undefined) {
-      window.history.pushState({ view }, '', `/${view}`);
-    } else {
-      window.history.pushState({ view }, '', `#${view}`);
-    }
+    const path = VIEW_TO_PATH[view] ?? `/${view}`;
+    window.history.pushState({ view }, '', path);
   };
 
   const navigateToSellerStore = (sellerId: string) => {
     setSelectedSellerId(sellerId);
     setCurrentView('seller-store');
-    window.history.pushState({ view: 'seller-store' }, '', '#seller-store');
+    window.history.pushState({ view: 'seller-store' }, '', '/seller-store');
   };
 
   if (loading) {
