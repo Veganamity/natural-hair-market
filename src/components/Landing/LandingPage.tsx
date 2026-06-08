@@ -680,7 +680,7 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
           <nav className="flex flex-wrap justify-center gap-4 mb-6">
             <a href="/a-propos" onClick={(e) => { e.preventDefault(); onNavigate?.('about'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">À propos</a>
             <a href="/contact" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Contact</a>
-            <a href="/mentions-legales" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Mentions légales</a>
+            <a href="/mentions-legales" onClick={(e) => { e.preventDefault(); onNavigate?.('terms'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Mentions légales</a>
             <a href="/faq" onClick={(e) => { e.preventDefault(); onNavigate?.('faq'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">FAQ</a>
             <a href="/cgu" onClick={(e) => { e.preventDefault(); onNavigate?.('terms'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">CGU</a>
             <a href="/cgv" onClick={(e) => { e.preventDefault(); onNavigate?.('sales'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">CGV</a>

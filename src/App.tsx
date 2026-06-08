@@ -53,6 +53,8 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/cart': 'cart',
   '/privacy': 'privacy',
   '/terms': 'terms',
+  '/mentions-legales': 'terms',
+  '/mentions-legales': 'terms',
   '/sales': 'sales',
   '/refund': 'refund',
   '/safety': 'safety',
