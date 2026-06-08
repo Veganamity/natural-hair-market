@@ -38,35 +38,41 @@ interface SellMyHairProps {
 type Condition = 'natural' | 'colored';
 type ColorType = 'chestnut' | 'blond_roux_gris';
 
-const LENGTHS_NATURAL = ['15-25 cm', '25-35 cm', '35-45 cm', '45-55 cm', '55 cm+'];
-const LENGTHS_COLORED = ['30-45 cm'];
+const ALL_LENGTHS = ['15-25 cm', '25-35 cm', '35-45 cm', '45-55 cm', '55 cm+'];
 
-const PRICES: Record<ColorType, Record<string, string>> = {
+const PRICES_PER_100G: Record<'chestnut' | 'blond_roux_gris' | 'colored', Record<string, number>> = {
   chestnut: {
-    '15-25 cm': '5 €',
-    '25-35 cm': '20 €',
-    '35-45 cm': '45 €',
-    '45-55 cm': '80 €',
-    '55 cm+': '120 €',
+    '15-25 cm': 5,
+    '25-35 cm': 18,
+    '35-45 cm': 30,
+    '45-55 cm': 42,
+    '55 cm+': 55,
   },
   blond_roux_gris: {
-    '15-25 cm': '10 €',
-    '25-35 cm': '40 €',
-    '35-45 cm': '90 €',
-    '45-55 cm': '160 €',
-    '55 cm+': 'Sur devis – Mini 250 €',
+    '15-25 cm': 6,
+    '25-35 cm': 20,
+    '35-45 cm': 35,
+    '45-55 cm': 48,
+    '55 cm+': 65,
+  },
+  colored: {
+    '15-25 cm': 2,
+    '25-35 cm': 8,
+    '35-45 cm': 15,
+    '45-55 cm': 25,
+    '55 cm+': 35,
   },
 };
 
 function getPrice(condition: Condition, color: ColorType | '', length: string): string {
   if (!length) return '';
-  if (condition === 'colored') return '10 €';
+  if (condition === 'colored') {
+    const rate = PRICES_PER_100G.colored[length];
+    return rate != null ? `${rate} € / 100g` : '';
+  }
   if (!color) return '';
-  return PRICES[color][length] ?? '';
-}
-
-function isPriceOnDemand(price: string) {
-  return price.startsWith('Sur devis');
+  const rate = PRICES_PER_100G[color][length];
+  return rate != null ? `${rate} € / 100g` : '';
 }
 
 // --- FAQ ---
@@ -147,7 +153,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
   const [colorType, setColorType] = useState<ColorType | ''>('');
   const [length, setLength] = useState('');
 
-  const availableLengths = condition === 'colored' ? LENGTHS_COLORED : LENGTHS_NATURAL;
+  const availableLengths = ALL_LENGTHS;
   const calculatedPrice = condition ? getPrice(condition as Condition, colorType, length) : '';
 
   // --- Formulaire ---
@@ -379,17 +385,12 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
             {/* Resultat */}
             {calculatedPrice && (
-              <div className={`rounded-xl p-5 text-center border-2 ${isPriceOnDemand(calculatedPrice) ? 'bg-amber-50 border-amber-300' : 'bg-emerald-50 border-emerald-300'}`}>
-                <p className="text-sm font-medium text-gray-600 mb-1">Estimation de rachat</p>
-                <p className={`text-3xl font-black ${isPriceOnDemand(calculatedPrice) ? 'text-amber-700' : 'text-emerald-700'}`}>
+              <div className="rounded-xl p-5 text-center border-2 bg-emerald-50 border-emerald-300">
+                <p className="text-sm font-medium text-gray-600 mb-1">Tarif de rachat</p>
+                <p className="text-3xl font-black text-emerald-700">
                   {calculatedPrice}
                 </p>
-                {isPriceOnDemand(calculatedPrice) && (
-                  <p className="text-xs text-amber-600 mt-1">Prix exact sur devis apres reception et verification des cheveux.</p>
-                )}
-                {!isPriceOnDemand(calculatedPrice) && (
-                  <p className="text-xs text-emerald-600 mt-1">Prix indicatif sous reserve de verification a reception.</p>
-                )}
+                <p className="text-xs text-emerald-600 mt-1">Tarif par 100g — prix final apres pesee et verification a reception.</p>
                 <button
                   onClick={scrollToForm}
                   className="mt-4 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm"
@@ -550,9 +551,9 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                   )}
 
                   {calculatedPrice && (
-                    <div className={`rounded-xl p-3 flex items-center justify-between gap-3 ${isPriceOnDemand(calculatedPrice) ? 'bg-amber-50 border border-amber-300' : 'bg-white border border-emerald-300'}`}>
-                      <p className="text-xs text-gray-600">Estimation de rachat</p>
-                      <p className={`text-lg font-black ${isPriceOnDemand(calculatedPrice) ? 'text-amber-700' : 'text-emerald-700'}`}>{calculatedPrice}</p>
+                    <div className="rounded-xl p-3 flex items-center justify-between gap-3 bg-white border border-emerald-300">
+                      <p className="text-xs text-gray-600">Tarif de rachat</p>
+                      <p className="text-lg font-black text-emerald-700">{calculatedPrice}</p>
                     </div>
                   )}
                 </div>
