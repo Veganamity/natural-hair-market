@@ -29,6 +29,8 @@ import {
   CreditCard,
   Mail,
   Phone,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -147,14 +149,33 @@ const PREP_STEPS = [
   },
 ];
 
+interface Strand {
+  id: string;
+  condition: Condition;
+  colorType: ColorType | '';
+  length: string;
+  weightGrams: string;
+  rateStr: string;
+  exactPrice: number | null;
+}
+
+function strandLabel(s: Strand): string {
+  const condLabel = s.condition === 'natural' ? 'Naturels' : 'Colores';
+  const colorLabel = s.colorType === 'chestnut' ? ' Chatain/Brun' : s.colorType === 'blond_roux_gris' ? ' Blond/Roux' : '';
+  return `${condLabel}${colorLabel} — ${s.length}`;
+}
+
 export function SellMyHair({ onStartSelling }: SellMyHairProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // --- Calculateur ---
+  // --- Calculateur (etat de la meche en cours) ---
   const [condition, setCondition] = useState<Condition | ''>('');
   const [colorType, setColorType] = useState<ColorType | ''>('');
   const [length, setLength] = useState('');
   const [weightGrams, setWeightGrams] = useState('');
+
+  // --- Liste des meches ajoutees ---
+  const [strands, setStrands] = useState<Strand[]>([]);
 
   const availableLengths = ALL_LENGTHS;
   const rateStr = condition ? getPrice(condition as Condition, colorType, length) : '';
@@ -164,6 +185,46 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
     ? Math.round(ratePerHundred * grams / 100 * 100) / 100
     : null;
   const calculatedPrice = rateStr;
+
+  const canAddStrand = !!condition && (condition === 'colored' || !!colorType) && !!length;
+
+  const addStrand = () => {
+    if (!canAddStrand) return;
+    const strand: Strand = {
+      id: `${Date.now()}-${Math.random()}`,
+      condition: condition as Condition,
+      colorType: colorType as ColorType | '',
+      length,
+      weightGrams,
+      rateStr,
+      exactPrice,
+    };
+    setStrands(prev => [...prev, strand]);
+    setCondition('');
+    setColorType('');
+    setLength('');
+    setWeightGrams('');
+  };
+
+  const removeStrand = (id: string) => setStrands(prev => prev.filter(s => s.id !== id));
+
+  const totalExactPrice = strands.reduce((sum, s) => sum + (s.exactPrice ?? 0), 0);
+  const allStrandsHavePrice = strands.length > 0 && strands.every(s => s.exactPrice != null);
+
+  // Meche "courante" (si l'utilisateur n'a pas encore clique Ajouter)
+  const currentStrandAsStrands = (): Strand[] => {
+    if (strands.length > 0) return strands;
+    if (!condition || !length) return [];
+    return [{
+      id: 'current',
+      condition: condition as Condition,
+      colorType: colorType as ColorType | '',
+      length,
+      weightGrams,
+      rateStr,
+      exactPrice,
+    }];
+  };
 
   // --- Formulaire ---
   const formRef = useRef<HTMLDivElement>(null);
@@ -188,7 +249,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
     name: string; email: string; phone: string;
     condition: string; color: string; length: string; price: string;
     address: string; iban: string; holder: string;
-    submittedAt: string;
+    submittedAt: string; strands: Strand[];
   } | null>(null);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,18 +267,32 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
     e.preventDefault();
     setSubmitError('');
 
-    if (!condition) {
-      setSubmitError('Veuillez selectionner l\'etat de vos cheveux.');
+    const effectiveStrands = currentStrandAsStrands();
+
+    if (effectiveStrands.length === 0) {
+      setSubmitError('Veuillez ajouter au moins une meche avant de soumettre.');
       return;
     }
-    if (condition === 'natural' && !colorType) {
-      setSubmitError('Veuillez selectionner la couleur de vos cheveux.');
-      return;
+    for (const s of effectiveStrands) {
+      if (s.condition === 'natural' && !s.colorType) {
+        setSubmitError('Veuillez selectionner la couleur pour chaque meche naturelle.');
+        return;
+      }
     }
-    if (!length) {
-      setSubmitError('Veuillez selectionner la longueur de vos cheveux.');
-      return;
-    }
+
+    const primaryStrand = effectiveStrands[0];
+    const condition = primaryStrand.condition;
+    const colorType = primaryStrand.colorType;
+    const length = primaryStrand.length;
+    const totalGrams = effectiveStrands.reduce((sum, s) => sum + (parseFloat(s.weightGrams) || 0), 0);
+    const totalPrice = allStrandsHavePrice ? totalExactPrice : null;
+    const priceLabel = effectiveStrands.length === 1
+      ? (primaryStrand.exactPrice != null
+          ? `${primaryStrand.exactPrice.toFixed(2)} € (${primaryStrand.weightGrams}g × ${primaryStrand.rateStr})`
+          : primaryStrand.rateStr || 'Non calcule')
+      : totalPrice != null
+          ? `${totalPrice.toFixed(2)} € total (${effectiveStrands.length} meches)`
+          : `${effectiveStrands.length} meches – tarifs variables`;
 
     setSubmitting(true);
 
@@ -249,7 +324,17 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           hair_condition: condition,
           hair_color: condition === 'natural' ? colorType || null : null,
           hair_length: length,
-          calculated_price: calculatedPrice || 'Non calcule',
+          calculated_price: priceLabel,
+          weight_grams: totalGrams > 0 ? Math.round(totalGrams) : null,
+          exact_price: totalPrice,
+          strands_json: effectiveStrands.length > 1 ? effectiveStrands.map(s => ({
+            condition: s.condition,
+            colorType: s.colorType,
+            length: s.length,
+            weightGrams: s.weightGrams,
+            rateStr: s.rateStr,
+            exactPrice: s.exactPrice,
+          })) : null,
           address_line1: form.address_line1.trim() || null,
           postal_code: form.postal_code.trim() || null,
           city: form.city.trim() || null,
@@ -265,19 +350,29 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
         name: `${form.first_name.trim()} ${form.last_name.trim()}`,
         email: form.email.trim(),
         phone: form.phone.trim(),
-        condition: condition === 'colored' ? 'Colores / Meches' : 'Naturels (Vierges)',
-        color: colorType === 'chestnut' ? 'Chatain / Brun' : colorType === 'blond_roux_gris' ? 'Blond / Roux / Gris' : '',
-        length,
-        price: rateStr || 'Non calcule',
+        condition: effectiveStrands.length === 1
+          ? (condition === 'colored' ? 'Colores / Meches' : 'Naturels (Vierges)')
+          : `${effectiveStrands.length} meches`,
+        color: effectiveStrands.length === 1
+          ? (colorType === 'chestnut' ? 'Chatain / Brun' : colorType === 'blond_roux_gris' ? 'Blond / Roux / Gris' : '')
+          : '',
+        length: effectiveStrands.length === 1 ? length : effectiveStrands.map(s => s.length).join(', '),
+        price: priceLabel,
         address: [form.address_line1.trim(), form.postal_code.trim(), form.city.trim()].filter(Boolean).join(', '),
         iban: form.iban.trim(),
         holder: form.bank_holder_name.trim(),
         submittedAt: new Date().toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        strands: effectiveStrands,
       });
       setSubmitSuccess(true);
       setForm({ first_name: '', last_name: '', email: '', phone: '', salon_name: '', address_line1: '', postal_code: '', city: '', iban: '', bank_holder_name: '' });
       setPhotoFile(null);
       setPhotoPreview(null);
+      setStrands([]);
+      setCondition('');
+      setColorType('');
+      setLength('');
+      setWeightGrams('');
     } catch (err) {
       setSubmitError((err as Error).message || 'Une erreur est survenue. Veuillez reessayer.');
     } finally {
@@ -553,25 +648,43 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
                   <div className="border-t border-gray-100" />
 
-                  {/* Cheveux */}
+                  {/* Meches */}
                   <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Caracteristiques des cheveux</p>
-                    <div className="grid sm:grid-cols-3 gap-2">
-                      <div className="bg-gray-50 rounded-xl p-3">
-                        <p className="text-xs text-gray-500 mb-0.5">Etat</p>
-                        <p className="text-sm font-semibold text-gray-800">{submittedSummary.condition}</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+                      {submittedSummary.strands.length > 1 ? `Meches (${submittedSummary.strands.length})` : 'Caracteristiques des cheveux'}
+                    </p>
+                    {submittedSummary.strands.length > 1 ? (
+                      <div className="space-y-2">
+                        {submittedSummary.strands.map((s, i) => (
+                          <div key={s.id} className="bg-gray-50 rounded-xl px-3 py-2 flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-xs font-semibold text-gray-800">Meche {i + 1} — {strandLabel(s)}</p>
+                              {s.weightGrams && <p className="text-xs text-gray-500">{s.weightGrams}g</p>}
+                            </div>
+                            <p className="text-sm font-bold text-emerald-700 flex-shrink-0">
+                              {s.exactPrice != null ? `${s.exactPrice.toFixed(2)} €` : s.rateStr}
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                      {submittedSummary.color && (
+                    ) : (
+                      <div className="grid sm:grid-cols-3 gap-2">
                         <div className="bg-gray-50 rounded-xl p-3">
-                          <p className="text-xs text-gray-500 mb-0.5">Couleur</p>
-                          <p className="text-sm font-semibold text-gray-800">{submittedSummary.color}</p>
+                          <p className="text-xs text-gray-500 mb-0.5">Etat</p>
+                          <p className="text-sm font-semibold text-gray-800">{submittedSummary.condition}</p>
                         </div>
-                      )}
-                      <div className="bg-gray-50 rounded-xl p-3">
-                        <p className="text-xs text-gray-500 mb-0.5">Longueur</p>
-                        <p className="text-sm font-semibold text-gray-800">{submittedSummary.length}</p>
+                        {submittedSummary.color && (
+                          <div className="bg-gray-50 rounded-xl p-3">
+                            <p className="text-xs text-gray-500 mb-0.5">Couleur</p>
+                            <p className="text-sm font-semibold text-gray-800">{submittedSummary.color}</p>
+                          </div>
+                        )}
+                        <div className="bg-gray-50 rounded-xl p-3">
+                          <p className="text-xs text-gray-500 mb-0.5">Longueur</p>
+                          <p className="text-sm font-semibold text-gray-800">{submittedSummary.length}</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   <div className="border-t border-gray-100" />
@@ -626,102 +739,162 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <form onSubmit={handleSubmit} className="space-y-5">
 
-                {/* Caracteristiques des cheveux */}
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-4">
-                  <p className="text-sm font-bold text-emerald-800">Caracteristiques de vos cheveux</p>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-2">Etat <span className="text-red-500">*</span></label>
-                    <div className="grid sm:grid-cols-2 gap-2">
-                      {[
-                        { value: 'natural', label: 'Naturels (Vierges)', desc: 'Jamais colores ni traites' },
-                        { value: 'colored', label: 'Colores / Meches', desc: 'Coloration ou decoloration' },
-                      ].map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => { setCondition(opt.value as Condition); setColorType(''); setLength(''); }}
-                          className={`p-3 rounded-xl border-2 text-left transition-all ${
-                            condition === opt.value
-                              ? 'border-emerald-500 bg-white'
-                              : 'border-gray-200 bg-white hover:border-emerald-300'
-                          }`}
-                        >
-                          <p className={`font-semibold text-xs ${condition === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
-                        </button>
-                      ))}
-                    </div>
+                {/* Caracteristiques des cheveux – multi-meches */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-gray-800">Meches a racheter</p>
+                    {strands.length > 0 && (
+                      <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                        {strands.length} meche{strands.length > 1 ? 's' : ''} ajoutee{strands.length > 1 ? 's' : ''}
+                      </span>
+                    )}
                   </div>
 
-                  {condition === 'natural' && (
+                  {/* Meches ajoutees */}
+                  {strands.length > 0 && (
+                    <div className="space-y-2">
+                      {strands.map((s, i) => (
+                        <div key={s.id} className="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2.5">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-emerald-800">Meche {i + 1} — {strandLabel(s)}</p>
+                            <p className="text-xs text-emerald-600 mt-0.5">
+                              {s.exactPrice != null
+                                ? `${s.exactPrice.toFixed(2)} € (${s.weightGrams}g × ${s.rateStr})`
+                                : s.rateStr || ''}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeStrand(s.id)}
+                            className="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      {/* Total */}
+                      {strands.length > 1 && (
+                        <div className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-2.5">
+                          <p className="text-xs font-bold text-gray-300">Total estimatif</p>
+                          <p className="text-base font-black text-emerald-400">
+                            {allStrandsHavePrice ? `${totalExactPrice.toFixed(2)} €` : 'A determiner'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Formulaire d'ajout de meche */}
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-4">
+                    <p className="text-xs font-bold text-emerald-800">
+                      {strands.length === 0 ? 'Caracteristiques de votre meche' : 'Ajouter une autre meche'}
+                    </p>
+
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-2">Couleur naturelle <span className="text-red-500">*</span></label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">Etat <span className="text-red-500">*</span></label>
                       <div className="grid sm:grid-cols-2 gap-2">
                         {[
-                          { value: 'chestnut', label: 'Chatain / Brun', dot: 'bg-amber-800' },
-                          { value: 'blond_roux_gris', label: 'Blond / Roux / Gris', dot: 'bg-yellow-300 border border-yellow-400' },
+                          { value: 'natural', label: 'Naturels (Vierges)', desc: 'Jamais colores ni traites' },
+                          { value: 'colored', label: 'Colores / Meches', desc: 'Coloration ou decoloration' },
                         ].map((opt) => (
                           <button
                             key={opt.value}
                             type="button"
-                            onClick={() => { setColorType(opt.value as ColorType); setLength(''); }}
-                            className={`p-3 rounded-xl border-2 text-left transition-all flex items-center gap-2 ${
-                              colorType === opt.value
+                            onClick={() => { setCondition(opt.value as Condition); setColorType(''); setLength(''); }}
+                            className={`p-3 rounded-xl border-2 text-left transition-all ${
+                              condition === opt.value
                                 ? 'border-emerald-500 bg-white'
                                 : 'border-gray-200 bg-white hover:border-emerald-300'
                             }`}
                           >
-                            <div className={`w-5 h-5 rounded-full flex-shrink-0 ${opt.dot}`} />
-                            <p className={`font-semibold text-xs ${colorType === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
+                            <p className={`font-semibold text-xs ${condition === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
                           </button>
                         ))}
                       </div>
                     </div>
-                  )}
 
-                  {(condition === 'colored' || (condition === 'natural' && colorType)) && (
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-2">Longueur <span className="text-red-500">*</span></label>
-                      <select
-                        value={length}
-                        onChange={(e) => setLength(e.target.value)}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-emerald-500 outline-none text-sm bg-white"
-                      >
-                        <option value="">-- Choisir une longueur --</option>
-                        {availableLengths.map((l) => (
-                          <option key={l} value={l}>{l}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {rateStr && (
-                    <div className="space-y-2">
+                    {condition === 'natural' && (
                       <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Poids estimé (grammes)</label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min="1"
-                            max="2000"
-                            step="1"
-                            placeholder="Ex : 150"
-                            value={weightGrams}
-                            onChange={(e) => setWeightGrams(e.target.value)}
-                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:border-emerald-500 outline-none bg-white"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-400">g</span>
+                        <label className="block text-xs font-semibold text-gray-700 mb-2">Couleur naturelle <span className="text-red-500">*</span></label>
+                        <div className="grid sm:grid-cols-2 gap-2">
+                          {[
+                            { value: 'chestnut', label: 'Chatain / Brun', dot: 'bg-amber-800' },
+                            { value: 'blond_roux_gris', label: 'Blond / Roux / Gris', dot: 'bg-yellow-300 border border-yellow-400' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => { setColorType(opt.value as ColorType); setLength(''); }}
+                              className={`p-3 rounded-xl border-2 text-left transition-all flex items-center gap-2 ${
+                                colorType === opt.value
+                                  ? 'border-emerald-500 bg-white'
+                                  : 'border-gray-200 bg-white hover:border-emerald-300'
+                              }`}
+                            >
+                              <div className={`w-5 h-5 rounded-full flex-shrink-0 ${opt.dot}`} />
+                              <p className={`font-semibold text-xs ${colorType === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
+                            </button>
+                          ))}
                         </div>
                       </div>
-                      <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${exactPrice != null ? 'bg-emerald-50 border-emerald-300' : 'bg-gray-50 border-gray-200'}`}>
-                        <p className="text-xs text-gray-600">{exactPrice != null ? `Estimation pour ${grams} g` : 'Tarif / 100g'}</p>
-                        <p className={`text-lg font-black ${exactPrice != null ? 'text-emerald-700' : 'text-gray-500'}`}>
-                          {exactPrice != null ? `${exactPrice.toFixed(2)} €` : rateStr}
-                        </p>
+                    )}
+
+                    {(condition === 'colored' || (condition === 'natural' && colorType)) && (
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-2">Longueur <span className="text-red-500">*</span></label>
+                        <select
+                          value={length}
+                          onChange={(e) => { setLength(e.target.value); setWeightGrams(''); }}
+                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-emerald-500 outline-none text-sm bg-white"
+                        >
+                          <option value="">-- Choisir une longueur --</option>
+                          {availableLengths.map((l) => (
+                            <option key={l} value={l}>{l}</option>
+                          ))}
+                        </select>
                       </div>
-                    </div>
-                  )}
+                    )}
+
+                    {rateStr && (
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Poids (grammes)</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="1"
+                              max="2000"
+                              step="1"
+                              placeholder="Ex : 150"
+                              value={weightGrams}
+                              onChange={(e) => setWeightGrams(e.target.value)}
+                              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:border-emerald-500 outline-none bg-white"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-400">g</span>
+                          </div>
+                        </div>
+                        <div className={`rounded-xl p-2.5 flex items-center justify-between gap-3 border ${exactPrice != null ? 'bg-white border-emerald-300' : 'bg-white border-gray-200'}`}>
+                          <p className="text-xs text-gray-600">{exactPrice != null ? `Estimation pour ${grams}g` : 'Tarif / 100g'}</p>
+                          <p className={`text-sm font-black ${exactPrice != null ? 'text-emerald-700' : 'text-gray-500'}`}>
+                            {exactPrice != null ? `${exactPrice.toFixed(2)} €` : rateStr}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Bouton Ajouter cette meche */}
+                    {canAddStrand && (
+                      <button
+                        type="button"
+                        onClick={addStrand}
+                        className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-emerald-400 hover:border-emerald-600 hover:bg-emerald-100 text-emerald-700 font-semibold py-2.5 rounded-xl transition-all text-sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                        {strands.length === 0 ? 'Ajouter cette meche' : 'Ajouter une meche supplementaire'}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Coordonnees */}

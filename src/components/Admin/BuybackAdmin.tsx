@@ -28,6 +28,12 @@ interface BuybackRequest {
   shipping_label_url: string | null;
   shipping_tracking_number: string | null;
   label_generated_at: string | null;
+  weight_grams: number | null;
+  exact_price: number | null;
+  strands_json: Array<{
+    condition: string; colorType: string; length: string;
+    weightGrams: string; rateStr: string; exactPrice: number | null;
+  }> | null;
 }
 
 const CONDITION_LABELS: Record<string, string> = {
@@ -339,24 +345,58 @@ export default function BuybackAdmin() {
 
                     {/* Colonne 2 : Caracteristiques */}
                     <div className="space-y-3">
-                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide">Caracteristiques</h3>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Palette className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">
-                            <span className="font-medium">{CONDITION_LABELS[req.hair_condition]}</span>
-                            {req.hair_color && <span className="text-gray-500"> — {COLOR_LABELS[req.hair_color]}</span>}
-                          </span>
+                      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+                        Caracteristiques{req.strands_json && req.strands_json.length > 0 ? ` (${req.strands_json.length} meches)` : ''}
+                      </h3>
+                      {req.strands_json && req.strands_json.length > 0 ? (
+                        /* Multi-meches */
+                        <div className="space-y-1.5">
+                          {req.strands_json.map((s, i) => (
+                            <div key={i} className="bg-gray-50 rounded-lg px-3 py-2 flex items-center justify-between gap-2">
+                              <div>
+                                <p className="text-xs font-semibold text-gray-800">
+                                  Meche {i + 1} – {CONDITION_LABELS[s.condition] || s.condition}
+                                  {s.colorType ? ` – ${COLOR_LABELS[s.colorType] || s.colorType}` : ''}
+                                </p>
+                                <p className="text-xs text-gray-500">{s.length}{s.weightGrams ? ` · ${s.weightGrams}g` : ''}</p>
+                              </div>
+                              <p className="text-sm font-bold text-emerald-700 flex-shrink-0">
+                                {s.exactPrice != null ? `${s.exactPrice.toFixed(2)} €` : s.rateStr}
+                              </p>
+                            </div>
+                          ))}
+                          {req.exact_price != null && (
+                            <div className="flex items-center justify-between bg-emerald-600 rounded-lg px-3 py-1.5">
+                              <p className="text-xs font-bold text-white">Total</p>
+                              <p className="text-sm font-black text-white">{req.exact_price} €</p>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Ruler className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">Longueur : <span className="font-medium">{req.hair_length}</span></span>
+                      ) : (
+                        /* Meche unique */
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Palette className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                            <span className="text-sm text-gray-700">
+                              <span className="font-medium">{CONDITION_LABELS[req.hair_condition]}</span>
+                              {req.hair_color && <span className="text-gray-500"> — {COLOR_LABELS[req.hair_color]}</span>}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Ruler className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                            <span className="text-sm text-gray-700">
+                              {req.hair_length}
+                              {req.weight_grams ? <span className="text-gray-500"> · {req.weight_grams}g</span> : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Euro className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                            <span className="text-sm font-bold text-emerald-700">
+                              {req.exact_price != null ? `${req.exact_price} €` : req.calculated_price}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Euro className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">Prix calcule : <span className="font-bold text-emerald-700">{req.calculated_price}</span></span>
-                        </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Colonne 3 : Photo */}
