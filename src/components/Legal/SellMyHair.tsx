@@ -529,28 +529,80 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               </div>
             )}
 
-            {/* Resultat */}
+            {/* Meches deja ajoutees */}
+            {strands.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-gray-700">
+                  Meches ajoutees ({strands.length})
+                </p>
+                {strands.map((s, i) => (
+                  <div key={s.id} className="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-emerald-800">Meche {i + 1} — {strandLabel(s)}</p>
+                      <p className="text-xs text-emerald-600 mt-0.5">
+                        {s.exactPrice != null
+                          ? `${s.exactPrice.toFixed(2)} € (${s.weightGrams}g × ${s.rateStr})`
+                          : `Tarif : ${s.rateStr}`}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeStrand(s.id)}
+                      className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {strands.length > 1 && (
+                  <div className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-3">
+                    <p className="text-sm font-bold text-gray-300">Total estimatif ({strands.length} meches)</p>
+                    <p className="text-xl font-black text-emerald-400">
+                      {allStrandsHavePrice ? `${totalExactPrice.toFixed(2)} €` : 'Prix variables'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Resultat meche courante */}
             {rateStr && (
-              <div className={`rounded-xl p-5 text-center border-2 ${exactPrice != null ? 'bg-emerald-50 border-emerald-400' : 'bg-gray-50 border-gray-200'}`}>
-                <p className="text-sm font-medium text-gray-600 mb-1">Estimation de rachat</p>
+              <div className={`rounded-xl p-5 border-2 ${exactPrice != null ? 'bg-emerald-50 border-emerald-400' : 'bg-gray-50 border-gray-200'}`}>
+                <p className="text-sm font-medium text-gray-600 mb-1 text-center">
+                  {strands.length > 0 ? 'Cette meche' : 'Estimation de rachat'}
+                </p>
                 {exactPrice != null ? (
-                  <>
+                  <div className="text-center">
                     <p className="text-4xl font-black text-emerald-700">{exactPrice.toFixed(2)} €</p>
                     <p className="text-xs text-emerald-600 mt-1">Pour {grams} g — base {rateStr}</p>
-                  </>
+                  </div>
                 ) : (
-                  <>
+                  <div className="text-center">
                     <p className="text-2xl font-black text-gray-400">{rateStr}</p>
                     <p className="text-xs text-gray-500 mt-1">Entrez le poids pour obtenir votre estimation precise.</p>
-                  </>
+                  </div>
                 )}
-                <p className="text-xs text-gray-400 mt-2">Prix final confirme apres pesee et verification a reception.</p>
+                <p className="text-xs text-gray-400 mt-2 text-center">Prix final confirme apres pesee et verification a reception.</p>
+
+                {/* Bouton Ajouter cette meche */}
+                {canAddStrand && (
+                  <button
+                    type="button"
+                    onClick={addStrand}
+                    className="mt-4 w-full flex items-center justify-center gap-2 border-2 border-dashed border-emerald-500 hover:border-emerald-700 hover:bg-emerald-100 text-emerald-700 font-semibold py-2.5 rounded-xl transition-all text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {strands.length === 0 ? 'Ajouter cette meche' : 'Ajouter une meche supplementaire'}
+                  </button>
+                )}
+
+                {/* Bouton soumettre */}
                 <button
                   onClick={scrollToForm}
-                  className="mt-4 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm"
+                  className="mt-3 w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors text-sm"
                 >
                   <Send className="w-4 h-4" />
-                  Transmettre ma demande de rachat
+                  {strands.length > 0 ? `Soumettre ma demande (${strands.length} meche${strands.length > 1 ? 's' : ''})` : 'Transmettre ma demande de rachat'}
                 </button>
               </div>
             )}
