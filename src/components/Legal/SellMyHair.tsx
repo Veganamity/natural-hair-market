@@ -2,12 +2,9 @@
  * Title SEO : Vendre mes cheveux - Prix, criteres & comment ca marche
  * Meta description : Vendez vos cheveux naturels ou colores sur NaturalHairMarket.
  * Prix libre, criteres clairs, transaction securisee. Decouvrez comment ca se passe.
- *
- * Mots-cles cibles : vendre ses cheveux, vendre mes cheveux, prix cheveux,
- * comment vendre ses cheveux, vendre cheveux naturels, vendre cheveux colores
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -22,12 +19,55 @@ import {
   ArrowRight,
   User,
   Scissors,
+  Droplets,
+  Wind,
+  CheckCircle,
+  Upload,
+  Send,
+  Sparkles,
 } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient';
 
 interface SellMyHairProps {
   onStartSelling?: () => void;
 }
 
+// --- Prix calculés ---
+type Condition = 'natural' | 'colored';
+type ColorType = 'chestnut' | 'blond_roux_gris';
+
+const LENGTHS_NATURAL = ['15-25 cm', '25-35 cm', '35-45 cm', '45-55 cm', '55 cm+'];
+const LENGTHS_COLORED = ['30-45 cm'];
+
+const PRICES: Record<ColorType, Record<string, string>> = {
+  chestnut: {
+    '15-25 cm': '5 €',
+    '25-35 cm': '20 €',
+    '35-45 cm': '45 €',
+    '45-55 cm': '80 €',
+    '55 cm+': '120 €',
+  },
+  blond_roux_gris: {
+    '15-25 cm': '10 €',
+    '25-35 cm': '40 €',
+    '35-45 cm': '90 €',
+    '45-55 cm': '160 €',
+    '55 cm+': 'Sur devis – Mini 250 €',
+  },
+};
+
+function getPrice(condition: Condition, color: ColorType | '', length: string): string {
+  if (!length) return '';
+  if (condition === 'colored') return '10 €';
+  if (!color) return '';
+  return PRICES[color][length] ?? '';
+}
+
+function isPriceOnDemand(price: string) {
+  return price.startsWith('Sur devis');
+}
+
+// --- FAQ ---
 const faqs: { q: string; a: string }[] = [
   {
     q: "Qui peut vendre ses cheveux sur NaturalHairMarket ?",
@@ -35,55 +75,23 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Quels types de cheveux sont acceptes ?",
-    a: "Les cheveux humains naturels, colores, decolo res ou traites (lissage, keratine, henne, etc.) sont acceptes, a condition que l'etat et les traitements soient clairement mentionnes dans l'annonce. Toutes les textures sont acceptees : raides, ondules, boucles, crepus.",
+    a: "Les cheveux humains naturels, colores, decolores ou traites (lissage, keratine, henne, etc.) sont acceptes, a condition que l'etat et les traitements soient clairement mentionnes dans l'annonce. Toutes les textures sont acceptees : raides, ondules, boucles, crepus.",
   },
   {
     q: "Les cheveux decolores ou colores sont-ils acceptes ?",
     a: "Oui. Les cheveux decolores et colores sont acceptes sur NaturalHairMarket. Il est obligatoire de le preciser dans l'annonce afin que l'acheteur puisse evaluer la qualite en connaissance de cause.",
   },
   {
-    q: "Est-ce que les cheveux tresses sont acceptes ?",
-    a: "Les cheveux doivent etre detresses, propres et attaches en queue ou en tresse simple avant la mise en vente. Des cheveux encore en extension ou tresses avec des ajouts synthetiques ne sont pas acceptes.",
-  },
-  {
     q: "Comment envoyer mes photos ?",
     a: "Lors de la creation de votre annonce sur la plateforme, vous pouvez telecharger vos photos directement. Privilegiez un fond clair, une bonne lumiere naturelle, et prenez au moins une photo de pres et une de loin pour montrer la longueur reelle.",
   },
   {
-    q: "Combien de temps pour qu'une annonce soit en ligne ?",
-    a: "Une fois votre annonce complete soumise sur la plateforme, elle est publiee rapidement selon les delais de moderation en vigueur. NaturalHairMarket se reserve le droit de valider ou refuser toute annonce non conforme.",
-  },
-  {
-    q: "Est-ce que le prix peut changer apres inspection ?",
-    a: "Dans le cadre d'une marketplace, c'est le vendeur qui fixe son prix librement. Cependant, si un acheteur recoit un lot dont l'etat ne correspond pas a la description, il peut ouvrir un litige via la plateforme. Il est donc important d'evaluer honnetement ses cheveux des la creation de l'annonce.",
-  },
-  {
     q: "Paiement : quand et comment ?",
-    a: "Le paiement est effectue via la plateforme NaturalHairMarket de facon securisee. Les fonds sont proteges jusqu'a confirmation de reception par l'acheteur. Le versement au vendeur intervient selon les conditions affichees dans l'interface. Tout paiement hors plateforme est strictement interdit.",
-  },
-  {
-    q: "Que se passe-t-il si mes cheveux ne sont pas acceptes ?",
-    a: "Si votre annonce ne respecte pas les regles de la plateforme (cheveux synthetiques, description inexacte, photos volees...), elle sera refusee ou supprimee. Vous recevrez une notification et pourrez corriger votre annonce si le motif le permet.",
+    a: "Le paiement est effectue via la plateforme NaturalHairMarket de facon securisee. Les fonds sont proteges jusqu'a confirmation de reception par l'acheteur. Le versement au vendeur intervient selon les conditions affichees dans l'interface.",
   },
   {
     q: "Comment je contacte NaturalHairMarket ?",
     a: "Vous pouvez contacter l'equipe par email a naturalhairmarket@gmail.com ou par telephone au 09 72 21 69 48 pour toute question relative a votre annonce ou a une transaction.",
-  },
-  {
-    q: "Les donnees personnelles sont-elles protegees ?",
-    a: "Oui. NaturalHairMarket traite vos donnees personnelles conformement au RGPD. Vos informations ne sont jamais revendues a des tiers. Consultez notre Politique de confidentialite pour en savoir plus.",
-  },
-  {
-    q: "Puis-je vendre des cheveux courts ?",
-    a: "La longueur minimale acceptee est a confirmer avec l'equipe NaturalHairMarket. En regle generale, plus les cheveux sont longs, plus leur valeur est elevee sur le marche. Des cheveux tres courts peuvent etre moins demandes.",
-  },
-  {
-    q: `Comment je sais si mes cheveux sont "en bon etat" ?`,
-    a: "Des cheveux en bon etat sont propres, sans odeur, sans parasites, non cassants, sans fourches excessives et conserves correctement. Un cheveu sec, abime ou tres poreux (suite a decolorations repetees) doit etre signale dans l'annonce.",
-  },
-  {
-    q: `Les cheveux doivent-ils etre "sans noeuds" ?`,
-    a: "Idealement, les cheveux doivent etre demeles, attaches en queue ou en tresse simple, et propres. Des noeuds importants ou des enchevelements peuvent reduire leur valeur percue et doivent etre mentionnes.",
   },
   {
     q: "Puis-je vendre plusieurs fois sur la plateforme ?",
@@ -91,8 +99,140 @@ const faqs: { q: string; a: string }[] = [
   },
 ];
 
+const PREP_STEPS = [
+  {
+    icon: <Droplets className="w-6 h-6 text-blue-500" />,
+    num: 1,
+    title: 'Lavage',
+    desc: 'Laver les cheveux pour les nettoyer et les desinfecter soigneusement.',
+    bg: 'bg-blue-50 border-blue-100',
+  },
+  {
+    icon: <Wind className="w-6 h-6 text-amber-500" />,
+    num: 2,
+    title: 'Sechage',
+    desc: 'Secher completement au seche-cheveux sans lisser. Aspect naturel obligatoire.',
+    bg: 'bg-amber-50 border-amber-100',
+  },
+  {
+    icon: <Layers className="w-6 h-6 text-emerald-600" />,
+    num: 3,
+    title: 'Preparation',
+    desc: 'Separer et securiser les cheveux en queues de cheval individuelles.',
+    bg: 'bg-emerald-50 border-emerald-100',
+  },
+  {
+    icon: <Ruler className="w-6 h-6 text-violet-500" />,
+    num: 4,
+    title: 'Mesure & coupe',
+    desc: 'Mesurer pour s\'assurer que la longueur est d\'au moins 15 cm, puis couper.',
+    bg: 'bg-violet-50 border-violet-100',
+  },
+  {
+    icon: <Package className="w-6 h-6 text-rose-500" />,
+    num: 5,
+    title: 'Tressage & mise en sac',
+    desc: 'Tresser en queue de cheval et placer dans un sac de type congelation avec fermeture.',
+    bg: 'bg-rose-50 border-rose-100',
+  },
+];
+
 export function SellMyHair({ onStartSelling }: SellMyHairProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // --- Calculateur ---
+  const [condition, setCondition] = useState<Condition | ''>('');
+  const [colorType, setColorType] = useState<ColorType | ''>('');
+  const [length, setLength] = useState('');
+
+  const availableLengths = condition === 'colored' ? LENGTHS_COLORED : LENGTHS_NATURAL;
+  const calculatedPrice = condition ? getPrice(condition as Condition, colorType, length) : '';
+
+  // --- Formulaire ---
+  const formRef = useRef<HTMLDivElement>(null);
+  const [form, setForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    salon_name: '',
+  });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError('');
+
+    if (!condition || !length) {
+      setSubmitError('Veuillez d\'abord utiliser le calculateur pour choisir votre type de cheveux et la longueur.');
+      return;
+    }
+    if (!calculatedPrice) {
+      setSubmitError('Veuillez selectionner une couleur dans le calculateur.');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      let photo_url: string | null = null;
+
+      if (photoFile) {
+        const ext = photoFile.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError, data } = await supabase.storage
+          .from('buyback-photos')
+          .upload(fileName, photoFile, { upsert: false });
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage
+          .from('buyback-photos')
+          .getPublicUrl(data.path);
+        photo_url = publicUrl;
+      }
+
+      const { error: insertError } = await supabase
+        .from('hair_buyback_requests')
+        .insert({
+          first_name: form.first_name.trim(),
+          last_name: form.last_name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          salon_name: form.salon_name.trim() || null,
+          photo_url,
+          hair_condition: condition,
+          hair_color: condition === 'natural' ? colorType || null : null,
+          hair_length: length,
+          calculated_price: calculatedPrice,
+          status: 'pending',
+        });
+
+      if (insertError) throw insertError;
+
+      setSubmitSuccess(true);
+      setForm({ first_name: '', last_name: '', email: '', phone: '', salon_name: '' });
+      setPhotoFile(null);
+      setPhotoPreview(null);
+    } catch (err) {
+      setSubmitError((err as Error).message || 'Une erreur est survenue. Veuillez reessayer.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -102,83 +242,383 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
         <div className="max-w-4xl mx-auto px-4 py-12 md:py-16 text-center">
           <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5 text-emerald-700 text-sm font-medium mb-5">
             <Scissors className="w-4 h-4" />
-            Marketplace de cheveux humains
+            Rachat & vente de cheveux humains
           </div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-            Vendre mes cheveux naturels ou&nbsp;colores&nbsp;:
+            Vendre mes cheveux naturels ou colores&nbsp;:
             <br className="hidden md:block" />
-            <span className="text-emerald-600"> prix, criteres et comment ca se passe</span>
+            <span className="text-emerald-600"> prix, preparation et demande de rachat</span>
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-            NaturalHairMarket est une marketplace ou vous fixez votre prix librement. Publiez votre annonce, decrivez vos cheveux honnetement, et attendez qu&apos;un acheteur vous contacte — le tout de facon securisee.
+            Estimez la valeur de vos cheveux en quelques secondes, preparez-les selon nos consignes, puis transmettez votre demande de rachat directement a NaturalHairMarket.
           </p>
-          <button
-            onClick={onStartSelling}
-            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors shadow-sm text-base"
-          >
-            Commencer a vendre
-            <ArrowRight className="w-5 h-5" />
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={scrollToForm}
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors shadow-sm text-base"
+            >
+              <Send className="w-5 h-5" />
+              Transmettre ma demande
+            </button>
+            <button
+              onClick={onStartSelling}
+              className="inline-flex items-center gap-2 border-2 border-emerald-200 text-emerald-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-emerald-50 transition-colors text-base"
+            >
+              Voir le marketplace
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
+      <div className="max-w-4xl mx-auto px-4 py-10 space-y-12">
 
-        {/* Grille tarifaire */}
+        {/* ===== SECTION A : Calculateur de prix ===== */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Grille tarifaire – Prix conseilles pour vendre ses cheveux</h2>
-          <p className="text-gray-500 mb-4 text-sm">Ces prix sont indicatifs. Sur NaturalHairMarket, c&apos;est vous qui fixez votre prix librement. Cette grille vous aide a vous positionner selon la longueur, la couleur et la qualite de vos cheveux.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">A</div>
+            <h2 className="text-2xl font-bold text-gray-900">Calculateur de prix – Estimez la valeur de vos cheveux</h2>
+          </div>
+          <p className="text-gray-500 mb-6 text-sm ml-11">Selectionnez les caracteristiques de vos cheveux pour obtenir une estimation de rachat instantanee.</p>
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+
+            {/* Choix 1 : Etat */}
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-3">1. Etat des cheveux</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { value: 'natural', label: 'Naturels (Vierges)', desc: 'Jamais colores ni traites chimiquement', emoji: '🌿' },
+                  { value: 'colored', label: 'Colores / Meches', desc: 'Coloration, decoloration ou meches', emoji: '🎨' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => {
+                      setCondition(opt.value as Condition);
+                      setColorType('');
+                      setLength('');
+                    }}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      condition === opt.value
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 hover:border-emerald-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="text-2xl mb-2 block">{opt.emoji}</span>
+                    <p className={`font-semibold text-sm ${condition === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Choix 2 : Couleur (si naturels) */}
+            {condition === 'natural' && (
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-3">2. Couleur naturelle</p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {[
+                    { value: 'chestnut', label: 'Chatain / Brun', desc: 'Teintes brunes et chatain fonce', color: 'bg-amber-800' },
+                    { value: 'blond_roux_gris', label: 'Blond / Roux / Gris', desc: 'Pepites rares tres recherchees', color: 'bg-yellow-300' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setColorType(opt.value as ColorType); setLength(''); }}
+                      className={`p-4 rounded-xl border-2 text-left transition-all flex items-start gap-3 ${
+                        colorType === opt.value
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-gray-200 hover:border-emerald-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-full ${opt.color} flex-shrink-0 border-2 border-white shadow-sm mt-0.5`} />
+                      <div>
+                        <p className={`font-semibold text-sm ${colorType === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Choix 3 : Longueur */}
+            {(condition === 'colored' || (condition === 'natural' && colorType)) && (
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-3">
+                  {condition === 'natural' ? '3.' : '2.'} Longueur des cheveux
+                </p>
+                <select
+                  value={length}
+                  onChange={(e) => setLength(e.target.value)}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:border-emerald-500 focus:ring-0 outline-none text-sm bg-white"
+                >
+                  <option value="">-- Choisir une longueur --</option>
+                  {availableLengths.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Resultat */}
+            {calculatedPrice && (
+              <div className={`rounded-xl p-5 text-center border-2 ${isPriceOnDemand(calculatedPrice) ? 'bg-amber-50 border-amber-300' : 'bg-emerald-50 border-emerald-300'}`}>
+                <p className="text-sm font-medium text-gray-600 mb-1">Estimation de rachat</p>
+                <p className={`text-3xl font-black ${isPriceOnDemand(calculatedPrice) ? 'text-amber-700' : 'text-emerald-700'}`}>
+                  {calculatedPrice}
+                </p>
+                {isPriceOnDemand(calculatedPrice) && (
+                  <p className="text-xs text-amber-600 mt-1">Prix exact sur devis apres reception et verification des cheveux.</p>
+                )}
+                {!isPriceOnDemand(calculatedPrice) && (
+                  <p className="text-xs text-emerald-600 mt-1">Prix indicatif sous reserve de verification a reception.</p>
+                )}
+                <button
+                  onClick={scrollToForm}
+                  className="mt-4 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm"
+                >
+                  <Send className="w-4 h-4" />
+                  Transmettre ma demande de rachat
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Grille tarifaire image */}
+        <section>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Grille tarifaire de reference</h2>
+          <p className="text-gray-500 mb-4 text-sm">Ces prix sont indicatifs et bases sur des cheveux en bon etat. Le prix definitif est confirme apres inspection a reception.</p>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <img
               src="/ab1b549f-6bc6-4966-b017-7d9be074b365.png"
-              alt="Grille tarifaire des cheveux bruts sur NaturalHairMarket - prix conseilles par longueur et couleur"
+              alt="Grille tarifaire des cheveux bruts sur NaturalHairMarket"
               className="w-full h-auto"
             />
           </div>
         </section>
 
+        {/* ===== SECTION B : Consignes de preparation ===== */}
+        <section>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">B</div>
+            <h2 className="text-2xl font-bold text-gray-900">Consignes de preparation obligatoires</h2>
+          </div>
+          <p className="text-gray-500 mb-6 text-sm ml-11">Ces 5 etapes sont indispensables pour que votre demande soit acceptee. Des cheveux mal prepares seront retournes.</p>
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
+            <img
+              src="/398249a7-e404-4b31-8512-bf2eac66a382.png"
+              alt="Le processus de collecte de cheveux en 5 etapes"
+              className="w-full h-auto"
+            />
+          </div>
+
+          <div className="grid sm:grid-cols-5 gap-3">
+            {PREP_STEPS.map((step) => (
+              <div key={step.num} className={`border rounded-xl p-4 text-center ${step.bg}`}>
+                <div className="flex justify-center mb-2">{step.icon}</div>
+                <p className="text-xs font-bold text-gray-800 mb-1">{step.num}. {step.title}</p>
+                <p className="text-xs text-gray-600 leading-relaxed">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+            <p className="text-amber-800 text-sm">
+              <strong>Longueur minimale : 15 cm.</strong> Pas de lissage, juste seche au seche-cheveux. Les cheveux doivent correspondre fidelement aux photos transmises.
+            </p>
+          </div>
+        </section>
+
+        {/* ===== SECTION C : Formulaire de soumission ===== */}
+        <section ref={formRef}>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">C</div>
+            <h2 className="text-2xl font-bold text-gray-900">Transmettre ma demande de rachat</h2>
+          </div>
+          <p className="text-gray-500 mb-6 text-sm ml-11">
+            Remplissez le formulaire ci-dessous. Notre equipe vous contactera sous 48h pour confirmer le rachat et les modalites d'envoi.
+          </p>
+
+          {submitSuccess ? (
+            <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-8 text-center">
+              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-9 h-9 text-emerald-600" />
+              </div>
+              <h3 className="text-xl font-bold text-emerald-800 mb-2">Demande envoyee avec succes !</h3>
+              <p className="text-emerald-700 text-sm max-w-md mx-auto leading-relaxed">
+                Nous avons bien recu votre demande de rachat. Notre equipe l'examine et vous contactera par email ou telephone sous <strong>48h ouvrables</strong>.
+              </p>
+              <button
+                onClick={() => setSubmitSuccess(false)}
+                className="mt-5 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors text-sm"
+              >
+                <Sparkles className="w-4 h-4" />
+                Faire une nouvelle demande
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              {/* Recap calculateur */}
+              {calculatedPrice && (
+                <div className="mb-6 bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Vos cheveux selectionnés</p>
+                    <p className="text-sm font-semibold text-gray-800">
+                      {condition === 'natural' ? 'Naturels' : 'Colores/Meches'}
+                      {condition === 'natural' && colorType ? ` — ${colorType === 'chestnut' ? 'Chatain/Brun' : 'Blond/Roux/Gris'}` : ''}
+                      {length ? ` — ${length}` : ''}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-emerald-600 font-medium mb-0.5">Estimation</p>
+                    <p className="text-lg font-black text-emerald-700">{calculatedPrice}</p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Prenom <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      value={form.first_name}
+                      onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                      placeholder="Marie"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Nom <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      value={form.last_name}
+                      onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                      placeholder="Dupont"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email <span className="text-red-500">*</span></label>
+                    <input
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="marie@exemple.fr"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Telephone <span className="text-red-500">*</span></label>
+                    <input
+                      type="tel"
+                      required
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="06 12 34 56 78"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Nom du salon <span className="text-gray-400 font-normal">(optionnel – si vous etes professionnel)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.salon_name}
+                    onChange={(e) => setForm({ ...form, salon_name: e.target.value })}
+                    placeholder="Salon Belleza Paris"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Photo de vos cheveux <span className="text-gray-400 font-normal">(recommande – accelere le traitement)</span>
+                  </label>
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-6 cursor-pointer hover:border-emerald-300 hover:bg-emerald-50 transition-all">
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Apercu" className="w-full max-h-48 object-contain rounded-lg" />
+                    ) : (
+                      <>
+                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                        <p className="text-sm font-medium text-gray-600">Cliquez pour ajouter une photo</p>
+                        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP – Max 10 Mo</p>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePhotoChange}
+                    />
+                  </label>
+                  {photoPreview && (
+                    <button
+                      type="button"
+                      onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                      className="mt-2 text-xs text-red-500 hover:text-red-700 underline"
+                    >
+                      Supprimer la photo
+                    </button>
+                  )}
+                </div>
+
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+                    {submitError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-base"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      Transmettre ma demande de rachat
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-gray-400 text-center">
+                  En soumettant ce formulaire, vous acceptez d'etre contacte par NaturalHairMarket concernant votre demande de rachat.
+                </p>
+              </form>
+            </div>
+          )}
+        </section>
+
         {/* Comment ca se passe */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Comment ca se passe ?</h2>
-          <p className="text-gray-500 mb-6 text-sm">De la creation de votre annonce au paiement, voici les etapes.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Comment se deroule le rachat ?</h2>
+          <p className="text-gray-500 mb-6 text-sm">De votre demande au paiement, voici les etapes.</p>
           <div className="space-y-4">
             {[
-              {
-                num: 1,
-                title: "Je cree mon annonce et j'envoie mes photos",
-                body: "Creez votre compte sur NaturalHairMarket, puis remplissez votre annonce : longueur, texture, couleur, etat, traitements eventuels. Ajoutez des photos authentiques et definissez librement votre prix.",
-                icon: <Camera className="w-5 h-5 text-emerald-600" />,
-              },
-              {
-                num: 2,
-                title: "Evaluation des criteres par les acheteurs",
-                body: "Les acheteurs consultent vos annonces et evaluent la qualite selon les criteres renseignes : longueur, densite, etat, type (naturels, decolores, colores). Plus votre description est precise, plus votre annonce est credible.",
-                icon: <Ruler className="w-5 h-5 text-emerald-600" />,
-              },
-              {
-                num: 3,
-                title: "Proposition de prix et conditions",
-                body: "Sur NaturalHairMarket, vous fixez votre prix directement. Les acheteurs peuvent vous faire une offre differente via le systeme d'offres de la plateforme. Vous etes libre d'accepter ou de refuser.",
-                icon: <DollarSign className="w-5 h-5 text-emerald-600" />,
-              },
-              {
-                num: 4,
-                title: "Validation et envoi",
-                body: "Une fois la commande confirmee, vous recevez une notification pour proceder a l'expedition. Le delai d'expedition est indique dans l'interface au moment de la commande. Assurez-vous d'envoyer le colis avec un numero de suivi valide.",
-                icon: <Package className="w-5 h-5 text-emerald-600" />,
-              },
-              {
-                num: 5,
-                title: "Paiement securise (selon validation de la reception)",
-                body: "Les fonds sont securises sur la plateforme jusqu'a confirmation de reception par l'acheteur. Le versement est ensuite effectue selon les conditions en vigueur. Toute transaction hors plateforme est interdite.",
-                icon: <Shield className="w-5 h-5 text-emerald-600" />,
-              },
+              { num: 1, title: "Soumission de votre demande", body: "Remplissez le formulaire ci-dessus avec vos coordonnees et les caracteristiques de vos cheveux. Notre equipe reçoit votre demande et l'examine.", icon: <Send className="w-5 h-5 text-emerald-600" /> },
+              { num: 2, title: "Validation et accord de prix", body: "Nous vous contactons sous 48h pour valider la demande et confirmer le prix. En cas de blond/roux/gris de plus de 55 cm, un devis personnalise vous est fourni.", icon: <CheckCircle className="w-5 h-5 text-emerald-600" /> },
+              { num: 3, title: "Envoi de vos cheveux", body: "Une fois l'accord confirme, vous envoyez vos cheveux par courrier suivi a l'adresse communiquee. Les frais d'envoi sont a votre charge.", icon: <Package className="w-5 h-5 text-emerald-600" /> },
+              { num: 4, title: "Verification et paiement", body: "A reception, nous verifions que les cheveux correspondent a la description. Le paiement est effectue par virement dans les 5 jours ouvrables.", icon: <Shield className="w-5 h-5 text-emerald-600" /> },
             ].map((step) => (
               <div key={step.num} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex gap-4">
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 text-base">
-                    {step.num}
-                  </div>
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-emerald-700 text-base">{step.num}</div>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -192,143 +632,27 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           </div>
         </section>
 
-        {/* Criteres pour vendre */}
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Criteres pour vendre ses cheveux</h2>
-          <p className="text-gray-500 mb-6 text-sm">Ces elements influencent directement la valeur percue de votre lot et la confiance des acheteurs.</p>
-          <div className="grid md:grid-cols-2 gap-4">
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Ruler className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-semibold text-gray-800">Longueur</h3>
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Mesuree en centimetres du cuir chevelu jusqu&apos;aux pointes. Longueur minimale acceptee&nbsp;: <span className="font-medium text-gray-700 italic">a confirmer</span>. Plus les cheveux sont longs, plus leur valeur est generalement elevee sur la plateforme.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Layers className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-semibold text-gray-800">Densite</h3>
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Evaluez la densite de votre chevelure : <strong>faible</strong> (queue fine), <strong>moyenne</strong> (queue normale) ou <strong>forte</strong> (queue tres epaisse). Le poids en grammes, si vous pouvez le mesurer, est un indicateur objectif tres apprecie.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle className="w-5 h-5 text-amber-500" />
-                <h3 className="font-semibold text-gray-800">Etat</h3>
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Soyez honnete sur l&apos;etat reel : secheresse, fourches, cassures, porosite (surtout apres decoloration), odeur. Des cheveux en bon etat, propres et sans fourches excessives auront une valeur percue plus elevee.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Palette className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-semibold text-gray-800">Type de cheveux</h3>
-              </div>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Precisez si vos cheveux sont <strong>naturels</strong> (jamais traites), <strong>decolores</strong>, <strong>colores</strong>, lisses, ou traites (keratine, defrisage, henne...). Chaque traitement doit etre mentionne clairement dans l&apos;annonce.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:col-span-2">
-              <div className="flex items-center gap-2 mb-3">
-                <Camera className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-semibold text-gray-800">Qualite des photos</h3>
-              </div>
-              <div className="grid sm:grid-cols-3 gap-3">
-                <div className="bg-emerald-50 rounded-xl p-3 text-center">
-                  <p className="text-xs font-semibold text-emerald-700 mb-1">Fond</p>
-                  <p className="text-gray-600 text-xs">Fond clair (mur blanc, drap blanc) pour faire ressortir la couleur reelle.</p>
-                </div>
-                <div className="bg-emerald-50 rounded-xl p-3 text-center">
-                  <p className="text-xs font-semibold text-emerald-700 mb-1">Lumiere</p>
-                  <p className="text-gray-600 text-xs">Lumiere naturelle de preference. Evitez les flash qui blanchissent et masquent la texture.</p>
-                </div>
-                <div className="bg-emerald-50 rounded-xl p-3 text-center">
-                  <p className="text-xs font-semibold text-emerald-700 mb-1">Angles</p>
-                  <p className="text-gray-600 text-xs">Au moins une photo de loin (longueur visible) et une de pres (texture, etat des pointes).</p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
         {/* Prix & marketplace */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Prix &amp; marketplace : comment ca fonctionne</h2>
-          <p className="text-gray-500 mb-6 text-sm">NaturalHairMarket est une place de marche entre particuliers et professionnels.</p>
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex gap-4">
-              <DollarSign className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Le vendeur fixe son prix librement</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Il n&apos;existe pas de grille tarifaire imposee sur NaturalHairMarket. Vous etes libre de proposer le prix que vous estimez juste. Le prix affiche correspond a votre demande. L&apos;acheteur peut proposer une offre ; vous pouvez l&apos;accepter ou la refuser.
-                </p>
-              </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Prix &amp; criteres de rachat</h2>
+          <p className="text-gray-500 mb-6 text-sm">Ces elements influencent directement la valeur percue de votre lot.</p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3"><Ruler className="w-5 h-5 text-emerald-600" /><h3 className="font-semibold text-gray-800">Longueur</h3></div>
+              <p className="text-gray-600 text-sm leading-relaxed">Mesuree en centimetres du cuir chevelu jusqu'aux pointes. Longueur minimale : <strong>15 cm</strong>. Plus les cheveux sont longs, plus leur valeur est elevee.</p>
             </div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex gap-4">
-              <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Le prix final depend de la qualite reelle</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Les acheteurs se basent sur les criteres renseignes (longueur, densite, etat, type) pour evaluer si votre prix est coherent. Une description fidele et des photos de qualite augmentent vos chances de vendre rapidement au prix souhaite.
-                </p>
-              </div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3"><Layers className="w-5 h-5 text-emerald-600" /><h3 className="font-semibold text-gray-800">Densite</h3></div>
+              <p className="text-gray-600 text-sm leading-relaxed">Evaluez la densite de votre chevelure : <strong>faible</strong> (queue fine), <strong>moyenne</strong> (queue normale) ou <strong>forte</strong> (queue tres epaisse). Le poids en grammes est un indicateur objectif apprecie.</p>
             </div>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex gap-4">
-              <Shield className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-1">Transaction 100% securisee via la plateforme</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  Toutes les transactions passent par NaturalHairMarket. Les paiements hors plateforme sont interdits. Les fonds sont proteges jusqu&apos;a confirmation de reception. En cas de litige, la plateforme intervient comme mediateur.
-                </p>
-              </div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3"><AlertTriangle className="w-5 h-5 text-amber-500" /><h3 className="font-semibold text-gray-800">Etat</h3></div>
+              <p className="text-gray-600 text-sm leading-relaxed">Des cheveux en bon etat, propres et sans fourches excessives auront une valeur plus elevee. Signalez toujours la secheresse, les cassures ou la porosite excessive.</p>
             </div>
-          </div>
-        </section>
-
-        {/* Processus de collecte - infographie */}
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Le processus de collecte de cheveux</h2>
-          <p className="text-gray-500 mb-6 text-sm">Suivez ces 5 etapes pour preparer vos cheveux dans les meilleures conditions et maximiser leur valeur.</p>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <img
-              src="/398249a7-e404-4b31-8512-bf2eac66a382.png"
-              alt="Le processus de collecte de cheveux en 5 etapes : lavage, sechage, preparation des queues de cheval, mesure et coupe, tressage et mise en sac"
-              className="w-full h-auto"
-            />
-          </div>
-          <div className="mt-4 grid sm:grid-cols-5 gap-3">
-            {[
-              { num: 1, title: "Lavage", desc: "Laver pour nettoyer et desinfecter" },
-              { num: 2, title: "Sechage", desc: "Secher completement au seche-cheveux sans lisser" },
-              { num: 3, title: "Queues de cheval", desc: "Separer et securiser en queues individuelles" },
-              { num: 4, title: "Mesure & coupe", desc: "Minimum 15 cm, puis couper" },
-              { num: 5, title: "Mise en sac", desc: "Tresser et placer dans un sac congelation a fermeture" },
-            ].map((step) => (
-              <div key={step.num} className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
-                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white text-sm font-bold flex items-center justify-center mx-auto mb-2">
-                  {step.num}
-                </div>
-                <p className="text-xs font-semibold text-emerald-800 mb-1">{step.title}</p>
-                <p className="text-xs text-gray-600 leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <p className="text-amber-800 text-sm">
-              <strong>Longueur minimale&nbsp;: 15 cm.</strong> Pas de lissage, juste seche. Les cheveux envoyes doivent correspondre fidelement aux photos et a la description de l&apos;annonce.
-            </p>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-3"><Palette className="w-5 h-5 text-emerald-600" /><h3 className="font-semibold text-gray-800">Couleur</h3></div>
+              <p className="text-gray-600 text-sm leading-relaxed">Les cheveux <strong>blonds, roux ou gris naturels</strong> sont les plus recherches (pepites). Les chatains/bruns sont courants. Les colores/meches ont une valeur reduite.</p>
+            </div>
           </div>
         </section>
 
@@ -351,9 +675,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                 </button>
                 {openFaq === i && (
                   <div className="px-5 pb-5">
-                    <p className="text-gray-600 text-sm leading-relaxed bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-                      {faq.a}
-                    </p>
+                    <p className="text-gray-600 text-sm leading-relaxed bg-emerald-50 border border-emerald-100 rounded-xl p-4">{faq.a}</p>
                   </div>
                 )}
               </div>
@@ -368,26 +690,26 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           </div>
           <h2 className="text-2xl font-bold mb-3">Pret(e) a vendre vos cheveux ?</h2>
           <p className="text-emerald-100 mb-6 max-w-md mx-auto leading-relaxed text-sm">
-            Creez votre annonce en quelques minutes. Criteres clairs, prix libre, transaction securisee. NaturalHairMarket vous accompagne a chaque etape.
+            Estimez la valeur de vos cheveux, preparez-les selon nos consignes, et transmettez votre demande en quelques minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={onStartSelling}
+              onClick={scrollToForm}
               className="inline-flex items-center justify-center gap-2 bg-white text-emerald-700 font-semibold px-7 py-3 rounded-xl hover:bg-emerald-50 transition-colors shadow-sm text-sm"
             >
-              <User className="w-4 h-4" />
-              Creer mon compte et vendre
+              <Send className="w-4 h-4" />
+              Faire ma demande de rachat
             </button>
             <button
               onClick={onStartSelling}
               className="inline-flex items-center justify-center gap-2 border-2 border-white/40 text-white font-semibold px-7 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm"
             >
-              Deposer une annonce
-              <ArrowRight className="w-4 h-4" />
+              <User className="w-4 h-4" />
+              Voir le marketplace
             </button>
           </div>
           <p className="text-emerald-200 text-xs mt-4">
-            Evaluation rapide · Criteres transparents · Paiement securise
+            Reponse sous 48h · Criteres transparents · Paiement securise
           </p>
         </section>
 

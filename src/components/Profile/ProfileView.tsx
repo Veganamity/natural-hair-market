@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield } from 'lucide-react';
+import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
 import { StripeOnboardingModal } from '../Stripe/StripeConnectEmbedded';
 
@@ -709,6 +709,13 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               >
                 <Package className="w-5 h-5" />
                 Gestion Annonces
+              </button>
+              <button
+                onClick={() => onNavigate?.('admin-buybacks')}
+                className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center gap-2"
+              >
+                <Scissors className="w-5 h-5" />
+                Rachats de cheveux
               </button>
             </div>
           </div>

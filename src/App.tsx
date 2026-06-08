@@ -26,6 +26,7 @@ import { AboutUs } from './components/Legal/AboutUs';
 import { GuideCoupe } from './components/Legal/GuideCoupe';
 import SalonVerificationAdmin from './components/Admin/SalonVerificationAdmin';
 import ListingAdmin from './components/Admin/ListingAdmin';
+import BuybackAdmin from './components/Admin/BuybackAdmin';
 import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
 import { CartView } from './components/Cart/CartView';
@@ -63,6 +64,8 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/guide-coupe-conservation': 'guide-coupe',
   '/admin-salons': 'admin-salons',
   '/admin-listings': 'admin-listings',
+  '/admin-buybacks': 'admin-buybacks',
+  '/admin': 'admin-buybacks',
   '/salon-certifie': 'salon-certifie',
   '/seller-store': 'seller-store',
 };
@@ -90,6 +93,7 @@ const VIEW_TO_PATH: Record<string, string> = {
   'guide-coupe': '/guide-coupe-conservation',
   'admin-salons': '/admin-salons',
   'admin-listings': '/admin-listings',
+  'admin-buybacks': '/admin-buybacks',
   'salon-certifie': '/salon-certifie',
   'seller-store': '/seller-store',
 };
@@ -99,7 +103,7 @@ type ViewName =
   | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales'
   | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'faq' | 'about'
   | 'guide-coupe'
-  | 'admin-salons' | 'admin-listings' | 'salon-certifie' | 'seller-store';
+  | 'admin-salons' | 'admin-listings' | 'admin-buybacks' | 'salon-certifie' | 'seller-store';
 
 function getInitialView(): ViewName {
   const pathname = window.location.pathname;
@@ -667,6 +671,7 @@ function AppContent() {
         {currentView === 'transactions' && <TransactionsView />}
         {currentView === 'profile' && <ProfileView onNavigate={(view) => navigateToView(view as ViewName)} />}
         {currentView === 'admin-salons' && <SalonVerificationAdmin />}
+        {currentView === 'admin-buybacks' && <BuybackAdmin />}
         {currentView === 'admin-listings' && (
           <ListingAdmin
             onViewListing={(listingId) => {
