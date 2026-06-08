@@ -70,37 +70,61 @@ Deno.serve(async (req: Request) => {
 
     const sendcloudAuth = btoa(`${sendcloudApiKey}:${sendcloudApiSecret}`);
 
-    // Get NaturalHairMarket sender address from Sendcloud (used as the delivery destination)
-    let companyAddress: Record<string, string> = {
-      name: "NaturalHairMarket",
-      address: "",
-      city: "",
-      postal_code: "",
-      country: "FR",
-    };
-    try {
-      const senderRes = await fetch("https://panel.sendcloud.sc/api/v2/user/addresses/sender", {
-        headers: { "Authorization": `Basic ${sendcloudAuth}` },
-      });
-      if (senderRes.ok) {
-        const senderData = await senderRes.json();
-        const addresses = senderData.sender_addresses || [];
-        const defaultAddr = addresses.find((a: any) => a.is_default) || addresses[0];
-        if (defaultAddr) {
-          companyAddress = {
-            name: defaultAddr.company_name || defaultAddr.contact_name || "NaturalHairMarket",
-            address: defaultAddr.street + (defaultAddr.house_number ? ` ${defaultAddr.house_number}` : ""),
-            city: defaultAddr.city,
-            postal_code: defaultAddr.postal_code,
-            country: defaultAddr.country?.iso_2 || "FR",
-          };
+    // --- Company destination address ---
+    // Try env vars first, then Sendcloud API, then fail with a clear error.
+    const envCompanyName = Deno.env.get("COMPANY_NAME") || "NaturalHairMarket";
+    const envCompanyAddress = Deno.env.get("COMPANY_ADDRESS") || "";
+    const envCompanyCity = Deno.env.get("COMPANY_CITY") || "";
+    const envCompanyPostal = Deno.env.get("COMPANY_POSTAL_CODE") || "";
+    const envCompanyEmail = Deno.env.get("COMPANY_EMAIL") || "";
+
+    let companyName = envCompanyName;
+    let companyAddress = envCompanyAddress;
+    let companyCity = envCompanyCity;
+    let companyPostal = envCompanyPostal;
+    let companyCountry = "FR";
+    let companyEmail = envCompanyEmail;
+
+    // Try Sendcloud user addresses if env vars missing
+    if (!companyAddress || !companyCity || !companyPostal) {
+      // Try both known endpoints
+      for (const endpoint of [
+        "https://panel.sendcloud.sc/api/v2/user/addresses/sender",
+        "https://panel.sendcloud.sc/api/v2/user/addresses",
+      ]) {
+        try {
+          const senderRes = await fetch(endpoint, {
+            headers: { "Authorization": `Basic ${sendcloudAuth}` },
+          });
+          if (senderRes.ok) {
+            const senderData = await senderRes.json();
+            const addresses = senderData.sender_addresses || senderData.results || senderData.addresses || [];
+            const defaultAddr = addresses.find((a: any) => a.is_default) || addresses[0];
+            if (defaultAddr) {
+              companyName = defaultAddr.company_name || defaultAddr.contact_name || envCompanyName;
+              companyAddress = `${defaultAddr.street || ""}${defaultAddr.house_number ? " " + defaultAddr.house_number : ""}`.trim();
+              companyCity = defaultAddr.city || "";
+              companyPostal = defaultAddr.postal_code || "";
+              companyCountry = defaultAddr.country?.iso_2 || defaultAddr.country || "FR";
+              companyEmail = defaultAddr.email || envCompanyEmail;
+              console.log("Fetched company address from", endpoint, ":", companyAddress, companyCity, companyPostal);
+              if (companyAddress && companyCity && companyPostal) break;
+            }
+          }
+        } catch (e) {
+          console.error("Could not fetch sender address from", endpoint, ":", e);
         }
       }
-    } catch (e) {
-      console.error("Could not fetch sender address:", e);
     }
 
-    // Find a suitable shipping method (home delivery France → France)
+    if (!companyAddress || !companyCity || !companyPostal) {
+      return new Response(
+        JSON.stringify({ error: "Adresse de destination (NaturalHairMarket) non configuree. Veuillez definir COMPANY_ADDRESS, COMPANY_CITY et COMPANY_POSTAL_CODE dans les secrets Supabase." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Shipping method ---
     let shippingMethodId = 8; // Colissimo fallback
     try {
       const methodsUrl = new URL("https://panel.sendcloud.sc/api/v2/shipping_methods");
@@ -112,17 +136,13 @@ Deno.serve(async (req: Request) => {
       if (methodsRes.ok) {
         const methodsData = await methodsRes.json();
         const methods: any[] = methodsData.shipping_methods || [];
-        // Prefer Mondial Relay home delivery, then Colissimo, then first available
-        const mondialRelay = methods.find((m: any) =>
-          (m.carrier || "").toLowerCase().includes("mondial") && !m.name?.toLowerCase().includes("service point")
-        );
         const colissimo = methods.find((m: any) =>
           (m.carrier || "").toLowerCase().includes("colissimo") ||
           (m.name || "").toLowerCase().includes("colissimo")
         );
-        const picked = mondialRelay || colissimo || methods[0];
+        const picked = colissimo || methods[0];
         if (picked?.id) shippingMethodId = picked.id;
-        console.log("Picked shipping method:", picked?.id, picked?.name, picked?.carrier);
+        console.log("Picked shipping method:", picked?.id, picked?.name);
       }
     } catch (e) {
       console.error("Could not fetch shipping methods:", e);
@@ -130,22 +150,30 @@ Deno.serve(async (req: Request) => {
 
     const sellerName = `${req2.first_name} ${req2.last_name}`;
 
-    // Create parcel: TO = NaturalHairMarket, FROM = seller
-    // This generates a prepaid label the seller uses to ship their hair to us.
-    const parcelData: Record<string, any> = {
-      name: companyAddress.name,
-      address: companyAddress.address || "1 rue de la Paix",
-      city: companyAddress.city || "Paris",
-      postal_code: companyAddress.postal_code || "75001",
-      country: companyAddress.country,
+    // Parse seller address: try to extract house number for Sendcloud FR
+    const addressLine = (req2.address_line1 || "").trim();
+    const houseNumMatch = addressLine.match(/^(\d+[\w-]*)\s+(.+)$/);
+    const fromAddress = houseNumMatch ? houseNumMatch[2] : addressLine;
+    const fromHouseNumber = houseNumMatch ? houseNumMatch[1] : "";
 
-      // Override sender = seller
+    // Create parcel: TO = NaturalHairMarket, FROM = seller
+    const parcelData: Record<string, any> = {
+      name: companyName,
+      address: companyAddress,
+      city: companyCity,
+      postal_code: companyPostal,
+      country: companyCountry,
+      ...(companyEmail ? { email: companyEmail } : {}),
+
+      // Sender = seller (generates prepaid label they can use)
       from_name: sellerName,
-      from_address: req2.address_line1,
+      from_address: fromAddress,
+      ...(fromHouseNumber ? { from_house_number: fromHouseNumber } : {}),
       from_city: req2.city,
       from_postal_code: req2.postal_code,
       from_country: "FR",
-      from_telephone: req2.phone || "",
+      ...(req2.phone ? { from_telephone: req2.phone } : {}),
+      ...(req2.email ? { from_email: req2.email } : {}),
 
       weight: "0.500",
       order_number: buybackId,
