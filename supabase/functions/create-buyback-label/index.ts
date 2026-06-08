@@ -61,12 +61,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (!req2.address_line1 || !req2.postal_code || !req2.city) {
-      return new Response(
-        JSON.stringify({ error: "Adresse du vendeur manquante. Impossible de generer l'etiquette." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const sellerHasAddress = !!(req2.address_line1 && req2.postal_code && req2.city);
 
     const sendcloudAuth = btoa(`${sendcloudApiKey}:${sendcloudApiSecret}`);
 
@@ -178,20 +173,22 @@ Deno.serve(async (req: Request) => {
       email: companyEmail,
       telephone: sellerPhone || envCompanyPhone,
 
-      // --- FROM override (sender shown on label: seller) ---
-      from_name: sellerName,
-      from_address: fromStreet,
-      ...(fromHouseNumber ? { from_house_number: fromHouseNumber } : {}),
-      from_city: req2.city,
-      from_postal_code: req2.postal_code,
-      from_country: "FR",
-      from_telephone: sellerPhone || envCompanyPhone,
-      from_email: sellerEmail,
-
       weight: "0.500",
       order_number: buybackId,
       request_label: true,
       shipment: { id: shippingMethodId },
+
+      // FROM override (seller address) only when available
+      ...(sellerHasAddress ? {
+        from_name: sellerName,
+        from_address: fromStreet,
+        ...(fromHouseNumber ? { from_house_number: fromHouseNumber } : {}),
+        from_city: req2.city,
+        from_postal_code: req2.postal_code,
+        from_country: "FR",
+        from_telephone: sellerPhone || envCompanyPhone,
+        from_email: sellerEmail,
+      } : {}),
     };
 
     console.log("=== BUYBACK LABEL PAYLOAD ===", JSON.stringify({ parcel: parcelData }));
