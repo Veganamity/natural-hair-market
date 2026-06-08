@@ -609,20 +609,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           </div>
         </section>
 
-        {/* Grille tarifaire image */}
-        <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Grille tarifaire de reference</h2>
-          <p className="text-gray-500 mb-4 text-sm">Ces prix sont indicatifs et bases sur des cheveux en bon etat. Le prix definitif est confirme apres inspection a reception.</p>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <img
-              src="/ab1b549f-6bc6-4966-b017-7d9be074b365.png"
-              alt="Grille tarifaire des cheveux bruts sur NaturalHairMarket"
-              className="w-full h-auto"
-            />
-          </div>
-        </section>
-
-        {/* ===== SECTION B : Consignes de preparation ===== */}
+{/* ===== SECTION B : Consignes de preparation ===== */}
         <section>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">B</div>
