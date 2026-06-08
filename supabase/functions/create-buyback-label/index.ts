@@ -184,10 +184,11 @@ Deno.serve(async (req: Request) => {
       weight: "0.500",
       order_number: buybackId,
       request_label: true,
+      is_return: true,
       shipment: { id: shippingMethodId },
 
-      // FROM override (seller address) only when available
-      // from_address must be the full address line — Sendcloud has no from_house_number field
+      // is_return: true requires from_* fields = return origin (seller's address)
+      // from_address = full address line (no from_house_number — not a valid Sendcloud field)
       ...(sellerHasAddress ? {
         from_name: sellerName,
         from_address: fromFullAddress,
