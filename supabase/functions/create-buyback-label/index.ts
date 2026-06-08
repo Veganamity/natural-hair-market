@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
     if (existing?.shipping_label_url) {
       return new Response(
         JSON.stringify({
-          shipping_label_url: existing.shipping_label_url,
+          success: true,
           tracking_number: existing.shipping_tracking_number,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -202,7 +202,7 @@ Deno.serve(async (req: Request) => {
         }).eq("id", buybackId);
 
         return new Response(
-          JSON.stringify({ success: true, shipping_label_url: labelUrl, tracking_number: trackingNumber, parcel_id: parcelId }),
+          JSON.stringify({ success: true, tracking_number: trackingNumber, parcel_id: parcelId }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -354,7 +354,7 @@ Deno.serve(async (req: Request) => {
     }).eq("id", buybackId);
 
     return new Response(
-      JSON.stringify({ success: true, shipping_label_url: labelUrl, tracking_number: trackingNumber, parcel_id: parcelId }),
+      JSON.stringify({ success: true, tracking_number: trackingNumber, parcel_id: parcelId }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
