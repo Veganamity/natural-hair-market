@@ -157,8 +157,19 @@ Deno.serve(async (req: Request) => {
     const companyStreet = companyAddrMatch ? companyAddrMatch[2] : companyAddress;
     const companyHouseNumber = companyAddrMatch ? companyAddrMatch[1] : "";
 
-    // Sendcloud requires telephone at parcel level (= sender/FROM contact)
-    const sellerPhone = (req2.phone || "").replace(/\s/g, "");
+    // Normalize phone to international format (+33...) required by Sendcloud FR
+    const normalizePhone = (raw: string): string => {
+      const cleaned = (raw || "").replace(/[\s\-\.]/g, "");
+      if (!cleaned) return "";
+      if (cleaned.startsWith("+")) return cleaned;
+      if (cleaned.startsWith("0033")) return "+" + cleaned.substring(2);
+      if (cleaned.startsWith("33") && cleaned.length === 11) return "+" + cleaned;
+      if (cleaned.startsWith("0") && cleaned.length === 10) return "+33" + cleaned.substring(1);
+      return cleaned;
+    };
+
+    const sellerPhone = normalizePhone(req2.phone);
+    const fallbackPhone = normalizePhone(envCompanyPhone);
     const sellerEmail = req2.email || "";
 
     // Create parcel: TO = NaturalHairMarket (receives hair), FROM = seller (ships hair)
@@ -171,7 +182,7 @@ Deno.serve(async (req: Request) => {
       postal_code: companyPostal,
       country: companyCountry,
       email: companyEmail,
-      telephone: sellerPhone || envCompanyPhone,
+      telephone: sellerPhone || fallbackPhone,
 
       weight: "0.500",
       order_number: buybackId,
@@ -186,7 +197,7 @@ Deno.serve(async (req: Request) => {
         from_city: req2.city,
         from_postal_code: req2.postal_code,
         from_country: "FR",
-        from_telephone: sellerPhone || envCompanyPhone,
+        from_telephone: sellerPhone || fallbackPhone,
         from_email: sellerEmail,
       } : {}),
     };
