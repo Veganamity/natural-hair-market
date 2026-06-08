@@ -241,11 +241,16 @@ Deno.serve(async (req: Request) => {
         const methodsData = await methodsRes.json();
         const methods: any[] = methodsData.shipping_methods || [];
         console.log("Available methods:", JSON.stringify(methods.map((m: any) => ({ id: m.id, name: m.name, carrier: m.carrier }))));
-        const colissimo = methods.find((m: any) =>
+        // Exclude non-tracked methods (letters, unstamped, etc.)
+        const tracked = methods.filter((m: any) => {
+          const name = (m.name || "").toLowerCase();
+          return !name.includes("letter") && !name.includes("lettre") && !name.includes("unstamped") && !name.includes("non affranchi");
+        });
+        const colissimo = tracked.find((m: any) =>
           (m.carrier || "").toLowerCase().includes("colissimo") ||
           (m.name || "").toLowerCase().includes("colissimo")
         );
-        const picked = colissimo || methods[0];
+        const picked = colissimo || tracked[0] || methods[0];
         if (picked?.id) shippingMethodId = picked.id;
         console.log("Picked method:", shippingMethodId, picked?.name);
       }
@@ -253,15 +258,16 @@ Deno.serve(async (req: Request) => {
       console.error("Could not fetch shipping methods:", e);
     }
 
+    // For a prepaid return label: name/address = SELLER (pickup origin), sender_address = NaturalHairMarket (destination)
     const v2Payload: Record<string, any> = {
-      name: companyName,
-      address: companyParts.street,
-      ...(companyParts.houseNumber ? { house_number: companyParts.houseNumber } : {}),
-      city: companyCity,
-      postal_code: companyPostal,
+      name: sellerName,
+      address: sellerHasAddress ? sellerParts.street : companyParts.street,
+      ...(sellerHasAddress && sellerParts.houseNumber ? { house_number: sellerParts.houseNumber } : {}),
+      city: buyback.city || companyCity,
+      postal_code: buyback.postal_code || companyPostal,
       country: "FR",
-      email: companyEmail,
-      telephone: companyPhone,
+      email: buyback.email || companyEmail,
+      telephone: sellerPhone,
       weight: "0.500",
       order_number: buybackId,
       request_label: true,
