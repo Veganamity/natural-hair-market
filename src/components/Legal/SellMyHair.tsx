@@ -152,9 +152,16 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
   const [condition, setCondition] = useState<Condition | ''>('');
   const [colorType, setColorType] = useState<ColorType | ''>('');
   const [length, setLength] = useState('');
+  const [weightGrams, setWeightGrams] = useState('');
 
   const availableLengths = ALL_LENGTHS;
-  const calculatedPrice = condition ? getPrice(condition as Condition, colorType, length) : '';
+  const rateStr = condition ? getPrice(condition as Condition, colorType, length) : '';
+  const ratePerHundred = rateStr ? parseFloat(rateStr) : null;
+  const grams = parseFloat(weightGrams);
+  const exactPrice = ratePerHundred != null && !isNaN(grams) && grams > 0
+    ? Math.round(ratePerHundred * grams / 100 * 100) / 100
+    : null;
+  const calculatedPrice = rateStr;
 
   // --- Formulaire ---
   const formRef = useRef<HTMLDivElement>(null);
@@ -372,7 +379,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                 </p>
                 <select
                   value={length}
-                  onChange={(e) => setLength(e.target.value)}
+                  onChange={(e) => { setLength(e.target.value); setWeightGrams(''); }}
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:border-emerald-500 focus:ring-0 outline-none text-sm bg-white"
                 >
                   <option value="">-- Choisir une longueur --</option>
@@ -383,14 +390,45 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               </div>
             )}
 
-            {/* Resultat */}
-            {calculatedPrice && (
-              <div className="rounded-xl p-5 text-center border-2 bg-emerald-50 border-emerald-300">
-                <p className="text-sm font-medium text-gray-600 mb-1">Tarif de rachat</p>
-                <p className="text-3xl font-black text-emerald-700">
-                  {calculatedPrice}
+            {/* Choix 4 : Poids en grammes */}
+            {rateStr && (
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-3">
+                  {condition === 'natural' ? '4.' : '3.'} Poids de vos cheveux (grammes)
                 </p>
-                <p className="text-xs text-emerald-600 mt-1">Tarif par 100g — prix final apres pesee et verification a reception.</p>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max="2000"
+                    step="1"
+                    placeholder="Ex : 150"
+                    value={weightGrams}
+                    onChange={(e) => setWeightGrams(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pr-12 text-gray-800 focus:border-emerald-500 focus:ring-0 outline-none text-sm bg-white"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-400">g</span>
+                </div>
+                <p className="text-xs text-gray-400 mt-1.5">Tarif applicable : <span className="font-semibold text-emerald-700">{rateStr}</span></p>
+              </div>
+            )}
+
+            {/* Resultat */}
+            {rateStr && (
+              <div className={`rounded-xl p-5 text-center border-2 ${exactPrice != null ? 'bg-emerald-50 border-emerald-400' : 'bg-gray-50 border-gray-200'}`}>
+                <p className="text-sm font-medium text-gray-600 mb-1">Estimation de rachat</p>
+                {exactPrice != null ? (
+                  <>
+                    <p className="text-4xl font-black text-emerald-700">{exactPrice.toFixed(2)} €</p>
+                    <p className="text-xs text-emerald-600 mt-1">Pour {grams} g — base {rateStr}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-black text-gray-400">{rateStr}</p>
+                    <p className="text-xs text-gray-500 mt-1">Entrez le poids pour obtenir votre estimation precise.</p>
+                  </>
+                )}
+                <p className="text-xs text-gray-400 mt-2">Prix final confirme apres pesee et verification a reception.</p>
                 <button
                   onClick={scrollToForm}
                   className="mt-4 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors text-sm"
@@ -550,10 +588,30 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                     </div>
                   )}
 
-                  {calculatedPrice && (
-                    <div className="rounded-xl p-3 flex items-center justify-between gap-3 bg-white border border-emerald-300">
-                      <p className="text-xs text-gray-600">Tarif de rachat</p>
-                      <p className="text-lg font-black text-emerald-700">{calculatedPrice}</p>
+                  {rateStr && (
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Poids estimé (grammes)</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            min="1"
+                            max="2000"
+                            step="1"
+                            placeholder="Ex : 150"
+                            value={weightGrams}
+                            onChange={(e) => setWeightGrams(e.target.value)}
+                            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:border-emerald-500 outline-none bg-white"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-400">g</span>
+                        </div>
+                      </div>
+                      <div className={`rounded-xl p-3 flex items-center justify-between gap-3 border ${exactPrice != null ? 'bg-emerald-50 border-emerald-300' : 'bg-gray-50 border-gray-200'}`}>
+                        <p className="text-xs text-gray-600">{exactPrice != null ? `Estimation pour ${grams} g` : 'Tarif / 100g'}</p>
+                        <p className={`text-lg font-black ${exactPrice != null ? 'text-emerald-700' : 'text-gray-500'}`}>
+                          {exactPrice != null ? `${exactPrice.toFixed(2)} €` : rateStr}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
