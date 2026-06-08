@@ -77,6 +77,7 @@ Deno.serve(async (req: Request) => {
     const envCompanyCity = Deno.env.get("COMPANY_CITY") || "Belfort";
     const envCompanyPostal = Deno.env.get("COMPANY_POSTAL_CODE") || "90000";
     const envCompanyEmail = Deno.env.get("COMPANY_EMAIL") || "stephaniebuisson1115@gmail.com";
+    const envCompanyPhone = Deno.env.get("COMPANY_PHONE") || "+33767166174";
 
     let companyName = envCompanyName;
     let companyAddress = envCompanyAddress;
@@ -175,7 +176,7 @@ Deno.serve(async (req: Request) => {
       postal_code: companyPostal,
       country: companyCountry,
       email: companyEmail,
-      telephone: sellerPhone || "+33600000000",
+      telephone: sellerPhone || envCompanyPhone,
 
       // --- FROM override (sender shown on label: seller) ---
       from_name: sellerName,
@@ -184,7 +185,7 @@ Deno.serve(async (req: Request) => {
       from_city: req2.city,
       from_postal_code: req2.postal_code,
       from_country: "FR",
-      from_telephone: sellerPhone || "+33600000000",
+      from_telephone: sellerPhone || envCompanyPhone,
       from_email: sellerEmail,
 
       weight: "0.500",
