@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import { Scissors, CheckCircle, XCircle, Clock, Search, RefreshCw, Mail, Phone, Building2, User, Ruler, Palette, Euro, Image as ImageIcon, Calendar, MapPin, CreditCard, Banknote as BanknoteIcon } from 'lucide-react';
+import { Scissors, CheckCircle, XCircle, Clock, Search, RefreshCw, Mail, Phone, Building2, User, Ruler, Palette, Euro, Image as ImageIcon, Calendar, MapPin, CreditCard, Banknote as BanknoteIcon, Package, ExternalLink, Truck } from 'lucide-react';
 
 interface BuybackRequest {
   id: string;
@@ -25,6 +25,9 @@ interface BuybackRequest {
   final_price: number | null;
   paid_at: string | null;
   payment_reference: string | null;
+  shipping_label_url: string | null;
+  shipping_tracking_number: string | null;
+  label_generated_at: string | null;
 }
 
 const CONDITION_LABELS: Record<string, string> = {
@@ -57,6 +60,7 @@ export default function BuybackAdmin() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [paymentForms, setPaymentForms] = useState<Record<string, { price: string; ref: string }>>({});
+  const [labelLoading, setLabelLoading] = useState<string | null>(null);
 
   const isAdmin = profile?.email === ADMIN_EMAIL || user?.email === ADMIN_EMAIL;
 
@@ -136,6 +140,35 @@ export default function BuybackAdmin() {
       showToast('success', 'Virement marque comme effectue.');
     }
     setActionLoading(null);
+  };
+
+  const generateLabel = async (id: string) => {
+    setLabelLoading(id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-buyback-label`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ buybackId: id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
+      setRequests(prev => prev.map(r => r.id === id ? {
+        ...r,
+        shipping_label_url: data.shipping_label_url,
+        shipping_tracking_number: data.tracking_number,
+        label_generated_at: new Date().toISOString(),
+      } : r));
+      showToast('success', 'Etiquette generee avec succes !');
+      if (data.shipping_label_url) window.open(data.shipping_label_url, '_blank');
+    } catch (err) {
+      showToast('error', (err as Error).message || 'Erreur lors de la generation de l\'etiquette.');
+    }
+    setLabelLoading(null);
   };
 
   const showToast = (type: 'success' | 'error', text: string) => {
@@ -458,6 +491,47 @@ export default function BuybackAdmin() {
                           : <BanknoteIcon className="w-4 h-4" />}
                         Marquer le virement comme effectue
                       </button>
+
+                      {/* Etiquette d'expedition */}
+                      <div className="border-t border-gray-100 pt-4">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                          <Truck className="w-3.5 h-3.5" />
+                          Etiquette d'expedition (vendeur → NaturalHairMarket)
+                        </p>
+                        {req.shipping_label_url ? (
+                          <div className="space-y-2">
+                            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-semibold text-emerald-700">Etiquette generee</p>
+                                {req.shipping_tracking_number && (
+                                  <p className="text-xs text-gray-500 font-mono mt-0.5">Suivi : {req.shipping_tracking_number}</p>
+                                )}
+                              </div>
+                              <a
+                                href={req.shipping_label_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Ouvrir PDF
+                              </a>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => generateLabel(req.id)}
+                            disabled={labelLoading === req.id || !req.address_line1}
+                            className="w-full flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-900 disabled:opacity-50 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                            title={!req.address_line1 ? "Adresse du vendeur manquante" : ""}
+                          >
+                            {labelLoading === req.id
+                              ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              : <Package className="w-4 h-4" />}
+                            {!req.address_line1 ? 'Adresse manquante – etiquette impossible' : 'Generer l\'etiquette Sendcloud'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -479,6 +553,23 @@ export default function BuybackAdmin() {
                       )}
                       {req.iban && (
                         <p className="text-xs text-gray-500 font-mono break-all">IBAN : {req.iban}</p>
+                      )}
+                      {req.shipping_label_url && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <Truck className="w-3.5 h-3.5 text-gray-400" />
+                          <a
+                            href={req.shipping_label_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            Etiquette expedition
+                          </a>
+                          {req.shipping_tracking_number && (
+                            <span className="text-xs text-gray-500 font-mono">— {req.shipping_tracking_number}</span>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}

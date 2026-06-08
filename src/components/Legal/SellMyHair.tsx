@@ -27,6 +27,8 @@ import {
   Sparkles,
   MapPin,
   CreditCard,
+  Mail,
+  Phone,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -182,6 +184,12 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [submittedSummary, setSubmittedSummary] = useState<{
+    name: string; email: string; phone: string;
+    condition: string; color: string; length: string; price: string;
+    address: string; iban: string; holder: string;
+    submittedAt: string;
+  } | null>(null);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -253,6 +261,19 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
       if (insertError) throw insertError;
 
+      setSubmittedSummary({
+        name: `${form.first_name.trim()} ${form.last_name.trim()}`,
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        condition: condition === 'colored' ? 'Colores / Meches' : 'Naturels (Vierges)',
+        color: colorType === 'chestnut' ? 'Chatain / Brun' : colorType === 'blond_roux_gris' ? 'Blond / Roux / Gris' : '',
+        length,
+        price: rateStr || 'Non calcule',
+        address: [form.address_line1.trim(), form.postal_code.trim(), form.city.trim()].filter(Boolean).join(', '),
+        iban: form.iban.trim(),
+        holder: form.bank_holder_name.trim(),
+        submittedAt: new Date().toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      });
       setSubmitSuccess(true);
       setForm({ first_name: '', last_name: '', email: '', phone: '', salon_name: '', address_line1: '', postal_code: '', city: '', iban: '', bank_holder_name: '' });
       setPhotoFile(null);
@@ -497,22 +518,109 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
             Remplissez le formulaire ci-dessous. Notre equipe vous contactera sous 48h pour confirmer le rachat et les modalites d'envoi.
           </p>
 
-          {submitSuccess ? (
-            <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-8 text-center">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-9 h-9 text-emerald-600" />
+          {submitSuccess && submittedSummary ? (
+            <div className="space-y-4" id="buyback-receipt">
+              {/* Confirmation header */}
+              <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-6 text-center">
+                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle className="w-8 h-8 text-emerald-600" />
+                </div>
+                <h3 className="text-xl font-bold text-emerald-800 mb-1">Demande envoyee avec succes !</h3>
+                <p className="text-emerald-700 text-sm">Notre equipe vous contactera sous <strong>48h ouvrables</strong>.</p>
               </div>
-              <h3 className="text-xl font-bold text-emerald-800 mb-2">Demande envoyee avec succes !</h3>
-              <p className="text-emerald-700 text-sm max-w-md mx-auto leading-relaxed">
-                Nous avons bien recu votre demande de rachat. Notre equipe l'examine et vous contactera par email ou telephone sous <strong>48h ouvrables</strong>.
-              </p>
-              <button
-                onClick={() => setSubmitSuccess(false)}
-                className="mt-5 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors text-sm"
-              >
-                <Sparkles className="w-4 h-4" />
-                Faire une nouvelle demande
-              </button>
+
+              {/* Recapitulatif imprimable */}
+              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                <div className="bg-gray-800 px-5 py-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-white font-bold text-sm">Recapitulatif de votre demande</p>
+                    <p className="text-gray-400 text-xs mt-0.5">Soumis le {submittedSummary.submittedAt}</p>
+                  </div>
+                  <Scissors className="w-5 h-5 text-emerald-400" />
+                </div>
+
+                <div className="p-5 space-y-4">
+                  {/* Identite */}
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Vos coordonnees</p>
+                    <div className="grid sm:grid-cols-2 gap-2 text-sm">
+                      <div className="flex items-center gap-2 text-gray-700"><User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />{submittedSummary.name}</div>
+                      <div className="flex items-center gap-2 text-gray-700"><Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />{submittedSummary.email}</div>
+                      <div className="flex items-center gap-2 text-gray-700"><Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />{submittedSummary.phone}</div>
+                      {submittedSummary.address && <div className="flex items-start gap-2 text-gray-700"><MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />{submittedSummary.address}</div>}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  {/* Cheveux */}
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Caracteristiques des cheveux</p>
+                    <div className="grid sm:grid-cols-3 gap-2">
+                      <div className="bg-gray-50 rounded-xl p-3">
+                        <p className="text-xs text-gray-500 mb-0.5">Etat</p>
+                        <p className="text-sm font-semibold text-gray-800">{submittedSummary.condition}</p>
+                      </div>
+                      {submittedSummary.color && (
+                        <div className="bg-gray-50 rounded-xl p-3">
+                          <p className="text-xs text-gray-500 mb-0.5">Couleur</p>
+                          <p className="text-sm font-semibold text-gray-800">{submittedSummary.color}</p>
+                        </div>
+                      )}
+                      <div className="bg-gray-50 rounded-xl p-3">
+                        <p className="text-xs text-gray-500 mb-0.5">Longueur</p>
+                        <p className="text-sm font-semibold text-gray-800">{submittedSummary.length}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100" />
+
+                  {/* Tarif */}
+                  <div className="flex items-center justify-between bg-emerald-50 rounded-xl px-4 py-3">
+                    <p className="text-sm text-gray-700 font-medium">Tarif indicatif de rachat</p>
+                    <p className="text-lg font-black text-emerald-700">{submittedSummary.price}</p>
+                  </div>
+
+                  {/* IBAN */}
+                  {submittedSummary.iban && (
+                    <>
+                      <div className="border-t border-gray-100" />
+                      <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Coordonnees bancaires</p>
+                        <div className="bg-gray-50 rounded-xl p-3 space-y-1">
+                          <p className="text-xs text-gray-500">Titulaire : <span className="font-semibold text-gray-700">{submittedSummary.holder}</span></p>
+                          <p className="text-xs font-mono text-gray-700 break-all">{submittedSummary.iban}</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Note */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      <strong>Prochaine etape :</strong> Notre equipe examine votre demande et vous envoie une etiquette d'expedition prepayee sous 48h. Attendez notre confirmation avant d'envoyer vos cheveux.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => window.print()}
+                  className="flex-1 inline-flex items-center justify-center gap-2 border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-700 font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm"
+                >
+                  Imprimer ce recapitulatif
+                </button>
+                <button
+                  onClick={() => { setSubmitSuccess(false); setSubmittedSummary(null); }}
+                  className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Faire une nouvelle demande
+                </button>
+              </div>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
