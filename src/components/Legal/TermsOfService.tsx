@@ -31,7 +31,7 @@ export function TermsOfService() {
                 <div className="bg-white rounded-lg p-4 border border-gray-200">
                   <p><strong>Éditeur du site :</strong> NaturalHairMarket</p>
                   <p><strong>Responsable de la publication :</strong> Stéphanie Buisson</p>
-                  <p><strong>Contact :</strong> naturalhairmarket@gmail.com – 09 72 21 69 48</p>
+                  <p><strong>Contact :</strong> naturalhairmarket@gmail.com – +33 7 84 89 86 47</p>
                   <p><strong>Statut juridique :</strong> Entrepreneuse individuelle (SIREN en cours d'attribution)</p>
                 </div>
                 <div className="bg-white rounded-lg p-4 border border-gray-200 mt-3">
@@ -524,8 +524,8 @@ export function TermsOfService() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 font-medium">Téléphone</p>
-                    <a href="tel:0972216948" className="text-emerald-600 font-semibold hover:underline">
-                      09 72 21 69 48
+                    <a href="tel:+33784898647" className="text-emerald-600 font-semibold hover:underline">
+                      +33 7 84 89 86 47
                     </a>
                   </div>
                 </div>

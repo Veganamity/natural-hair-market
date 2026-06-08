@@ -103,7 +103,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Comment je contacte NaturalHairMarket ?",
-    a: "Vous pouvez contacter l'equipe par email a naturalhairmarket@gmail.com ou par telephone au 09 72 21 69 48 pour toute question relative a votre annonce ou a une transaction.",
+    a: "Vous pouvez contacter l'equipe par email a naturalhairmarket@gmail.com ou par telephone au +33 7 84 89 86 47 pour toute question relative a votre annonce ou a une transaction.",
   },
   {
     q: "Puis-je vendre plusieurs fois sur la plateforme ?",

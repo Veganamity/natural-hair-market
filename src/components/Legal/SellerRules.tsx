@@ -335,7 +335,7 @@ export function SellerRules() {
                 </div>
               </a>
               <a
-                href="tel:0972216948"
+                href="tel:+33784898647"
                 className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 transition-colors"
               >
                 <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -343,7 +343,7 @@ export function SellerRules() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Téléphone</p>
-                  <p className="text-emerald-700 font-semibold text-sm">09 72 21 69 48</p>
+                  <p className="text-emerald-700 font-semibold text-sm">+33 7 84 89 86 47</p>
                 </div>
               </a>
             </div>
