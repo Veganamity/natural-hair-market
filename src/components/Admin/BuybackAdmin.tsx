@@ -616,18 +616,19 @@ export default function BuybackAdmin() {
                       {req.iban && (
                         <p className="text-xs text-gray-500 font-mono break-all">IBAN : {req.iban}</p>
                       )}
-                      {req.shipping_label_url && (
+                      {req.sendcloud_parcel_id && (
                         <div className="flex items-center gap-2 pt-1">
                           <Truck className="w-3.5 h-3.5 text-gray-400" />
-                          <a
-                            href={req.shipping_label_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                          <button
+                            onClick={() => openLabelPdf(req.id)}
+                            disabled={labelLoading === req.id}
+                            className="text-xs text-blue-600 hover:underline flex items-center gap-1 disabled:opacity-50"
                           >
-                            <ExternalLink className="w-3 h-3" />
-                            Etiquette expedition
-                          </a>
+                            {labelLoading === req.id
+                              ? <div className="w-3 h-3 border border-blue-400 border-t-transparent rounded-full animate-spin" />
+                              : <ExternalLink className="w-3 h-3" />}
+                            Telecharger etiquette
+                          </button>
                           {req.shipping_tracking_number && (
                             <span className="text-xs text-gray-500 font-mono">— {req.shipping_tracking_number}</span>
                           )}
