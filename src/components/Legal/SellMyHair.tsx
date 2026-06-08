@@ -25,6 +25,8 @@ import {
   Upload,
   Send,
   Sparkles,
+  MapPin,
+  CreditCard,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -156,6 +158,11 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
     email: '',
     phone: '',
     salon_name: '',
+    address_line1: '',
+    postal_code: '',
+    city: '',
+    iban: '',
+    bank_holder_name: '',
   });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -222,13 +229,19 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           hair_color: condition === 'natural' ? colorType || null : null,
           hair_length: length,
           calculated_price: calculatedPrice || 'Non calcule',
+          address_line1: form.address_line1.trim() || null,
+          postal_code: form.postal_code.trim() || null,
+          city: form.city.trim() || null,
+          country: 'FR',
+          iban: form.iban.trim() || null,
+          bank_holder_name: form.bank_holder_name.trim() || null,
           status: 'pending',
         });
 
       if (insertError) throw insertError;
 
       setSubmitSuccess(true);
-      setForm({ first_name: '', last_name: '', email: '', phone: '', salon_name: '' });
+      setForm({ first_name: '', last_name: '', email: '', phone: '', salon_name: '', address_line1: '', postal_code: '', city: '', iban: '', bank_holder_name: '' });
       setPhotoFile(null);
       setPhotoPreview(null);
     } catch (err) {
@@ -606,6 +619,81 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                     placeholder="Salon Belleza Paris"
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
                   />
+                </div>
+
+                {/* Adresse d'expedition */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-blue-600" />
+                    <p className="text-sm font-bold text-blue-800">Adresse d'expedition</p>
+                  </div>
+                  <p className="text-xs text-blue-700">Necessaire pour la creation de l'etiquette d'envoi une fois votre demande acceptee.</p>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Adresse <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      value={form.address_line1}
+                      onChange={(e) => setForm({ ...form, address_line1: e.target.value })}
+                      placeholder="12 rue de la Paix"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">Code postal <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        required
+                        value={form.postal_code}
+                        onChange={(e) => setForm({ ...form, postal_code: e.target.value })}
+                        placeholder="75001"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">Ville <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        required
+                        value={form.city}
+                        onChange={(e) => setForm({ ...form, city: e.target.value })}
+                        placeholder="Paris"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Coordonnees bancaires */}
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-amber-600" />
+                    <p className="text-sm font-bold text-amber-800">Coordonnees bancaires pour le virement</p>
+                  </div>
+                  <p className="text-xs text-amber-700">Vos coordonnees sont securisees et accessibles uniquement par l'equipe NaturalHairMarket pour effectuer votre virement.</p>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Titulaire du compte <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      value={form.bank_holder_name}
+                      onChange={(e) => setForm({ ...form, bank_holder_name: e.target.value })}
+                      placeholder="Marie Dupont"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">IBAN <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      value={form.iban}
+                      onChange={(e) => setForm({ ...form, iban: e.target.value.toUpperCase() })}
+                      placeholder="FR76 3000 6000 0112 3456 7890 189"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
+                    />
+                  </div>
                 </div>
 
                 <div>

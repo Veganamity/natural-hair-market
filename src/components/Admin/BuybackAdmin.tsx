@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import {
-  Scissors, CheckCircle, XCircle, Clock, Search, RefreshCw,
-  Mail, Phone, Building2, User, Ruler, Palette, Euro, Image as ImageIcon, Calendar,
-} from 'lucide-react';
+import { Scissors, CheckCircle, XCircle, Clock, Search, RefreshCw, Mail, Phone, Building2, User, Ruler, Palette, Euro, Image as ImageIcon, Calendar, MapPin, CreditCard, Banknote as BanknoteIcon } from 'lucide-react';
 
 interface BuybackRequest {
   id: string;
@@ -19,7 +16,15 @@ interface BuybackRequest {
   hair_color: 'chestnut' | 'blond_roux_gris' | null;
   hair_length: string;
   calculated_price: string;
-  status: 'pending' | 'accepted' | 'refused';
+  status: 'pending' | 'accepted' | 'paid' | 'refused';
+  address_line1: string | null;
+  postal_code: string | null;
+  city: string | null;
+  iban: string | null;
+  bank_holder_name: string | null;
+  final_price: number | null;
+  paid_at: string | null;
+  payment_reference: string | null;
 }
 
 const CONDITION_LABELS: Record<string, string> = {
@@ -33,9 +38,10 @@ const COLOR_LABELS: Record<string, string> = {
 };
 
 const STATUS_CONFIG = {
-  pending:  { label: 'En attente',  bg: 'bg-amber-50',   border: 'border-amber-300',  text: 'text-amber-700',  dot: 'bg-amber-400' },
-  accepted: { label: 'Accepte',     bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  refused:  { label: 'Refuse',      bg: 'bg-red-50',     border: 'border-red-300',    text: 'text-red-700',    dot: 'bg-red-500' },
+  pending:  { label: 'En attente',       bg: 'bg-amber-50',   border: 'border-amber-300',   text: 'text-amber-700',   dot: 'bg-amber-400' },
+  accepted: { label: 'Accepte – A payer', bg: 'bg-blue-50',    border: 'border-blue-300',    text: 'text-blue-700',    dot: 'bg-blue-500' },
+  paid:     { label: 'Paye',             bg: 'bg-emerald-50', border: 'border-emerald-300',  text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  refused:  { label: 'Refuse',           bg: 'bg-red-50',     border: 'border-red-300',     text: 'text-red-700',     dot: 'bg-red-500' },
 };
 
 const ADMIN_EMAIL = 'stephaniebuisson1115@gmail.com';
@@ -45,11 +51,12 @@ export default function BuybackAdmin() {
   const [requests, setRequests] = useState<BuybackRequest[]>([]);
   const [filtered, setFiltered] = useState<BuybackRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'refused'>('pending');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'paid' | 'refused'>('pending');
   const [search, setSearch] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [paymentForms, setPaymentForms] = useState<Record<string, { price: string; ref: string }>>({});
 
   const isAdmin = profile?.email === ADMIN_EMAIL || user?.email === ADMIN_EMAIL;
 
@@ -94,7 +101,39 @@ export default function BuybackAdmin() {
       showToast('error', 'Erreur lors de la mise a jour du statut.');
     } else {
       setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
-      showToast('success', status === 'accepted' ? 'Demande acceptee avec succes.' : 'Demande refusee.');
+      showToast('success', status === 'accepted'
+        ? 'Demande acceptee. Renseignez le montant et marquez comme paye.'
+        : 'Demande refusee.');
+    }
+    setActionLoading(null);
+  };
+
+  const markAsPaid = async (id: string) => {
+    const pf = paymentForms[id] ?? {};
+    const priceNum = pf.price ? parseFloat(pf.price.replace(',', '.')) : null;
+    setActionLoading(id);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
+      .from('hair_buyback_requests')
+      .update({
+        status: 'paid',
+        final_price: priceNum,
+        paid_at: new Date().toISOString(),
+        payment_reference: pf.ref?.trim() || null,
+      })
+      .eq('id', id);
+
+    if (error) {
+      showToast('error', 'Erreur lors du marquage comme paye.');
+    } else {
+      setRequests(prev => prev.map(r => r.id === id ? {
+        ...r,
+        status: 'paid' as const,
+        final_price: priceNum,
+        paid_at: new Date().toISOString(),
+        payment_reference: pf.ref?.trim() || null,
+      } : r));
+      showToast('success', 'Virement marque comme effectue.');
     }
     setActionLoading(null);
   };
@@ -123,6 +162,7 @@ export default function BuybackAdmin() {
     all: requests.length,
     pending: requests.filter(r => r.status === 'pending').length,
     accepted: requests.filter(r => r.status === 'accepted').length,
+    paid: requests.filter(r => r.status === 'paid').length,
     refused: requests.filter(r => r.status === 'refused').length,
   };
 
@@ -174,7 +214,7 @@ export default function BuybackAdmin() {
 
       {/* Filtres */}
       <div className="flex flex-wrap gap-2">
-        {(['all', 'pending', 'accepted', 'refused'] as const).map((f) => (
+        {(['all', 'pending', 'accepted', 'paid', 'refused'] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -186,7 +226,8 @@ export default function BuybackAdmin() {
           >
             {f === 'all' && `Toutes (${counts.all})`}
             {f === 'pending' && `En attente (${counts.pending})`}
-            {f === 'accepted' && `Acceptees (${counts.accepted})`}
+            {f === 'accepted' && `A payer (${counts.accepted})`}
+            {f === 'paid' && `Payees (${counts.paid})`}
             {f === 'refused' && `Refusees (${counts.refused})`}
           </button>
         ))}
@@ -285,14 +326,11 @@ export default function BuybackAdmin() {
                       </div>
                     </div>
 
-                    {/* Colonne 3 : Photo + actions */}
+                    {/* Colonne 3 : Photo */}
                     <div className="space-y-3">
                       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide">Photo</h3>
                       {req.photo_url ? (
-                        <button
-                          onClick={() => setLightbox(req.photo_url!)}
-                          className="block w-full"
-                        >
+                        <button onClick={() => setLightbox(req.photo_url!)} className="block w-full">
                           <img
                             src={req.photo_url}
                             alt="Cheveux"
@@ -309,7 +347,7 @@ export default function BuybackAdmin() {
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Actions: En attente */}
                   {req.status === 'pending' && (
                     <div className="mt-5 pt-4 border-t border-gray-100 flex gap-3">
                       <button
@@ -317,11 +355,7 @@ export default function BuybackAdmin() {
                         disabled={actionLoading === req.id}
                         className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
                       >
-                        {actionLoading === req.id ? (
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                          <CheckCircle className="w-4 h-4" />
-                        )}
+                        {actionLoading === req.id ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                         Accepter le rachat
                       </button>
                       <button
@@ -329,21 +363,130 @@ export default function BuybackAdmin() {
                         disabled={actionLoading === req.id}
                         className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
                       >
-                        {actionLoading === req.id ? (
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                          <XCircle className="w-4 h-4" />
-                        )}
+                        {actionLoading === req.id ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <XCircle className="w-4 h-4" />}
                         Refuser
                       </button>
                     </div>
                   )}
 
-                  {req.status !== 'pending' && (
+                  {/* Actions: Accepte → Proceder au reglement */}
+                  {req.status === 'accepted' && (
+                    <div className="mt-5 pt-4 border-t border-gray-100 space-y-4">
+                      <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">Proceder au reglement</p>
+
+                      {/* Adresse d'expedition */}
+                      {req.address_line1 ? (
+                        <div className="bg-gray-50 rounded-xl p-3 space-y-1">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <MapPin className="w-3.5 h-3.5 text-gray-500" />
+                            <p className="text-xs font-semibold text-gray-600">Adresse du vendeur (pour etiquette d'envoi)</p>
+                          </div>
+                          <p className="text-sm text-gray-800">{req.address_line1}</p>
+                          <p className="text-sm text-gray-800">{req.postal_code} {req.city}</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${req.address_line1}, ${req.postal_code} ${req.city}`);
+                              showToast('success', 'Adresse copiee dans le presse-papier.');
+                            }}
+                            className="mt-1 text-xs text-blue-600 hover:text-blue-800 underline"
+                          >
+                            Copier l'adresse
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-700">
+                          Adresse non renseignee — contacter le vendeur par email ou telephone.
+                        </div>
+                      )}
+
+                      {/* Coordonnees bancaires */}
+                      {req.iban ? (
+                        <div className="bg-gray-50 rounded-xl p-3 space-y-1">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <CreditCard className="w-3.5 h-3.5 text-gray-500" />
+                            <p className="text-xs font-semibold text-gray-600">Coordonnees bancaires</p>
+                          </div>
+                          <p className="text-sm text-gray-800 font-medium">{req.bank_holder_name}</p>
+                          <p className="text-sm font-mono text-gray-700 break-all">{req.iban}</p>
+                          <button
+                            type="button"
+                            onClick={() => { navigator.clipboard.writeText(req.iban!); showToast('success', 'IBAN copie.'); }}
+                            className="mt-1 text-xs text-blue-600 hover:text-blue-800 underline"
+                          >
+                            Copier l'IBAN
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-700">
+                          IBAN non renseigne — demander au vendeur ses coordonnees bancaires.
+                        </div>
+                      )}
+
+                      {/* Montant final + reference */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Montant verse (€)</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            placeholder={req.calculated_price.replace(' €', '')}
+                            value={paymentForms[req.id]?.price ?? ''}
+                            onChange={(e) => setPaymentForms(pf => ({ ...pf, [req.id]: { ...pf[req.id], price: e.target.value } }))}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Reference virement</label>
+                          <input
+                            type="text"
+                            placeholder="REF-XXXX"
+                            value={paymentForms[req.id]?.ref ?? ''}
+                            onChange={(e) => setPaymentForms(pf => ({ ...pf, [req.id]: { ...pf[req.id], ref: e.target.value } }))}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => markAsPaid(req.id)}
+                        disabled={actionLoading === req.id}
+                        className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                      >
+                        {actionLoading === req.id
+                          ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          : <BanknoteIcon className="w-4 h-4" />}
+                        Marquer le virement comme effectue
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Statut: Paye */}
+                  {req.status === 'paid' && (
+                    <div className="mt-5 pt-4 border-t border-gray-100 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        <p className="text-sm font-semibold text-emerald-700">Virement effectue</p>
+                      </div>
+                      {req.final_price != null && (
+                        <p className="text-xs text-gray-600">Montant verse : <span className="font-bold text-gray-800">{req.final_price} €</span></p>
+                      )}
+                      {req.paid_at && (
+                        <p className="text-xs text-gray-500">Le {formatDate(req.paid_at)}</p>
+                      )}
+                      {req.payment_reference && (
+                        <p className="text-xs text-gray-500 font-mono">Ref : {req.payment_reference}</p>
+                      )}
+                      {req.iban && (
+                        <p className="text-xs text-gray-500 font-mono break-all">IBAN : {req.iban}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Statut: Refuse */}
+                  {req.status === 'refused' && (
                     <div className="mt-5 pt-4 border-t border-gray-100">
-                      <p className={`text-sm font-semibold text-center ${sc.text}`}>
-                        {req.status === 'accepted' ? 'Demande acceptee — le vendeur a ete contacte.' : 'Demande refusee.'}
-                      </p>
+                      <p className="text-sm font-semibold text-center text-red-600">Demande refusee.</p>
                     </div>
                   )}
                 </div>
