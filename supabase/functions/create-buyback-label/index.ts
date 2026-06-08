@@ -150,30 +150,42 @@ Deno.serve(async (req: Request) => {
 
     const sellerName = `${req2.first_name} ${req2.last_name}`;
 
-    // Parse seller address: try to extract house number for Sendcloud FR
+    // Parse seller address: extract house number separately (required by Sendcloud FR)
     const addressLine = (req2.address_line1 || "").trim();
     const houseNumMatch = addressLine.match(/^(\d+[\w-]*)\s+(.+)$/);
-    const fromAddress = houseNumMatch ? houseNumMatch[2] : addressLine;
+    const fromStreet = houseNumMatch ? houseNumMatch[2] : addressLine;
     const fromHouseNumber = houseNumMatch ? houseNumMatch[1] : "";
 
-    // Create parcel: TO = NaturalHairMarket, FROM = seller
+    // Parse company address similarly
+    const companyAddrMatch = companyAddress.match(/^(\d+[\w-]*)\s+(.+)$/);
+    const companyStreet = companyAddrMatch ? companyAddrMatch[2] : companyAddress;
+    const companyHouseNumber = companyAddrMatch ? companyAddrMatch[1] : "";
+
+    // Sendcloud requires telephone at parcel level (= sender/FROM contact)
+    const sellerPhone = (req2.phone || "").replace(/\s/g, "");
+    const sellerEmail = req2.email || "";
+
+    // Create parcel: TO = NaturalHairMarket (receives hair), FROM = seller (ships hair)
     const parcelData: Record<string, any> = {
+      // --- TO (destination: NaturalHairMarket) ---
       name: companyName,
-      address: companyAddress,
+      address: companyStreet,
+      ...(companyHouseNumber ? { house_number: companyHouseNumber } : {}),
       city: companyCity,
       postal_code: companyPostal,
       country: companyCountry,
-      ...(companyEmail ? { email: companyEmail } : {}),
+      email: companyEmail,
+      telephone: sellerPhone || "+33600000000",
 
-      // Sender = seller (generates prepaid label they can use)
+      // --- FROM override (sender shown on label: seller) ---
       from_name: sellerName,
-      from_address: fromAddress,
+      from_address: fromStreet,
       ...(fromHouseNumber ? { from_house_number: fromHouseNumber } : {}),
       from_city: req2.city,
       from_postal_code: req2.postal_code,
       from_country: "FR",
-      ...(req2.phone ? { from_telephone: req2.phone } : {}),
-      ...(req2.email ? { from_email: req2.email } : {}),
+      from_telephone: sellerPhone || "+33600000000",
+      from_email: sellerEmail,
 
       weight: "0.500",
       order_number: buybackId,
