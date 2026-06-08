@@ -256,8 +256,11 @@ function AppContent() {
       />;
     }
 
-    const PUBLIC_VIEWS = new Set(['faq', 'about', 'sell-my-hair', 'guide-coupe']);
-    if (LEGAL_PATHS[`/${currentView}`] !== undefined || PUBLIC_VIEWS.has(currentView)) {
+    const PUBLIC_VIEWS = new Set([
+      'privacy', 'terms', 'sales', 'refund', 'safety', 'seller-rules',
+      'sell-my-hair', 'buyer-rules', 'faq', 'about', 'guide-coupe',
+    ]);
+    if (PUBLIC_VIEWS.has(currentView)) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
           <nav className="bg-white shadow-md sticky top-0 z-40">

@@ -67,26 +67,25 @@ export default function BuybackAdmin() {
 
   const loadRequests = async () => {
     setLoading(true);
-    const query = supabase
-      .from('hair_buyback_requests')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (filter !== 'all') query.eq('status', filter);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    let query = db.from('hair_buyback_requests').select('*').order('created_at', { ascending: false });
+    if (filter !== 'all') query = query.eq('status', filter);
 
     const { data, error } = await query;
     if (error) {
       showToast('error', 'Erreur lors du chargement des demandes.');
     } else {
-      setRequests(data ?? []);
-      setFiltered(data ?? []);
+      setRequests((data ?? []) as BuybackRequest[]);
+      setFiltered((data ?? []) as BuybackRequest[]);
     }
     setLoading(false);
   };
 
   const updateStatus = async (id: string, status: 'accepted' | 'refused') => {
     setActionLoading(id);
-    const { error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from('hair_buyback_requests')
       .update({ status })
       .eq('id', id);
