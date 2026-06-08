@@ -146,15 +146,15 @@ Deno.serve(async (req: Request) => {
 
     const sellerName = `${req2.first_name} ${req2.last_name}`;
 
-    // For the TO address (main fields), Sendcloud FR requires house_number separately
-    const companyAddrMatch = companyAddress.match(/^(\d+[\w-]*)\s+(.+)$/);
-    const companyStreet = companyAddrMatch ? companyAddrMatch[2] : companyAddress;
-    const companyHouseNumber = companyAddrMatch ? companyAddrMatch[1] : "";
+    // Sendcloud FR requires house_number separately for BOTH TO and FROM addresses
+    const splitAddress = (line: string) => {
+      const m = (line || "").trim().match(/^(\d+[\w-]*)\s+(.+)$/);
+      return m ? { street: m[2], houseNumber: m[1] } : { street: (line || "").trim(), houseNumber: "" };
+    };
 
-    // For FROM override, from_address must be the FULL line (Sendcloud does not accept from_house_number)
-    const fromFullAddress = (req2.address_line1 || "").trim();
+    const companyParts = splitAddress(companyAddress);
+    const fromParts = splitAddress(req2.address_line1 || "");
 
-    // Normalize phone to international format (+33...) required by Sendcloud FR
     const normalizePhone = (raw: string): string => {
       const cleaned = (raw || "").replace(/[\s\-\.]/g, "");
       if (!cleaned) return "";
@@ -169,12 +169,12 @@ Deno.serve(async (req: Request) => {
     const fallbackPhone = normalizePhone(envCompanyPhone);
     const sellerEmail = req2.email || "";
 
-    // Create parcel: TO = NaturalHairMarket (receives hair), FROM = seller (ships hair)
+    // is_return: true → FROM = seller (origin), TO = NaturalHairMarket (destination)
+    // Both TO and FROM require house_number as a separate field for Colissimo FR
     const parcelData: Record<string, any> = {
-      // --- TO (destination: NaturalHairMarket) ---
       name: companyName,
-      address: companyStreet,
-      ...(companyHouseNumber ? { house_number: companyHouseNumber } : {}),
+      address: companyParts.street,
+      ...(companyParts.houseNumber ? { house_number: companyParts.houseNumber } : {}),
       city: companyCity,
       postal_code: companyPostal,
       country: companyCountry,
@@ -187,11 +187,10 @@ Deno.serve(async (req: Request) => {
       is_return: true,
       shipment: { id: shippingMethodId },
 
-      // is_return: true requires from_* fields = return origin (seller's address)
-      // from_address = full address line (no from_house_number — not a valid Sendcloud field)
       ...(sellerHasAddress ? {
         from_name: sellerName,
-        from_address: fromFullAddress,
+        from_address: fromParts.street,
+        ...(fromParts.houseNumber ? { from_house_number: fromParts.houseNumber } : {}),
         from_city: req2.city,
         from_postal_code: req2.postal_code,
         from_country: "FR",
