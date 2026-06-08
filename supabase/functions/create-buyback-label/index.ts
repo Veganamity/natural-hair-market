@@ -146,16 +146,13 @@ Deno.serve(async (req: Request) => {
 
     const sellerName = `${req2.first_name} ${req2.last_name}`;
 
-    // Parse seller address: extract house number separately (required by Sendcloud FR)
-    const addressLine = (req2.address_line1 || "").trim();
-    const houseNumMatch = addressLine.match(/^(\d+[\w-]*)\s+(.+)$/);
-    const fromStreet = houseNumMatch ? houseNumMatch[2] : addressLine;
-    const fromHouseNumber = houseNumMatch ? houseNumMatch[1] : "";
-
-    // Parse company address similarly
+    // For the TO address (main fields), Sendcloud FR requires house_number separately
     const companyAddrMatch = companyAddress.match(/^(\d+[\w-]*)\s+(.+)$/);
     const companyStreet = companyAddrMatch ? companyAddrMatch[2] : companyAddress;
     const companyHouseNumber = companyAddrMatch ? companyAddrMatch[1] : "";
+
+    // For FROM override, from_address must be the FULL line (Sendcloud does not accept from_house_number)
+    const fromFullAddress = (req2.address_line1 || "").trim();
 
     // Normalize phone to international format (+33...) required by Sendcloud FR
     const normalizePhone = (raw: string): string => {
@@ -190,10 +187,10 @@ Deno.serve(async (req: Request) => {
       shipment: { id: shippingMethodId },
 
       // FROM override (seller address) only when available
+      // from_address must be the full address line — Sendcloud has no from_house_number field
       ...(sellerHasAddress ? {
         from_name: sellerName,
-        from_address: fromStreet,
-        ...(fromHouseNumber ? { from_house_number: fromHouseNumber } : {}),
+        from_address: fromFullAddress,
         from_city: req2.city,
         from_postal_code: req2.postal_code,
         from_country: "FR",
