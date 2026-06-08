@@ -71,12 +71,12 @@ Deno.serve(async (req: Request) => {
     const sendcloudAuth = btoa(`${sendcloudApiKey}:${sendcloudApiSecret}`);
 
     // --- Company destination address ---
-    // Try env vars first, then Sendcloud API, then fail with a clear error.
-    const envCompanyName = Deno.env.get("COMPANY_NAME") || "NaturalHairMarket";
-    const envCompanyAddress = Deno.env.get("COMPANY_ADDRESS") || "";
-    const envCompanyCity = Deno.env.get("COMPANY_CITY") || "";
-    const envCompanyPostal = Deno.env.get("COMPANY_POSTAL_CODE") || "";
-    const envCompanyEmail = Deno.env.get("COMPANY_EMAIL") || "";
+    // Try env vars first, then hardcoded defaults, then Sendcloud API.
+    const envCompanyName = Deno.env.get("COMPANY_NAME") || "NaturalHairMarket – Stephanie Buisson";
+    const envCompanyAddress = Deno.env.get("COMPANY_ADDRESS") || "17 rue d'Hanoi";
+    const envCompanyCity = Deno.env.get("COMPANY_CITY") || "Belfort";
+    const envCompanyPostal = Deno.env.get("COMPANY_POSTAL_CODE") || "90000";
+    const envCompanyEmail = Deno.env.get("COMPANY_EMAIL") || "stephaniebuisson1115@gmail.com";
 
     let companyName = envCompanyName;
     let companyAddress = envCompanyAddress;
