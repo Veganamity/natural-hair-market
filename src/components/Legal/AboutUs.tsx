@@ -390,7 +390,7 @@ export function AboutUs({ onClose }: AboutUsProps) {
                 </div>
               </a>
               <a
-                href="tel:0784898647"
+                href="tel:+33784898647"
                 className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-emerald-50 transition-colors group"
               >
                 <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors">
@@ -401,7 +401,7 @@ export function AboutUs({ onClose }: AboutUsProps) {
                 <div>
                   <p className="text-sm text-gray-600 font-medium">Téléphone</p>
                   <span className="text-emerald-600 font-semibold">
-                    07 84 89 86 47
+                    +33 7 84 89 86 47
                   </span>
                 </div>
               </a>

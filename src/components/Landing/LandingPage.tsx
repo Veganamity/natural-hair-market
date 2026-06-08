@@ -671,8 +671,8 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
                 </div>
                 <h4 className="text-white font-semibold">Téléphone</h4>
               </div>
-              <a href="tel:0784898647" className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">
-                07 84 89 86 47
+              <a href="tel:+33784898647" className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">
+                +33 7 84 89 86 47
               </a>
             </div>
           </div>
