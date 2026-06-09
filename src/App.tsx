@@ -300,6 +300,7 @@ function AppContent() {
             {currentView === 'faq' && <FAQ onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
             {currentView === 'about' && <AboutUs onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
             {currentView === 'guide-coupe' && <GuideCoupe onStartSelling={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
+            {currentView === 'partners' && <Partners />}
           </main>
         </div>
       );
@@ -703,7 +704,6 @@ function AppContent() {
         {currentView === 'faq' && <FAQ onClose={() => navigateToView('marketplace')} />}
         {currentView === 'about' && <AboutUs onClose={() => navigateToView('marketplace')} />}
         {currentView === 'guide-coupe' && <GuideCoupe onStartSelling={() => navigateToView('sell-my-hair')} />}
-        {currentView === 'partners' && <Partners />}
       </main>
 
       {showCreateListing && (
