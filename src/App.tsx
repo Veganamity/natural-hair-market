@@ -24,6 +24,7 @@ import { BuyerRules } from './components/Legal/BuyerRules';
 import { FAQ } from './components/Legal/FAQ';
 import { AboutUs } from './components/Legal/AboutUs';
 import { GuideCoupe } from './components/Legal/GuideCoupe';
+import { Partners } from './components/Legal/Partners';
 import SalonVerificationAdmin from './components/Admin/SalonVerificationAdmin';
 import ListingAdmin from './components/Admin/ListingAdmin';
 import BuybackAdmin from './components/Admin/BuybackAdmin';
@@ -71,6 +72,7 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/admin': 'admin-buybacks',
   '/salon-certifie': 'salon-certifie',
   '/seller-store': 'seller-store',
+  '/partenaires': 'partners',
 };
 
 // Mapping view → URL canonique
@@ -99,6 +101,7 @@ const VIEW_TO_PATH: Record<string, string> = {
   'admin-buybacks': '/admin-buybacks',
   'salon-certifie': '/salon-certifie',
   'seller-store': '/seller-store',
+  partners: '/partenaires',
 };
 
 type ViewName =
@@ -107,7 +110,7 @@ type ViewName =
   | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'faq' | 'about'
   | 'guide-coupe'
   | 'admin-salons' | 'admin-listings' | 'admin-buybacks' | 'salon-certifie' | 'seller-store'
-  | 'my-buybacks';
+  | 'my-buybacks' | 'partners';
 
 function getInitialView(): ViewName {
   const pathname = window.location.pathname;
@@ -262,7 +265,7 @@ function AppContent() {
 
     const PUBLIC_VIEWS = new Set([
       'privacy', 'terms', 'sales', 'refund', 'safety', 'seller-rules',
-      'sell-my-hair', 'buyer-rules', 'faq', 'about', 'guide-coupe',
+      'sell-my-hair', 'buyer-rules', 'faq', 'about', 'guide-coupe', 'partners',
     ]);
     if (PUBLIC_VIEWS.has(currentView)) {
       return (
@@ -700,6 +703,7 @@ function AppContent() {
         {currentView === 'faq' && <FAQ onClose={() => navigateToView('marketplace')} />}
         {currentView === 'about' && <AboutUs onClose={() => navigateToView('marketplace')} />}
         {currentView === 'guide-coupe' && <GuideCoupe onStartSelling={() => navigateToView('sell-my-hair')} />}
+        {currentView === 'partners' && <Partners />}
       </main>
 
       {showCreateListing && (
@@ -760,6 +764,13 @@ function AppContent() {
                 className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
               >
                 Politique de confidentialité
+              </a>
+              <a
+                href="/partenaires"
+                onClick={(e) => { e.preventDefault(); navigateToView('partners'); }}
+                className="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
+              >
+                Nos Partenaires
               </a>
             </div>
           </div>

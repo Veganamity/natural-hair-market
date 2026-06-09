@@ -11,7 +11,7 @@ type Listing = Database['public']['Tables']['listings']['Row'];
 interface LandingPageProps {
   onGetStarted: () => void;
   onLogin?: () => void;
-  onNavigate?: (view: 'faq' | 'about' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'privacy' | 'guide-coupe') => void;
+  onNavigate?: (view: 'faq' | 'about' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'privacy' | 'guide-coupe' | 'partners') => void;
 }
 
 export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPageProps) {
@@ -691,6 +691,7 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
             <a href="/reglement-acheteur" onClick={(e) => { e.preventDefault(); onNavigate?.('buyer-rules'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Règlement acheteur</a>
             <a href="/politique-de-confidentialite" onClick={(e) => { e.preventDefault(); onNavigate?.('privacy'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Politique de confidentialité</a>
             <a href="/guide-coupe-conservation" onClick={(e) => { e.preventDefault(); onNavigate?.('guide-coupe'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Guide de coupe et conservation</a>
+            <a href="/partenaires" onClick={(e) => { e.preventDefault(); onNavigate?.('partners'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Nos Partenaires</a>
           </nav>
 
           <p className="text-sm text-gray-400 text-center">
