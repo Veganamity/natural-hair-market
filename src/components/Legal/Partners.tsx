@@ -56,8 +56,8 @@ export function Partners() {
               <p className="text-gray-600 text-sm leading-relaxed flex-1">
                 {partner.description}
               </p>
-              <span className="text-emerald-600 text-sm font-medium group-hover:underline">
-                Retrouvez-nous sur l'annuaire {partner.name} →
+              <span className="text-emerald-600 text-sm font-medium group-hover:underline break-all">
+                {partner.url}
               </span>
             </div>
           </a>
