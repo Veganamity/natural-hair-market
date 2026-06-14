@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /?q=
 
-Sitemap: https://tergjlwermtignqmsnys.supabase.co/functions/v1/sitemap
+Sitemap: https://www.naturalhairmarket.com/sitemap.xml

@@ -226,6 +226,14 @@ function AppContent() {
     };
   }, [accountMenuOpen]);
 
+  const BASE_URL = 'https://www.naturalhairmarket.com';
+
+  useEffect(() => {
+    const path = VIEW_TO_PATH[currentView] ?? `/${currentView}`;
+    const canonical = document.getElementById('canonical-url') as HTMLLinkElement | null;
+    if (canonical) canonical.href = `${BASE_URL}${path}`;
+  }, [currentView]);
+
   const navigateToView = (view: ViewName, listingId?: string | null) => {
     if (view === 'marketplace' && listingId === undefined) {
       setPreselectedListingId(null);
