@@ -211,6 +211,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                 required
               >
                 <option value="">Sélectionner</option>
+                <option value="15cm">15cm</option>
                 <option value="20cm">20cm</option>
                 <option value="25cm">25cm</option>
                 <option value="30cm">30cm</option>

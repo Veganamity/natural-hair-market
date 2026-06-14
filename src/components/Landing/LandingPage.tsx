@@ -215,7 +215,7 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Mèches longues 25cm, 30cm, 40cm, 50cm, 60cm+</span>
+                  <span className="text-gray-700">Mèches longues 15cm, 25cm, 30cm, 40cm, 50cm, 60cm+</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
@@ -393,7 +393,7 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
-                    <span className="text-gray-700">Cheveux longs (25cm à 70+ cm)</span>
+                    <span className="text-gray-700">Cheveux longs (15cm à 70+ cm)</span>
                   </li>
                 </ul>
               </div>

@@ -282,7 +282,7 @@ export function FAQ({ onClose }: FAQProps) {
                   <li>❌ cheveux synthétiques</li>
                   <li>❌ cheveux ramassés (non coupés)</li>
                   <li>❌ cheveux humides ou sales</li>
-                  <li>❌ mèches de moins de 25 cm</li>
+                  <li>❌ mèches de moins de 15 cm</li>
                   <li>❌ cheveux emmêlés / moisis / abîmés</li>
                 </ul>
               </div>
