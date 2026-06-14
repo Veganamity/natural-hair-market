@@ -1,0 +1,5 @@
+# Redirect non-www → www (301 permanent)
+https://naturalhairmarket.com/* https://www.naturalhairmarket.com/:splat 301!
+
+# SPA fallback — must be last
+/* /index.html 200

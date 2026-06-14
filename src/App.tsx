@@ -228,10 +228,76 @@ function AppContent() {
 
   const BASE_URL = 'https://www.naturalhairmarket.com';
 
+  const PAGE_META: Record<string, { title: string; description: string }> = {
+    landing: {
+      title: 'Achat & Vente de Cheveux Naturels | Natural Hair Market',
+      description: 'La 1ère marketplace pour acheter et vendre des cheveux naturels, humains et européens. Trouvez des extensions de haute qualité au meilleur prix.',
+    },
+    marketplace: {
+      title: 'Marketplace Cheveux Naturels | Natural Hair Market',
+      description: 'Parcourez des centaines d\'annonces de cheveux naturels humains à vendre : cheveux européens, blonds, bruns, châtains. Achat sécurisé.',
+    },
+    'sell-my-hair': {
+      title: 'Vendre mes Cheveux Naturels | Natural Hair Market',
+      description: 'Vendez vos cheveux naturels en toute sécurité. Estimez le prix de vos cheveux et publiez votre annonce gratuitement. Longueur minimale 15 cm.',
+    },
+    faq: {
+      title: 'FAQ – Questions fréquentes | Natural Hair Market',
+      description: 'Toutes les réponses à vos questions sur l\'achat et la vente de cheveux naturels sur Natural Hair Market.',
+    },
+    about: {
+      title: 'À propos | Natural Hair Market',
+      description: 'Découvrez Natural Hair Market, la première marketplace française dédiée à l\'achat et la vente de cheveux naturels humains et européens.',
+    },
+    'guide-coupe': {
+      title: 'Guide Coupe & Conservation des Cheveux | Natural Hair Market',
+      description: 'Comment couper et conserver vos cheveux pour les vendre au meilleur prix. Conseils pratiques pour les vendeurs de cheveux naturels.',
+    },
+    privacy: {
+      title: 'Politique de confidentialité | Natural Hair Market',
+      description: 'Politique de confidentialité et protection des données personnelles de Natural Hair Market.',
+    },
+    terms: {
+      title: 'Conditions d\'utilisation | Natural Hair Market',
+      description: 'Conditions générales d\'utilisation de la marketplace Natural Hair Market.',
+    },
+    sales: {
+      title: 'Conditions générales de vente | Natural Hair Market',
+      description: 'Conditions générales de vente applicables aux transactions sur Natural Hair Market.',
+    },
+    refund: {
+      title: 'Politique de remboursement | Natural Hair Market',
+      description: 'Notre politique de remboursement et de protection des acheteurs sur Natural Hair Market.',
+    },
+    safety: {
+      title: 'Qualité & Sécurité | Natural Hair Market',
+      description: 'Comment Natural Hair Market garantit la qualité et la sécurité des transactions de cheveux naturels.',
+    },
+    'seller-rules': {
+      title: 'Règles vendeurs | Natural Hair Market',
+      description: 'Règles et conseils pour vendre des cheveux naturels sur Natural Hair Market.',
+    },
+    'buyer-rules': {
+      title: 'Règles acheteurs | Natural Hair Market',
+      description: 'Règles et conseils pour acheter des cheveux naturels sur Natural Hair Market.',
+    },
+    partners: {
+      title: 'Nos Partenaires | Natural Hair Market',
+      description: 'Découvrez les partenaires de Natural Hair Market : salons certifiés et prestataires de services.',
+    },
+  };
+
   useEffect(() => {
     const path = VIEW_TO_PATH[currentView] ?? `/${currentView}`;
     const canonical = document.getElementById('canonical-url') as HTMLLinkElement | null;
     if (canonical) canonical.href = `${BASE_URL}${path}`;
+
+    const meta = PAGE_META[currentView];
+    if (meta) {
+      document.title = meta.title;
+      const descEl = document.getElementById('meta-description') as HTMLMetaElement | null;
+      if (descEl) descEl.content = meta.description;
+    }
   }, [currentView]);
 
   const navigateToView = (view: ViewName, listingId?: string | null) => {
