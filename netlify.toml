@@ -9,12 +9,6 @@ VITE_STRIPE_PUBLIC_KEY = "pk_test_51STHi8EeISQOoW2jKgBeaGnHZs4M7gfFB6BP5Ght3sFc7
 GOOGLE_CLIENT_ID = "890673217806-mfcgufbors58bib4pdrudh45hrsavkk9.apps.googleusercontent.com"
 
 [[redirects]]
-from = "/sitemap.xml"
-to = "https://tergjlwermtignqmsnys.supabase.co/functions/v1/sitemap"
-status = 200
-force = true
-
-[[redirects]]
 from = "/*"
 to = "/index.html"
 status = 200
