@@ -8,6 +8,14 @@ VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 VITE_STRIPE_PUBLIC_KEY = "pk_test_51STHi8EeISQOoW2jKgBeaGnHZs4M7gfFB6BP5Ght3sFc7J2Xl07LNnxiCfw4zKcseIuLroaG8X1ovyLwVzcof7ee00JrFi3w4l"
 GOOGLE_CLIENT_ID = "890673217806-mfcgufbors58bib4pdrudh45hrsavkk9.apps.googleusercontent.com"
 
+# Force non-www → www (301 permanent)
+[[redirects]]
+from = "https://naturalhairmarket.com/*"
+to = "https://www.naturalhairmarket.com/:splat"
+status = 301
+force = true
+
+# SPA fallback
 [[redirects]]
 from = "/*"
 to = "/index.html"
