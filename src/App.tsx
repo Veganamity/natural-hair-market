@@ -31,6 +31,7 @@ import BuybackAdmin from './components/Admin/BuybackAdmin';
 import MyBuybackRequests from './components/Buyback/MyBuybackRequests';
 import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
+import { NotFound } from './components/NotFound';
 import { CartView } from './components/Cart/CartView';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { SellerStorePage } from './components/Seller/SellerStorePage';
@@ -54,7 +55,6 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/cart': 'cart',
   '/privacy': 'privacy',
   '/terms': 'terms',
-  '/mentions-legales': 'terms',
   '/mentions-legales': 'terms',
   '/sales': 'sales',
   '/refund': 'refund',
@@ -110,16 +110,16 @@ type ViewName =
   | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'faq' | 'about'
   | 'guide-coupe'
   | 'admin-salons' | 'admin-listings' | 'admin-buybacks' | 'salon-certifie' | 'seller-store'
-  | 'my-buybacks' | 'partners';
+  | 'my-buybacks' | 'partners' | 'not-found';
 
 function getInitialView(): ViewName {
   const pathname = window.location.pathname;
-  // Support legacy hash URLs lors d'une première visite
   const hash = window.location.hash.slice(1).split('?')[0].split('&')[0];
   const pathView = PATH_TO_VIEW[pathname];
   if (pathView) return pathView as ViewName;
   if (hash && PATH_TO_VIEW[`/${hash}`]) return PATH_TO_VIEW[`/${hash}`] as ViewName;
-  return 'landing';
+  if (pathname === '/') return 'landing';
+  return 'not-found';
 }
 
 function AppContent() {
@@ -430,6 +430,10 @@ function AppContent() {
           </main>
         </div>
       );
+    }
+
+    if (currentView === 'not-found') {
+      return <NotFound onGoHome={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} onGoBack={() => window.history.back()} />;
     }
 
     return (
@@ -778,6 +782,11 @@ function AppContent() {
         {currentView === 'faq' && <FAQ onClose={() => navigateToView('marketplace')} />}
         {currentView === 'about' && <AboutUs onClose={() => navigateToView('marketplace')} />}
         {currentView === 'guide-coupe' && <GuideCoupe onStartSelling={() => navigateToView('sell-my-hair')} />}
+        {currentView === 'not-found' && (
+          <div className="-mx-2 sm:-mx-4 lg:-mx-6 -my-4 sm:-my-8">
+            <NotFound onGoHome={() => navigateToView('landing')} onGoBack={() => window.history.back()} />
+          </div>
+        )}
       </main>
 
       {showCreateListing && (
