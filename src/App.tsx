@@ -307,12 +307,14 @@ function AppContent() {
     setCurrentView(view);
     const path = VIEW_TO_PATH[view] ?? `/${view}`;
     window.history.pushState({ view }, '', path);
+    window.scrollTo(0, 0);
   };
 
   const navigateToSellerStore = (sellerId: string) => {
     setSelectedSellerId(sellerId);
     setCurrentView('seller-store');
     window.history.pushState({ view: 'seller-store' }, '', '/seller-store');
+    window.scrollTo(0, 0);
   };
 
   if (loading) {
