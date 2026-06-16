@@ -31,6 +31,9 @@ import {
   Phone,
   Plus,
   Trash2,
+  Zap,
+  Star,
+  Users,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -472,6 +475,111 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-12">
+
+        {/* ===== SEO : H1 + Intro + Avantages + Témoignages + CTA ===== */}
+        <section className="space-y-8">
+
+          {/* H1 SEO principal */}
+          <div className="text-center">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mb-4">
+              Vendre mes cheveux en France&nbsp;:<br className="hidden md:block" />
+              <span className="text-emerald-600"> la marketplace de référence pour le rachat de cheveux</span>
+            </h1>
+            <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              NaturalHairMarket est la première marketplace française spécialisée dans la vente de cheveux naturels humains. Que vous souhaitiez <strong>vendre vos cheveux</strong>, <strong>vendre ses cheveux</strong> pour la première fois, ou obtenir un <strong>rachat de cheveux</strong> rapide et sécurisé, notre plateforme met en relation vendeurs particuliers et acheteurs professionnels vérifiés partout en France. Publication gratuite, paiement garanti, réponse sous 48h.
+            </p>
+          </div>
+
+          {/* 3 avantages */}
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              {
+                icon: <Zap className="w-7 h-7 text-amber-500" />,
+                bg: 'bg-amber-50 border-amber-100',
+                title: 'Paiement rapide',
+                desc: 'Virement bancaire sous 5 jours ouvrables après réception et validation de vos cheveux.',
+              },
+              {
+                icon: <Star className="w-7 h-7 text-emerald-600" />,
+                bg: 'bg-emerald-50 border-emerald-100',
+                title: '100% gratuit',
+                desc: 'Aucun frais d\'inscription, aucune commission prélevée au vendeur. La publication est totalement gratuite.',
+              },
+              {
+                icon: <Users className="w-7 h-7 text-blue-500" />,
+                bg: 'bg-blue-50 border-blue-100',
+                title: 'Acheteurs vérifiés',
+                desc: 'Tous nos acheteurs sont identifiés et validés par notre équipe pour garantir des transactions sûres.',
+              },
+            ].map((item) => (
+              <div key={item.title} className={`${item.bg} border rounded-2xl p-5 text-center`}>
+                <div className="flex justify-center mb-3">{item.icon}</div>
+                <p className="font-bold text-gray-900 mb-1">{item.title}</p>
+                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA principal */}
+          <div className="text-center">
+            <button
+              onClick={scrollToForm}
+              className="inline-flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-emerald-200 text-base"
+            >
+              <Scissors className="w-5 h-5" />
+              Je vends mes cheveux maintenant
+              <ArrowRight className="w-5 h-5" />
+            </button>
+            <p className="text-xs text-gray-400 mt-3">Gratuit · Sans engagement · Réponse sous 48h</p>
+          </div>
+
+          {/* 3 témoignages clients */}
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 text-center mb-5">Ils ont vendu leurs cheveux sur NaturalHairMarket</h2>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                {
+                  name: 'Camille R.',
+                  city: 'Lyon',
+                  amount: '152 €',
+                  hair: 'Blonds naturels, 45 cm',
+                  text: 'J\'ai reçu mon virement 4 jours après l\'envoi. Processus simple, équipe très réactive. Je recommande !',
+                },
+                {
+                  name: 'Inès M.',
+                  city: 'Paris',
+                  amount: '88 €',
+                  hair: 'Châtains, 40 cm',
+                  text: 'Vendre ses cheveux n\'a jamais été aussi facile. Le formulaire prend 5 minutes et on est guidée à chaque étape.',
+                },
+                {
+                  name: 'Sophie L.',
+                  city: 'Bordeaux',
+                  amount: '236 €',
+                  hair: 'Roux naturels, 71 cm',
+                  text: 'Je ne savais pas que mes cheveux roux valaient autant ! Super expérience, paiement rapide et sans accroc.',
+                },
+              ].map((t) => (
+                <div key={t.name} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm flex flex-col gap-3">
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-700 leading-relaxed flex-1">&ldquo;{t.text}&rdquo;</p>
+                  <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">{t.name}</p>
+                      <p className="text-xs text-gray-500">{t.city} · {t.hair}</p>
+                    </div>
+                    <span className="text-base font-black text-emerald-600">{t.amount}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </section>
 
         {/* ===== SECTION A : Calculateur de prix ===== */}
         <section>
