@@ -4,7 +4,7 @@
  * Prix libre, criteres clairs, transaction securisee. Decouvrez comment ca se passe.
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -224,6 +224,22 @@ function strandLabel(s: Strand): string {
 
 export function SellMyHair({ onStartSelling }: SellMyHairProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    const prevTitle = document.title;
+    const metaDesc = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = metaDesc?.content ?? '';
+
+    document.title = 'Vendre mes cheveux en France et en Europe | NaturalHairMarket';
+    if (metaDesc) {
+      metaDesc.content = 'Vendez vos cheveux naturels en France et en Europe sur NaturalHairMarket. Marketplace 100% gratuite, paiement rapide et acheteurs vérifiés. Estimez le prix de vos cheveux maintenant !';
+    }
+
+    return () => {
+      document.title = prevTitle;
+      if (metaDesc) metaDesc.content = prevDesc;
+    };
+  }, []);
 
   // --- Calculateur (etat de la meche en cours) ---
   const [condition, setCondition] = useState<Condition | ''>('');
