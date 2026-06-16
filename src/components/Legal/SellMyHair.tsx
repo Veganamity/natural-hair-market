@@ -482,7 +482,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           {/* H1 SEO principal */}
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mb-4">
-              Vendre mes cheveux en France&nbsp;:<br className="hidden md:block" />
+              Vendre mes cheveux en France et en Europe&nbsp;:<br className="hidden md:block" />
               <span className="text-emerald-600"> la marketplace de référence pour le rachat de cheveux</span>
             </h1>
             <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
