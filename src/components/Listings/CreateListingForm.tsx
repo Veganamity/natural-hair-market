@@ -27,7 +27,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
     is_treated: false,
     is_natural_color: false,
     condition: 'excellent',
-    country: 'France',
+    country: '',
     certification_accepted: false,
   });
 
@@ -431,30 +431,39 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="France">France</option>
-                <option value="Belgique">Belgique</option>
-                <option value="Suisse">Suisse</option>
-                <option value="Luxembourg">Luxembourg</option>
-                <option value="Allemagne">Allemagne</option>
-                <option value="Italie">Italie</option>
-                <option value="Espagne">Espagne</option>
-                <option value="Portugal">Portugal</option>
-                <option value="Pays-Bas">Pays-Bas</option>
-                <option value="Royaume-Uni">Royaume-Uni</option>
-                <option value="Irlande">Irlande</option>
-                <option value="Autriche">Autriche</option>
-                <option value="Pologne">Pologne</option>
-                <option value="Suède">Suède</option>
-                <option value="Norvège">Norvège</option>
-                <option value="Danemark">Danemark</option>
-                <option value="Finlande">Finlande</option>
-                <option value="Grèce">Grèce</option>
-                <option value="Russie">Russie</option>
-                <option value="Ukraine">Ukraine</option>
-                <option value="Chine">Chine</option>
-                <option value="Inde">Inde</option>
-                <option value="Brésil">Brésil</option>
-                <option value="Autre">Autre</option>
+                <option value="">-- Sélectionner un pays --</option>
+                <optgroup label="Europe">
+                  <option value="France">France</option>
+                  <option value="Belgique">Belgique</option>
+                  <option value="Suisse">Suisse</option>
+                  <option value="Luxembourg">Luxembourg</option>
+                  <option value="Allemagne">Allemagne</option>
+                  <option value="Italie">Italie</option>
+                  <option value="Espagne">Espagne</option>
+                  <option value="Portugal">Portugal</option>
+                  <option value="Pays-Bas">Pays-Bas</option>
+                  <option value="Royaume-Uni">Royaume-Uni</option>
+                  <option value="Irlande">Irlande</option>
+                  <option value="Autriche">Autriche</option>
+                  <option value="Pologne">Pologne</option>
+                  <option value="Suède">Suède</option>
+                  <option value="Norvège">Norvège</option>
+                  <option value="Danemark">Danemark</option>
+                  <option value="Finlande">Finlande</option>
+                  <option value="Grèce">Grèce</option>
+                  <option value="Russie">Russie</option>
+                  <option value="Ukraine">Ukraine</option>
+                </optgroup>
+                <optgroup label="Asie">
+                  <option value="Inde">Inde</option>
+                  <option value="Chine">Chine</option>
+                </optgroup>
+                <optgroup label="Amérique latine">
+                  <option value="Brésil">Brésil</option>
+                </optgroup>
+                <optgroup label="Autre">
+                  <option value="Autre">Autre</option>
+                </optgroup>
               </select>
             </div>
           </div>
