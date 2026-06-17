@@ -47,7 +47,7 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(12);
 
       if (error) throw error;
       setFeaturedListings(data || []);
@@ -115,7 +115,7 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
           </div>
 
           {!loading && featuredListings.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-4">
               {featuredListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
