@@ -451,6 +451,9 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 <option value="Grèce">Grèce</option>
                 <option value="Russie">Russie</option>
                 <option value="Ukraine">Ukraine</option>
+                <option value="Chine">Chine</option>
+                <option value="Inde">Inde</option>
+                <option value="Brésil">Brésil</option>
                 <option value="Autre">Autre</option>
               </select>
             </div>
