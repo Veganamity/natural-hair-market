@@ -134,10 +134,11 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
 
       const minLengthCm = minLength ? (lengthUnit === 'cm' ? parseFloat(minLength) : inchesToCm(parseFloat(minLength))) : null;
       const maxLengthCm = maxLength ? (lengthUnit === 'cm' ? parseFloat(maxLength) : inchesToCm(parseFloat(maxLength))) : null;
+      const listingLengthCm = listing.hair_length ? parseFloat(listing.hair_length) : null;
 
       const matchesLengthRange =
-        (!minLengthCm || listing.length_cm >= minLengthCm) &&
-        (!maxLengthCm || listing.length_cm <= maxLengthCm);
+        (!minLengthCm || (listingLengthCm !== null && listingLengthCm >= minLengthCm)) &&
+        (!maxLengthCm || (listingLengthCm !== null && listingLengthCm <= maxLengthCm));
 
       return matchesSearch && matchesFilter && matchesPriceRange && matchesLengthRange;
     });
