@@ -231,11 +231,11 @@ function AppContent() {
   const PAGE_META: Record<string, { title: string; description: string }> = {
     landing: {
       title: 'Achat & Vente de Cheveux Naturels | Natural Hair Market',
-      description: 'La 1ère marketplace pour acheter et vendre des cheveux naturels, humains et européens. Trouvez des extensions de haute qualité au meilleur prix.',
+      description: 'La 1ère marketplace pour acheter et vendre des cheveux naturels humains en Europe. Trouvez des extensions de haute qualité au meilleur prix.',
     },
     marketplace: {
       title: 'Marketplace Cheveux Naturels | Natural Hair Market',
-      description: 'Parcourez des centaines d\'annonces de cheveux naturels humains à vendre : cheveux européens, blonds, bruns, châtains. Achat sécurisé.',
+      description: 'Parcourez des centaines d\'annonces de cheveux naturels humains à vendre en Europe : blonds, bruns, châtains. Achat sécurisé.',
     },
     'sell-my-hair': {
       title: 'Vendre mes Cheveux Naturels | Natural Hair Market',
@@ -247,7 +247,7 @@ function AppContent() {
     },
     about: {
       title: 'À propos | Natural Hair Market',
-      description: 'Découvrez Natural Hair Market, la première marketplace française dédiée à l\'achat et la vente de cheveux naturels humains et européens.',
+      description: 'Découvrez Natural Hair Market, la première marketplace française dédiée à l\'achat et la vente de cheveux naturels humains en Europe.',
     },
     'guide-coupe': {
       title: 'Guide Coupe & Conservation des Cheveux | Natural Hair Market',
