@@ -225,7 +225,7 @@ export function SellerStorePage({ sellerId, onBack }: SellerStorePageProps) {
                       <button
                         onClick={() => {
                           if (!inCart) {
-                            addToCart(listing, sellerId, seller.full_name || seller.email || 'Vendeur');
+                            addToCart(listing, sellerId, seller.full_name || 'Vendeur');
                           }
                         }}
                         className={`w-full py-1.5 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors ${
