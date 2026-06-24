@@ -149,7 +149,7 @@ export function ListingCard({
             }}
             className="mt-1.5 w-full text-left text-[10px] text-emerald-600 hover:text-emerald-700 font-medium truncate transition-colors"
           >
-            {seller.full_name || seller.email} — voir sa boutique →
+            {seller.full_name || 'Vendeur'} — voir sa boutique →
           </button>
         )}
       </div>

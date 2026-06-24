@@ -254,7 +254,7 @@ export function ListingDetails({
                 >
                   <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-emerald-700 font-semibold text-[10px]">
-                      {seller.full_name?.[0] || seller.email[0].toUpperCase()}
+                      {seller.full_name?.[0]?.toUpperCase() || 'V'}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">

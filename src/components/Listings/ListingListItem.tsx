@@ -120,7 +120,7 @@ export function ListingListItem({
                   }}
                   className="text-emerald-600 hover:text-emerald-700 font-medium text-xs transition-colors"
                 >
-                  {seller.full_name || seller.email} — boutique →
+                  {seller.full_name || 'Vendeur'} — boutique →
                 </button>
               )}
               {seller?.is_certified_salon && (

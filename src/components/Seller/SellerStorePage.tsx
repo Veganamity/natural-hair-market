@@ -114,7 +114,7 @@ export function SellerStorePage({ sellerId, onBack }: SellerStorePageProps) {
                 <img src={seller.avatar_url} alt={seller.full_name || ''} className="w-full h-full object-cover rounded-xl" />
               ) : (
                 <span className="text-3xl font-bold text-emerald-700">
-                  {(seller.full_name?.[0] || seller.email[0]).toUpperCase()}
+                  {(seller.full_name?.[0] || 'V').toUpperCase()}
                 </span>
               )}
             </div>
