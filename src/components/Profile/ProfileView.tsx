@@ -5,6 +5,7 @@ import { Database } from '../../lib/database.types';
 import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
 import { StripeOnboardingModal } from '../Stripe/StripeConnectEmbedded';
+import { COUNTRIES } from '../../lib/countries';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -35,6 +36,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   });
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -256,24 +258,6 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   };
 
   const handleDeleteAccount = async () => {
-    const confirmText = 'SUPPRIMER MON COMPTE';
-    const userInput = prompt(
-      `⚠️ ATTENTION : Cette action est irréversible.\n\n` +
-      `La suppression de votre compte entraînera :\n` +
-      `• La suppression définitive de toutes vos données personnelles\n` +
-      `• La suppression de toutes vos annonces\n` +
-      `• La suppression de votre historique de transactions\n` +
-      `• La perte de vos favoris et offres\n\n` +
-      `Pour confirmer, tapez exactement : ${confirmText}`
-    );
-
-    if (userInput !== confirmText) {
-      if (userInput !== null) {
-        alert('Suppression annulée : le texte de confirmation ne correspond pas.');
-      }
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -283,21 +267,19 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         throw new Error('Session expirée');
       }
 
-      // Delete user account via Supabase admin API
       const { error: deleteError } = await supabase.rpc('delete_user_account');
 
       if (deleteError) {
         throw deleteError;
       }
 
-      // Sign out and redirect
       await supabase.auth.signOut();
-      alert('Votre compte a été supprimé avec succès.');
       window.location.href = '/';
     } catch (error: any) {
       console.error('Error deleting account:', error);
       setError(`Erreur lors de la suppression du compte: ${error.message}`);
       setLoading(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -514,6 +496,21 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pays
+                  </label>
+                  <select
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
+                  >
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -935,7 +932,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                   Toutes vos données, annonces, transactions et favoris seront définitivement supprimés.
                 </p>
                 <button
-                  onClick={handleDeleteAccount}
+                  onClick={() => setShowDeleteModal(true)}
                   disabled={loading}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
@@ -948,6 +945,48 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         </div>
       </div>
     </div>
+
+      {/* Modal de confirmation de suppression de compte */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="bg-red-600 px-6 py-5 text-white text-center">
+              <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
+                <Trash2 className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-lg font-bold">Supprimer le compte ?</h3>
+              <p className="text-red-100 text-sm mt-1">Cette action est définitive et irréversible.</p>
+            </div>
+            <div className="px-6 py-5">
+              <ul className="text-sm text-gray-600 space-y-2 bg-red-50 border border-red-100 rounded-xl p-4 mb-5">
+                <li className="flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" /> Toutes vos données personnelles</li>
+                <li className="flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" /> Toutes vos annonces publiées</li>
+                <li className="flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" /> Votre historique de transactions</li>
+                <li className="flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" /> Vos favoris et offres reçues</li>
+              </ul>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={loading}
+                  className="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-all disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={loading}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {loading
+                    ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <><Trash2 className="w-4 h-4" /> Supprimer définitivement</>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -234,20 +234,23 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
       {/* ─── ACHETEURS / VENDEURS (split) ─── */}
       <section className="py-12 md:py-16 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">Vous êtes…</h2>
+            <p className="text-gray-500 text-sm">La marketplace s'adapte à votre profil</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+
             {/* Acheteurs */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-8 border border-emerald-100">
-              <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-semibold mb-4 text-sm">
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-7 border border-emerald-100 flex flex-col">
+              <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-semibold mb-4 text-sm self-start">
                 <ShoppingBag className="w-4 h-4" />
-                Pour les acheteurs
+                Acheteur
               </div>
-              <h3 className="text-2xl font-extrabold text-gray-800 mb-2">
-                Trouvez vos cheveux idéaux
-              </h3>
-              <p className="text-gray-600 mb-5">
+              <h3 className="text-xl font-extrabold text-gray-800 mb-2">Trouvez vos cheveux idéaux</h3>
+              <p className="text-gray-600 text-sm mb-5 flex-1">
                 Des centaines de mèches de haute qualité disponibles. 10% de commission transparente, aucun abonnement.
               </p>
-              <ul className="space-y-2.5 mb-6">
+              <ul className="space-y-2 mb-6">
                 {['Cheveux européens naturels', 'Mèches 15cm à 70cm+', 'Colorés, gris, bouclés, lisses', 'Qualité vérifiée, photos réelles'].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-gray-700 text-sm">
                     <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
@@ -263,19 +266,17 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
               </button>
             </div>
 
-            {/* Vendeurs */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border border-amber-100">
-              <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-semibold mb-4 text-sm">
-                <TrendingUp className="w-4 h-4" />
-                Pour les vendeurs
+            {/* Particulier vendeur */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-7 border border-amber-100 flex flex-col">
+              <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-semibold mb-4 text-sm self-start">
+                <Scissors className="w-4 h-4" />
+                Particulier
               </div>
-              <h3 className="text-2xl font-extrabold text-gray-800 mb-2">
-                Vendez gratuitement
-              </h3>
-              <p className="text-gray-600 mb-5">
-                Particuliers, salons, professionnels — publiez vos mèches et encaissez 100% du prix affiché. Zéro frais vendeur.
+              <h3 className="text-xl font-extrabold text-gray-800 mb-2">Vendez vos cheveux gratuitement</h3>
+              <p className="text-gray-600 text-sm mb-5 flex-1">
+                Vous souhaitez vendre votre mèche ? Publiez en quelques minutes et encaissez 100% du prix affiché.
               </p>
-              <ul className="space-y-2.5 mb-6">
+              <ul className="space-y-2 mb-6">
                 {['Publication 100% gratuite', 'Aucune commission vendeur', 'Vous touchez votre prix intégral', 'Paiement rapide et sécurisé'].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-gray-700 text-sm">
                     <CheckCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
@@ -290,6 +291,36 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
                 Déposer une annonce
               </button>
             </div>
+
+            {/* Salon de coiffure */}
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-7 border border-blue-100 flex flex-col relative overflow-hidden">
+              <div className="absolute top-3 right-3">
+                <span className="bg-blue-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">Badge vérifié</span>
+              </div>
+              <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold mb-4 text-sm self-start">
+                <TrendingUp className="w-4 h-4" />
+                Salon de coiffure
+              </div>
+              <h3 className="text-xl font-extrabold text-gray-800 mb-2">Écoulez vos chutes de coupe</h3>
+              <p className="text-gray-600 text-sm mb-5 flex-1">
+                Salons, coiffeurs indépendants — valorisez les mèches issues de vos coupes. Obtenez le badge <strong className="text-blue-700">"Salon Vérifié"</strong> avec votre SIRET.
+              </p>
+              <ul className="space-y-2 mb-6">
+                {['Badge "Salon Vérifié" sur vos annonces', 'Confiance accrue des acheteurs', 'Ventes en volume possibles', 'Certification gratuite avec SIRET'].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-gray-700 text-sm">
+                    <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={onSell ?? onLogin ?? onGetStarted}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-all transform hover:scale-[1.02] shadow-md"
+              >
+                Créer mon compte salon
+              </button>
+            </div>
+
           </div>
         </div>
       </section>
