@@ -259,6 +259,8 @@ export interface Database {
           siret?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "users"
