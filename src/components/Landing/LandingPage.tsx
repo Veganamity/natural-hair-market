@@ -1,4 +1,4 @@
-import { Search, Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield, ChevronDown, Scissors, Package, CreditCard, Camera, Tag, Truck } from 'lucide-react';
+import { Search, Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield, ChevronDown, Scissors, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Database } from '../../lib/database.types';
@@ -21,8 +21,7 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [heroSearch, setHeroSearch] = useState('');
-  const [activeHowTab, setActiveHowTab] = useState<'buyer' | 'seller'>('buyer');
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   const faqItems = [
     {
@@ -119,29 +118,6 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
             Achetez ou vendez des mèches de haute qualité directement entre particuliers et professionnels. Gratuit pour les vendeurs, transparent pour tous.
           </p>
 
-          {/* Search bar */}
-          <div className="max-w-xl mx-auto mb-8">
-            <div className="flex items-center bg-white rounded-xl shadow-2xl overflow-hidden">
-              <div className="flex items-center gap-2 flex-1 px-4">
-                <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={heroSearch}
-                  onChange={(e) => setHeroSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && onGetStarted()}
-                  placeholder="Rechercher des cheveux (couleur, longueur…)"
-                  className="flex-1 py-4 text-gray-800 placeholder-gray-400 bg-transparent outline-none text-sm md:text-base"
-                />
-              </div>
-              <button
-                onClick={onGetStarted}
-                className="px-5 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors whitespace-nowrap"
-              >
-                Rechercher
-              </button>
-            </div>
-          </div>
-
           {/* Two main CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
@@ -178,201 +154,74 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
         </div>
       </section>
 
-      {/* ─── COMMENT ÇA MARCHE EN 3 ÉTAPES ─── */}
-      <section className="py-14 md:py-20 px-4 bg-white">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-semibold text-sm mb-4">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Simple & Rapide
+      {/* ─── CARROUSEL ANNONCES RÉCENTES ─── */}
+      <section className="py-12 md:py-16 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-semibold text-xs mb-3">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Nouvelles annonces
+              </div>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">
+                {t('landing.recentListings')}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">{t('landing.recentListingsSubtitle')}</p>
             </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">
-              Comment ça marche ?
-            </h2>
-            <p className="text-gray-500 text-lg max-w-xl mx-auto">
-              En 3 étapes seulement, achetez ou vendez vos cheveux en toute sérénité.
-            </p>
-          </div>
-
-          {/* Tab selector */}
-          <div className="flex justify-center mb-10">
-            <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1">
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => setActiveHowTab('buyer')}
-                className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                  activeHowTab === 'buyer'
-                    ? 'bg-white text-emerald-700 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                onClick={() => setCarouselIndex(i => Math.max(0, i - 1))}
+                disabled={carouselIndex === 0}
+                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
-                <span className="flex items-center gap-2">
-                  <ShoppingBag className="w-4 h-4" />
-                  J'achète
-                </span>
+                <ChevronLeft className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setActiveHowTab('seller')}
-                className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                  activeHowTab === 'seller'
-                    ? 'bg-white text-amber-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                onClick={() => setCarouselIndex(i => Math.min(featuredListings.length - 1, i + 1))}
+                disabled={featuredListings.length === 0 || carouselIndex >= featuredListings.length - 6}
+                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
               >
-                <span className="flex items-center gap-2">
-                  <Scissors className="w-4 h-4" />
-                  Je vends
-                </span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onGetStarted}
+                className="hidden sm:flex items-center gap-1.5 ml-2 text-emerald-600 hover:text-emerald-700 font-semibold text-sm transition-colors"
+              >
+                Voir tout →
               </button>
             </div>
           </div>
 
-          {activeHowTab === 'buyer' ? (
-            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-              {[
-                {
-                  step: '1',
-                  icon: Search,
-                  color: 'emerald',
-                  title: 'Parcourez les annonces',
-                  desc: 'Filtrez par couleur, longueur, poids et budget. Des centaines de mèches disponibles chaque jour.'
-                },
-                {
-                  step: '2',
-                  icon: CreditCard,
-                  color: 'teal',
-                  title: 'Commandez en sécurité',
-                  desc: 'Achat immédiat ou faites une offre. Paiement sécurisé par carte bancaire. +10% de commission transparente.'
-                },
-                {
-                  step: '3',
-                  icon: Package,
-                  color: 'emerald',
-                  title: 'Recevez à domicile',
-                  desc: 'Livraison rapide avec suivi de colis. Vos cheveux naturels vous parviennent emballés avec soin.'
-                }
-              ].map(({ step, icon: Icon, color, title, desc }) => (
-                <div key={step} className="relative group">
-                  <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100 hover:shadow-lg hover:border-emerald-100 transition-all h-full">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className={`w-12 h-12 rounded-xl bg-${color}-100 flex items-center justify-center flex-shrink-0`}>
-                        <Icon className={`w-6 h-6 text-${color}-600`} />
-                      </div>
-                      <span className="text-5xl font-extrabold text-gray-100 leading-none mt-1">{step}</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
-                  </div>
-                  {parseInt(step) < 3 && (
-                    <div className="hidden md:block absolute top-10 -right-5 z-10 text-gray-200 text-2xl font-bold">→</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-              {[
-                {
-                  step: '1',
-                  icon: Camera,
-                  color: 'amber',
-                  title: 'Photographiez & mesurez',
-                  desc: 'Prenez des photos de qualité, mesurez la longueur et le poids de votre mèche. C\'est tout !'
-                },
-                {
-                  step: '2',
-                  icon: Tag,
-                  color: 'orange',
-                  title: 'Publiez gratuitement',
-                  desc: 'Créez votre annonce en quelques clics, fixez votre prix librement. La publication est 100% gratuite.'
-                },
-                {
-                  step: '3',
-                  icon: Truck,
-                  color: 'amber',
-                  title: 'Encaissez 100%',
-                  desc: 'Une fois vendu, envoyez la mèche et recevez la totalité de votre prix. Aucun frais vendeur.'
-                }
-              ].map(({ step, icon: Icon, color, title, desc }) => (
-                <div key={step} className="relative group">
-                  <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100 hover:shadow-lg hover:border-amber-100 transition-all h-full">
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className={`w-12 h-12 rounded-xl bg-${color}-100 flex items-center justify-center flex-shrink-0`}>
-                        <Icon className={`w-6 h-6 text-${color}-600`} />
-                      </div>
-                      <span className="text-5xl font-extrabold text-gray-100 leading-none mt-1">{step}</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
-                  </div>
-                  {parseInt(step) < 3 && (
-                    <div className="hidden md:block absolute top-10 -right-5 z-10 text-gray-200 text-2xl font-bold">→</div>
-                  )}
-                </div>
+          {loading && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded-xl bg-gray-100 animate-pulse aspect-[3/4]" />
               ))}
             </div>
           )}
 
-          <div className="text-center mt-10">
-            {activeHowTab === 'buyer' ? (
-              <button
-                onClick={onGetStarted}
-                className="inline-flex items-center gap-2 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-base transition-all transform hover:scale-105 shadow-lg"
-              >
-                <Search className="w-4 h-4" />
-                Parcourir les annonces
-              </button>
-            ) : (
-              <button
-                onClick={onSell ?? onLogin ?? onGetStarted}
-                className="inline-flex items-center gap-2 px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-base transition-all transform hover:scale-105 shadow-lg"
-              >
-                <Scissors className="w-4 h-4" />
-                Déposer mon annonce gratuitement
-              </button>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── ANNONCES RÉCENTES ─── */}
-      <section className="py-10 md:py-12 px-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-extrabold text-gray-800">
-                {t('landing.recentListings')}
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                {t('landing.recentListingsSubtitle')}
-              </p>
-            </div>
-            <button
-              onClick={onGetStarted}
-              className="hidden sm:flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 font-semibold text-sm transition-colors"
-            >
-              Voir tout →
-            </button>
-          </div>
-
           {!loading && featuredListings.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-6">
-              {featuredListings.map((listing) => (
-                <ListingCard
-                  key={listing.id}
-                  listing={listing}
-                  onClick={onGetStarted}
-                />
-              ))}
+            <div className="overflow-hidden">
+              <div
+                className="flex gap-3 transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(calc(-${carouselIndex} * (100% / 6 + 0.5rem)))` }}
+              >
+                {featuredListings.map((listing) => (
+                  <div key={listing.id} className="flex-shrink-0 w-[calc(50%-6px)] sm:w-[calc(33.33%-8px)] md:w-[calc(25%-9px)] lg:w-[calc(16.67%-10px)]">
+                    <ListingCard listing={listing} onClick={onGetStarted} />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 max-w-2xl mx-auto">
-              <p className="font-semibold mb-2">{error}</p>
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg max-w-2xl mx-auto">
+              <p className="font-semibold text-sm">{error}</p>
             </div>
           )}
 
-          <div className="text-center mt-2">
+          <div className="text-center mt-8">
             <button
               onClick={onGetStarted}
               className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:from-emerald-700 hover:to-teal-700 transition-all transform hover:scale-105 shadow-lg"
@@ -382,9 +231,8 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
           </div>
         </div>
       </section>
-
       {/* ─── ACHETEURS / VENDEURS (split) ─── */}
-      <section className="py-12 md:py-16 px-4 bg-white">
+      <section className="py-12 md:py-16 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Acheteurs */}
