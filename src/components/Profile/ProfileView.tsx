@@ -23,7 +23,8 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const [error, setError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [formData, setFormData] = useState({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     phone: '',
     location: '',
     bio: '',
@@ -111,8 +112,12 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         return;
       } else {
         setProfile(data);
+        const parts = (data.full_name || '').split(' ');
+        const derivedFirst = data.first_name || parts[0] || '';
+        const derivedLast = data.last_name || parts.slice(1).join(' ') || '';
         setFormData({
-          full_name: data.full_name || '',
+          first_name: derivedFirst,
+          last_name: derivedLast,
           phone: data.phone || '',
           location: data.location || '',
           bio: data.bio || '',
@@ -160,7 +165,20 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .update(formData)
+        .update({
+          first_name: formData.first_name.trim(),
+          last_name: formData.last_name.trim(),
+          full_name: `${formData.first_name.trim()} ${formData.last_name.trim()}`.trim(),
+          phone: formData.phone,
+          location: formData.location,
+          bio: formData.bio,
+          address_line1: formData.address_line1,
+          address_line2: formData.address_line2,
+          postal_code: formData.postal_code,
+          city: formData.city,
+          country: formData.country,
+          siret: formData.siret,
+        })
         .eq('id', user!.id)
         .select();
 
@@ -375,16 +393,31 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 </div>
               </div>
             )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nom complet
-              </label>
-              <input
-                type="text"
-                value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Prénom <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  placeholder="Marie"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nom <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  placeholder="Dupont"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
             </div>
 
             <div>
@@ -570,9 +603,15 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           </form>
         ) : (
           <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-600">Nom</label>
-              <p className="font-semibold text-gray-800">{profile.full_name || 'Non renseigné'}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-gray-600">Prénom</label>
+                <p className="font-semibold text-gray-800">{profile.first_name || (profile.full_name ? profile.full_name.split(' ')[0] : 'Non renseigné')}</p>
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">Nom</label>
+                <p className="font-semibold text-gray-800">{profile.last_name || (profile.full_name ? profile.full_name.split(' ').slice(1).join(' ') : 'Non renseigné') || 'Non renseigné'}</p>
+              </div>
             </div>
             <div>
               <label className="text-sm text-gray-600">Email</label>

@@ -190,6 +190,8 @@ export interface Database {
           id: string
           email: string
           full_name: string | null
+          first_name: string | null
+          last_name: string | null
           phone: string | null
           avatar_url: string | null
           location: string | null
@@ -214,6 +216,8 @@ export interface Database {
           id: string
           email: string
           full_name?: string | null
+          first_name?: string | null
+          last_name?: string | null
           phone?: string | null
           avatar_url?: string | null
           location?: string | null
@@ -238,23 +242,9 @@ export interface Database {
           id?: string
           email?: string
           full_name?: string | null
+          first_name?: string | null
+          last_name?: string | null
           phone?: string | null
-          avatar_url?: string | null
-          location?: string | null
-          bio?: string | null
-          created_at?: string
-          updated_at?: string
-          address_line1?: string | null
-          address_line2?: string | null
-          postal_code?: string | null
-          city?: string | null
-          country?: string
-          stripe_account_id?: string | null
-          stripe_account_status?: string
-          stripe_onboarding_completed?: boolean
-          default_shipping_fee?: number
-          accepts_marketplace_terms?: boolean
-          business_name?: string | null
           address_complement?: string | null
           siret?: string | null
         }

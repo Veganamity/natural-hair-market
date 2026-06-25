@@ -41,6 +41,8 @@ export function ProfileCompletionModal() {
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
         full_name: `${form.first_name.trim()} ${form.last_name.trim()}`,
         phone: form.phone.trim(),
         address_line1: form.address_line1.trim(),
