@@ -6,7 +6,7 @@ import { ListingCard } from '../Listings/ListingCard';
 import { ListingListItem } from '../Listings/ListingListItem';
 import { ListingDetails } from '../Listings/ListingDetails';
 import { Database } from '../../lib/database.types';
-import { Search, SlidersHorizontal, ArrowUpDown, Grid2x2 as Grid, List } from 'lucide-react';
+import { Search, SlidersHorizontal, Grid2x2 as Grid, List, X, ChevronDown } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -35,9 +35,18 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
   const [maxLength, setMaxLength] = useState('');
   const [lengthUnit, setLengthUnit] = useState<'cm' | 'inches'>('cm');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const cmToInches = (cm: number) => Math.round(cm / 2.54);
   const inchesToCm = (inches: number) => Math.round(inches * 2.54);
+
+  const activeFilterCount = [
+    filterType !== 'all',
+    minPrice !== '',
+    maxPrice !== '',
+    minLength !== '',
+    maxLength !== '',
+  ].filter(Boolean).length;
 
   useEffect(() => {
     fetchListings();
@@ -178,192 +187,199 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
     );
   }
 
+  const hairTypeOptions = [
+    { value: 'all', label: t('marketplace.allTypes') },
+    { value: 'straight', label: t('hairTypes.straight') },
+    { value: 'wavy', label: t('hairTypes.wavy') },
+    { value: 'curly', label: t('hairTypes.curly') },
+    { value: 'coily', label: t('hairTypes.coily') },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder={t('marketplace.searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-5 h-5 text-gray-600" />
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="all">{t('marketplace.allTypes')}</option>
-                <option value="straight">{t('hairTypes.straight')}</option>
-                <option value="wavy">{t('hairTypes.wavy')}</option>
-                <option value="curly">{t('hairTypes.curly')}</option>
-                <option value="coily">{t('hairTypes.coily')}</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <ArrowUpDown className="w-5 h-5 text-gray-600" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="relevant">{t('marketplace.relevance')}</option>
-                <option value="recent">{t('marketplace.mostRecent')}</option>
-                <option value="price_asc">{t('marketplace.priceLowToHigh')}</option>
-                <option value="price_desc">{t('marketplace.priceHighToLow')}</option>
-              </select>
+    <div className="space-y-4">
+
+      {/* ── Barre de recherche principale ── */}
+      <div className="flex gap-2">
+        <div className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 h-11 shadow-sm focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
+          <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <input
+            type="text"
+            placeholder={t('marketplace.searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 text-sm text-gray-800 placeholder-gray-400 bg-transparent outline-none"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <button
+          onClick={() => setFiltersOpen(!filtersOpen)}
+          className={`flex items-center gap-2 h-11 px-4 rounded-xl border text-sm font-medium transition-all ${
+            filtersOpen || activeFilterCount > 0
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+              : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300 hover:text-emerald-700 shadow-sm'
+          }`}
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          <span className="hidden sm:inline">Filtres</span>
+          {activeFilterCount > 0 && (
+            <span className={`text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ${filtersOpen ? 'bg-white text-emerald-700' : 'bg-emerald-500 text-white'}`}>
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* ── Panneau de filtres avancés ── */}
+      {filtersOpen && (
+        <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-4 space-y-4">
+          {/* Type de cheveux — chips */}
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Type</p>
+            <div className="flex flex-wrap gap-2">
+              {hairTypeOptions.map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setFilterType(value)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    filterType === value
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
-              <label className="text-sm font-semibold text-gray-700 min-w-fit">{t('marketplace.priceRange')} :</label>
-              <div className="flex items-center gap-2 flex-wrap">
+          {/* Prix & Longueur sur une ligne */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('marketplace.priceRange')}</p>
+              <div className="flex items-center gap-2">
                 <input
                   type="number"
                   placeholder={t('marketplace.min')}
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none"
                 />
-                <span className="text-gray-500">-</span>
+                <span className="text-gray-400 text-sm flex-shrink-0">—</span>
                 <input
                   type="number"
                   placeholder={t('marketplace.max')}
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none"
                 />
-                <span className="text-gray-500 text-sm">€</span>
-                {(minPrice || maxPrice) && (
-                  <button
-                    onClick={() => {
-                      setMinPrice('');
-                      setMaxPrice('');
-                    }}
-                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
-                  >
-                    {t('marketplace.reset')}
-                  </button>
-                )}
+                <span className="text-gray-500 text-sm flex-shrink-0">€</span>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-start sm:items-center">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-semibold text-gray-700 min-w-fit">{t('marketplace.length')} :</label>
-                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setLengthUnit('cm')}
-                    className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
-                      lengthUnit === 'cm'
-                        ? 'bg-emerald-600 text-white'
-                        : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                  >
-                    cm
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLengthUnit('inches')}
-                    className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
-                      lengthUnit === 'inches'
-                        ? 'bg-emerald-600 text-white'
-                        : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                  >
-                    {t('marketplace.inches')}
-                  </button>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('marketplace.length')}</p>
+                <div className="flex items-center gap-0.5 bg-gray-100 rounded-md p-0.5">
+                  {(['cm', 'inches'] as const).map((unit) => (
+                    <button
+                      key={unit}
+                      onClick={() => setLengthUnit(unit)}
+                      className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                        lengthUnit === unit ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                    >
+                      {unit === 'cm' ? 'cm' : '"'}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
                 <input
                   type="number"
                   placeholder={t('marketplace.min')}
                   value={minLength}
                   onChange={(e) => setMinLength(e.target.value)}
-                  className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none"
                 />
-                <span className="text-gray-500">-</span>
+                <span className="text-gray-400 text-sm flex-shrink-0">—</span>
                 <input
                   type="number"
                   placeholder={t('marketplace.max')}
                   value={maxLength}
                   onChange={(e) => setMaxLength(e.target.value)}
-                  className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none"
                 />
-                <span className="text-gray-500 text-sm">{lengthUnit === 'cm' ? 'cm' : '"'}</span>
-                {(minLength || maxLength) && (
-                  <button
-                    onClick={() => {
-                      setMinLength('');
-                      setMaxLength('');
-                    }}
-                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
-                  >
-                    {t('marketplace.reset')}
-                  </button>
-                )}
+                <span className="text-gray-500 text-sm flex-shrink-0">{lengthUnit === 'cm' ? 'cm' : '"'}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-1 self-start">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-emerald-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-              title="Vue liste"
+          {activeFilterCount > 0 && (
+            <div className="pt-1 border-t border-gray-100">
+              <button
+                onClick={() => { setFilterType('all'); setMinPrice(''); setMaxPrice(''); setMinLength(''); setMaxLength(''); }}
+                className="text-sm text-red-500 hover:text-red-600 font-medium transition-colors"
+              >
+                Réinitialiser tous les filtres
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Barre résultats + tri + vue ── */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">
+          <span className="font-semibold text-gray-800">{filteredAndSortedListings.length}</span> annonce{filteredAndSortedListings.length !== 1 ? 's' : ''}
+        </p>
+
+        <div className="flex items-center gap-2">
+          {/* Sort */}
+          <div className="relative flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-3 h-8 text-sm text-gray-600 shadow-sm">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="appearance-none bg-transparent outline-none cursor-pointer pr-4 text-sm font-medium text-gray-700"
             >
-              <List className="w-5 h-5" />
-            </button>
+              <option value="relevant">{t('marketplace.relevance')}</option>
+              <option value="recent">{t('marketplace.mostRecent')}</option>
+              <option value="price_asc">{t('marketplace.priceLowToHigh')}</option>
+              <option value="price_desc">{t('marketplace.priceHighToLow')}</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2 pointer-events-none" />
+          </div>
+
+          {/* View toggle — grid first */}
+          <div className="flex items-center bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-emerald-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+              className={`p-1.5 rounded transition-colors ${
+                viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-gray-600'
               }`}
-              title="Vue grille"
+              title="Mosaïque"
             >
-              <Grid className="w-5 h-5" />
+              <Grid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded transition-colors ${
+                viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-gray-600'
+              }`}
+              title="Liste"
+            >
+              <List className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
 
-      {viewMode === 'list' ? (
-        <div className="space-y-4">
-          {filteredAndSortedListings.map((listing) => (
-            <ListingListItem
-              key={listing.id}
-              listing={listing}
-              seller={(listing as any).profiles}
-              onFavoriteToggle={handleFavoriteToggle}
-              isFavorited={favorites.has(listing.id)}
-              onSellerClick={!isGuest ? onSellerClick : undefined}
-              onClick={() => {
-                if (isGuest && onListingClick) {
-                  onListingClick();
-                } else {
-                  setSelectedListing(listing);
-                }
-              }}
-            />
-          ))}
-        </div>
-      ) : (
+      {/* ── Résultats ── */}
+      {viewMode === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
           {filteredAndSortedListings.map((listing) => (
             <ListingCard
@@ -382,6 +398,34 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
               }}
             />
           ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredAndSortedListings.map((listing) => (
+            <ListingListItem
+              key={listing.id}
+              listing={listing}
+              seller={(listing as any).profiles}
+              onFavoriteToggle={handleFavoriteToggle}
+              isFavorited={favorites.has(listing.id)}
+              onSellerClick={!isGuest ? onSellerClick : undefined}
+              onClick={() => {
+                if (isGuest && onListingClick) {
+                  onListingClick();
+                } else {
+                  setSelectedListing(listing);
+                }
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {filteredAndSortedListings.length === 0 && !loading && (
+        <div className="text-center py-16 text-gray-400">
+          <Search className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="font-medium text-gray-600">Aucune annonce trouvée</p>
+          <p className="text-sm mt-1">Essayez d'autres termes ou réinitialisez les filtres</p>
         </div>
       )}
 
