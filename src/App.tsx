@@ -307,7 +307,25 @@ function AppContent() {
   };
 
   useEffect(() => {
-    const path = VIEW_TO_PATH[currentView] ?? `/${currentView}`;
+    // Never set canonical to /not-found — Google would classify the page as a Soft 404
+    if (currentView === 'not-found') {
+      const metaRobots = document.querySelector('meta[name="robots"]');
+      if (metaRobots) metaRobots.setAttribute('content', 'noindex, nofollow');
+      return;
+    }
+
+    // Restore robots for all real pages
+    const metaRobots = document.querySelector('meta[name="robots"]');
+    if (metaRobots) metaRobots.setAttribute('content', 'index, follow');
+
+    // For listing pages, use the actual /annonce/... URL already in the browser
+    let path: string;
+    if (currentView === 'listing-page' && window.location.pathname.startsWith('/annonce/')) {
+      path = window.location.pathname;
+    } else {
+      path = VIEW_TO_PATH[currentView] ?? `/${currentView}`;
+    }
+
     const canonical = document.getElementById('canonical-url') as HTMLLinkElement | null;
     if (canonical) canonical.href = `${BASE_URL}${path}`;
 
