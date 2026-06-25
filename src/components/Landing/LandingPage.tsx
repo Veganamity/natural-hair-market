@@ -1,4 +1,4 @@
-import { Search, Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield, ChevronDown } from 'lucide-react';
+import { Search, Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield, ChevronDown, Scissors, Package, CreditCard, Camera, Tag, Truck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Database } from '../../lib/database.types';
@@ -10,16 +10,19 @@ type Listing = Database['public']['Tables']['listings']['Row'];
 
 interface LandingPageProps {
   onGetStarted: () => void;
+  onSell?: () => void;
   onLogin?: () => void;
   onNavigate?: (view: 'faq' | 'about' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'privacy' | 'guide-coupe' | 'partners') => void;
 }
 
-export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPageProps) {
+export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: LandingPageProps) {
   const { t } = useLanguage();
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [heroSearch, setHeroSearch] = useState('');
+  const [activeHowTab, setActiveHowTab] = useState<'buyer' | 'seller'>('buyer');
 
   const faqItems = [
     {
@@ -64,58 +67,295 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-6 md:py-8 px-4 relative">
-        <div className="absolute top-4 right-4">
-          <LanguageSelector />
-        </div>
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex justify-center mb-4">
+      {/* ─── HEADER ─── */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <img
               src="/file_0000000094ac71f49db79e27f27b239c.png"
-              alt={t('landing.title')}
-              className="h-32 w-auto md:h-40"
+              alt="Natural Hair Market"
+              className="h-9 w-auto"
             />
           </div>
-          <h1 className="text-lg sm:text-xl md:text-2xl mb-2 font-bold leading-tight">
-            Achat et Vente de Cheveux Naturels Humains en Europe
-          </h1>
-          <p className="text-sm sm:text-base md:text-base mb-2 font-medium max-w-2xl mx-auto leading-relaxed opacity-90">
-            Vous êtes un particulier ou un salon&nbsp;? Vendez vos cheveux naturels au meilleur prix. Vous êtes particulier, perruquier ou pro des extensions&nbsp;? Trouvez des cheveux de haute qualité en direct.
-          </p>
-          <div className="flex flex-col md:flex-row gap-2 md:gap-4 justify-center items-center mb-3 md:mb-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              <span className="text-xs sm:text-sm md:text-sm font-semibold">{t('landing.sellersFree')}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              <span className="text-xs sm:text-sm md:text-sm font-semibold">{t('landing.buyersFee')}</span>
-            </div>
-          </div>
-          <div className="flex justify-center">
+          <div className="flex items-center gap-2">
+            <LanguageSelector />
             <button
-              onClick={onGetStarted}
-              className="bg-white text-emerald-700 px-5 py-2 rounded-lg text-sm font-bold hover:bg-gray-50 transition-all transform hover:scale-105 shadow-lg"
+              onClick={onLogin ?? onGetStarted}
+              className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium text-sm transition-colors"
             >
-              {t('landing.getStarted')}
+              Se connecter
+            </button>
+            <button
+              onClick={onSell ?? onLogin ?? onGetStarted}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold text-sm transition-all transform hover:scale-105 shadow-md"
+            >
+              Déposer une annonce
             </button>
           </div>
         </div>
       </header>
 
-      <section className="py-3 md:py-4 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-2 md:mb-3">
-            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-1">
-              {t('landing.recentListings')}
+      {/* ─── HERO ─── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-800 text-white">
+        {/* Decorative background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-teal-600/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-700/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative max-w-5xl mx-auto px-4 py-16 md:py-24 text-center">
+          <div className="inline-flex items-center gap-2 bg-emerald-700/50 border border-emerald-500/40 text-emerald-200 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
+            <Sparkles className="w-3.5 h-3.5" />
+            La marketplace de référence en Europe
+          </div>
+
+          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-4 tracking-tight">
+            Vos cheveux naturels<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-200">méritent une seconde vie</span>
+          </h1>
+
+          <p className="text-lg md:text-xl text-emerald-100 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Achetez ou vendez des mèches de haute qualité directement entre particuliers et professionnels. Gratuit pour les vendeurs, transparent pour tous.
+          </p>
+
+          {/* Search bar */}
+          <div className="max-w-xl mx-auto mb-8">
+            <div className="flex items-center bg-white rounded-xl shadow-2xl overflow-hidden">
+              <div className="flex items-center gap-2 flex-1 px-4">
+                <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={heroSearch}
+                  onChange={(e) => setHeroSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && onGetStarted()}
+                  placeholder="Rechercher des cheveux (couleur, longueur…)"
+                  className="flex-1 py-4 text-gray-800 placeholder-gray-400 bg-transparent outline-none text-sm md:text-base"
+                />
+              </div>
+              <button
+                onClick={onGetStarted}
+                className="px-5 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors whitespace-nowrap"
+              >
+                Rechercher
+              </button>
+            </div>
+          </div>
+
+          {/* Two main CTAs */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button
+              onClick={onSell ?? onLogin ?? onGetStarted}
+              className="flex items-center gap-2.5 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-xl w-full sm:w-auto justify-center"
+            >
+              <Scissors className="w-5 h-5" />
+              Je vends mes cheveux
+            </button>
+            <button
+              onClick={onGetStarted}
+              className="flex items-center gap-2.5 px-8 py-4 bg-white/10 hover:bg-white/20 border-2 border-white/50 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 backdrop-blur-sm w-full sm:w-auto justify-center"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              Je cherche des cheveux
+            </button>
+          </div>
+
+          {/* Trust badges */}
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mt-10 text-emerald-200 text-sm">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-emerald-400" />
+              <span>Publication gratuite pour les vendeurs</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-emerald-400" />
+              <span>10% de commission acheteur seulement</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-emerald-400" />
+              <span>Paiement sécurisé</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── COMMENT ÇA MARCHE EN 3 ÉTAPES ─── */}
+      <section className="py-14 md:py-20 px-4 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full font-semibold text-sm mb-4">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Simple & Rapide
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">
+              Comment ça marche ?
             </h2>
-            <p className="text-xs sm:text-sm text-gray-600">
-              {t('landing.recentListingsSubtitle')}
+            <p className="text-gray-500 text-lg max-w-xl mx-auto">
+              En 3 étapes seulement, achetez ou vendez vos cheveux en toute sérénité.
             </p>
           </div>
 
+          {/* Tab selector */}
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex bg-gray-100 rounded-xl p-1 gap-1">
+              <button
+                onClick={() => setActiveHowTab('buyer')}
+                className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                  activeHowTab === 'buyer'
+                    ? 'bg-white text-emerald-700 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4" />
+                  J'achète
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveHowTab('seller')}
+                className={`px-6 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                  activeHowTab === 'seller'
+                    ? 'bg-white text-amber-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Scissors className="w-4 h-4" />
+                  Je vends
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {activeHowTab === 'buyer' ? (
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+              {[
+                {
+                  step: '1',
+                  icon: Search,
+                  color: 'emerald',
+                  title: 'Parcourez les annonces',
+                  desc: 'Filtrez par couleur, longueur, poids et budget. Des centaines de mèches disponibles chaque jour.'
+                },
+                {
+                  step: '2',
+                  icon: CreditCard,
+                  color: 'teal',
+                  title: 'Commandez en sécurité',
+                  desc: 'Achat immédiat ou faites une offre. Paiement sécurisé par carte bancaire. +10% de commission transparente.'
+                },
+                {
+                  step: '3',
+                  icon: Package,
+                  color: 'emerald',
+                  title: 'Recevez à domicile',
+                  desc: 'Livraison rapide avec suivi de colis. Vos cheveux naturels vous parviennent emballés avec soin.'
+                }
+              ].map(({ step, icon: Icon, color, title, desc }) => (
+                <div key={step} className="relative group">
+                  <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100 hover:shadow-lg hover:border-emerald-100 transition-all h-full">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className={`w-12 h-12 rounded-xl bg-${color}-100 flex items-center justify-center flex-shrink-0`}>
+                        <Icon className={`w-6 h-6 text-${color}-600`} />
+                      </div>
+                      <span className="text-5xl font-extrabold text-gray-100 leading-none mt-1">{step}</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+                  </div>
+                  {parseInt(step) < 3 && (
+                    <div className="hidden md:block absolute top-10 -right-5 z-10 text-gray-200 text-2xl font-bold">→</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+              {[
+                {
+                  step: '1',
+                  icon: Camera,
+                  color: 'amber',
+                  title: 'Photographiez & mesurez',
+                  desc: 'Prenez des photos de qualité, mesurez la longueur et le poids de votre mèche. C\'est tout !'
+                },
+                {
+                  step: '2',
+                  icon: Tag,
+                  color: 'orange',
+                  title: 'Publiez gratuitement',
+                  desc: 'Créez votre annonce en quelques clics, fixez votre prix librement. La publication est 100% gratuite.'
+                },
+                {
+                  step: '3',
+                  icon: Truck,
+                  color: 'amber',
+                  title: 'Encaissez 100%',
+                  desc: 'Une fois vendu, envoyez la mèche et recevez la totalité de votre prix. Aucun frais vendeur.'
+                }
+              ].map(({ step, icon: Icon, color, title, desc }) => (
+                <div key={step} className="relative group">
+                  <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100 hover:shadow-lg hover:border-amber-100 transition-all h-full">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className={`w-12 h-12 rounded-xl bg-${color}-100 flex items-center justify-center flex-shrink-0`}>
+                        <Icon className={`w-6 h-6 text-${color}-600`} />
+                      </div>
+                      <span className="text-5xl font-extrabold text-gray-100 leading-none mt-1">{step}</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">{title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+                  </div>
+                  {parseInt(step) < 3 && (
+                    <div className="hidden md:block absolute top-10 -right-5 z-10 text-gray-200 text-2xl font-bold">→</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-10">
+            {activeHowTab === 'buyer' ? (
+              <button
+                onClick={onGetStarted}
+                className="inline-flex items-center gap-2 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-base transition-all transform hover:scale-105 shadow-lg"
+              >
+                <Search className="w-4 h-4" />
+                Parcourir les annonces
+              </button>
+            ) : (
+              <button
+                onClick={onSell ?? onLogin ?? onGetStarted}
+                className="inline-flex items-center gap-2 px-8 py-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-base transition-all transform hover:scale-105 shadow-lg"
+              >
+                <Scissors className="w-4 h-4" />
+                Déposer mon annonce gratuitement
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── ANNONCES RÉCENTES ─── */}
+      <section className="py-10 md:py-12 px-4 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-extrabold text-gray-800">
+                {t('landing.recentListings')}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {t('landing.recentListingsSubtitle')}
+              </p>
+            </div>
+            <button
+              onClick={onGetStarted}
+              className="hidden sm:flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 font-semibold text-sm transition-colors"
+            >
+              Voir tout →
+            </button>
+          </div>
+
           {!loading && featuredListings.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-6">
               {featuredListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
@@ -129,21 +369,13 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 max-w-2xl mx-auto">
               <p className="font-semibold mb-2">{error}</p>
-              <div className="text-sm mt-2 space-y-1">
-                <p className="font-semibold">Si le problème persiste :</p>
-                <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Vérifiez votre connexion internet</li>
-                  <li>Assurez-vous que votre domaine est autorisé dans Supabase</li>
-                  <li>Contactez le support technique</li>
-                </ul>
-              </div>
             </div>
           )}
 
-          <div className="text-center">
+          <div className="text-center mt-2">
             <button
               onClick={onGetStarted}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:from-emerald-700 hover:to-teal-700 transition-all transform hover:scale-105 shadow-lg"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:from-emerald-700 hover:to-teal-700 transition-all transform hover:scale-105 shadow-lg"
             >
               {t('landing.viewAllListings')}
             </button>
@@ -151,461 +383,130 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
         </div>
       </section>
 
-      <section className="py-8 md:py-10 px-4 bg-gray-50">
+      {/* ─── ACHETEURS / VENDEURS (split) ─── */}
+      <section className="py-12 md:py-16 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
-          <p className="text-center text-gray-700 text-base md:text-lg mb-6 max-w-2xl mx-auto">
-            Bienvenue sur <strong>Natural Hair Market</strong>, la plateforme de référence pour l'<strong>achat</strong> et la <strong>vente</strong> de cheveux naturels.
-          </p>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
-                <Users className="w-6 h-6 text-emerald-600" />
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Acheteurs */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-8 border border-emerald-100">
+              <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-semibold mb-4 text-sm">
+                <ShoppingBag className="w-4 h-4" />
+                Pour les acheteurs
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">{t('landing.forEveryone')}</h3>
-              <p className="text-gray-600">
-                {t('landing.forEveryoneDesc')}
+              <h3 className="text-2xl font-extrabold text-gray-800 mb-2">
+                Trouvez vos cheveux idéaux
+              </h3>
+              <p className="text-gray-600 mb-5">
+                Des centaines de mèches de haute qualité disponibles. 10% de commission transparente, aucun abonnement.
               </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mb-3">
-                <Shield className="w-6 h-6 text-teal-600" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">{t('landing.transparent')}</h3>
-              <p className="text-gray-600">
-                {t('landing.transparentDesc')}
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">
-                <Sparkles className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">{t('landing.quality')}</h3>
-              <p className="text-gray-600">
-                {t('landing.qualityDesc')}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-8 md:py-10 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-6 md:mb-8">
-            <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full font-semibold mb-3 text-sm">
-              <ShoppingBag className="w-4 h-4" />
-              Pour les acheteurs
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-              Achetez des cheveux humains naturels avec seulement 10% de commission
-            </h2>
-            <p className="text-base md:text-lg text-gray-600">
-              Parcourez des centaines de mèches disponibles, mises en ligne chaque jour
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 rounded-xl border border-emerald-200">
-              <h3 className="text-xl font-bold text-gray-800 mb-3">Types de cheveux disponibles</h3>
-              <ul className="space-y-3">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Cheveux européens naturels</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Mèches longues 15cm, 25cm, 30cm, 40cm, 50cm, 60cm+</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Cheveux bruns, blonds, châtains, cuivrés</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Cheveux gris et blancs naturels (très recherchés)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Cheveux colorés (rouge, bleu, violet, noir carbone)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Cheveux méchés / balayage / ombré</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Cheveux lisses, ondulés, bouclés</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Mèches épaisses pour extensions</span>
-                </li>
+              <ul className="space-y-2.5 mb-6">
+                {['Cheveux européens naturels', 'Mèches 15cm à 70cm+', 'Colorés, gris, bouclés, lisses', 'Qualité vérifiée, photos réelles'].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-gray-700 text-sm">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
               </ul>
+              <button
+                onClick={onGetStarted}
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition-all transform hover:scale-[1.02] shadow-md"
+              >
+                Parcourir les annonces
+              </button>
             </div>
 
-            <div className="bg-gradient-to-br from-teal-50 to-emerald-50 p-6 rounded-xl border border-teal-200">
-              <h3 className="text-xl font-bold text-gray-800 mb-3">Chaque annonce contient</h3>
-              <ul className="space-y-2 mb-4">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Longueur exacte</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Poids en grammes</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Couleur et état (naturel, coloré, décoloré)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="w-5 h-5 text-teal-600 flex-shrink-0 mt-1" />
-                  <span className="text-gray-700">Origine de la mèche (pays)</span>
-                </li>
+            {/* Vendeurs */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 border border-amber-100">
+              <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-semibold mb-4 text-sm">
+                <TrendingUp className="w-4 h-4" />
+                Pour les vendeurs
+              </div>
+              <h3 className="text-2xl font-extrabold text-gray-800 mb-2">
+                Vendez gratuitement
+              </h3>
+              <p className="text-gray-600 mb-5">
+                Particuliers, salons, professionnels — publiez vos mèches et encaissez 100% du prix affiché. Zéro frais vendeur.
+              </p>
+              <ul className="space-y-2.5 mb-6">
+                {['Publication 100% gratuite', 'Aucune commission vendeur', 'Vous touchez votre prix intégral', 'Paiement rapide et sécurisé'].map((item) => (
+                  <li key={item} className="flex items-center gap-2 text-gray-700 text-sm">
+                    <CheckCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
               </ul>
-
-              <div className="bg-white p-4 rounded-lg shadow-sm border border-teal-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Euro className="w-5 h-5 text-teal-600" />
-                  <h4 className="font-bold text-gray-800 text-sm">Commission acheteur : 10%</h4>
-                </div>
-                <p className="text-gray-700 text-sm mb-2">
-                  Appliquée uniquement au moment de l'achat
-                </p>
-                <p className="text-gray-600 text-sm">
-                  ✓ Aucun abonnement<br />
-                  ✓ Aucun coût caché<br />
-                  ✓ 10% de commission sur le prix de la mèche
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-100 p-6 rounded-xl">
-            <h3 className="text-lg font-bold text-gray-800 mb-3">Idéal pour :</h3>
-            <div className="grid md:grid-cols-5 gap-3">
-              <div className="bg-white p-3 rounded-lg text-center">
-                <p className="font-semibold text-gray-800">Perruquiers</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg text-center">
-                <p className="font-semibold text-gray-800 text-sm">Grossistes</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg text-center">
-                <p className="font-semibold text-gray-800 text-sm">Fabricants d'extensions</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg text-center">
-                <p className="font-semibold text-gray-800 text-sm">Artistes FX</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg text-center">
-                <p className="font-semibold text-gray-800 text-sm">Particuliers exigeants</p>
-              </div>
+              <button
+                onClick={onSell ?? onLogin ?? onGetStarted}
+                className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-sm transition-all transform hover:scale-[1.02] shadow-md"
+              >
+                Déposer une annonce
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-8 md:py-10 px-4 bg-gradient-to-br from-emerald-50 to-teal-50">
+      {/* ─── POURQUOI NOUS ─── */}
+      <section className="py-10 md:py-12 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-6 md:mb-8">
-            <div className="inline-flex items-center gap-2 bg-teal-100 text-teal-700 px-3 py-1.5 rounded-full font-semibold mb-3 text-sm">
-              <TrendingUp className="w-4 h-4" />
-              Pour les vendeurs
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-              Vendez vos cheveux coupés – 100% gratuit pour les salons
-            </h2>
-            <p className="text-base md:text-lg text-gray-600">
-              Vous coupez des mèches longues chaque semaine ? Valorisez-les !
-            </p>
-          </div>
-
-          <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg mb-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Avantages vendeurs</h3>
-                <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">Publiez gratuitement</p>
-                      <p className="text-gray-600 text-sm">Aucun frais d'inscription ou de publication</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">Aucun frais vendeur</p>
-                      <p className="text-gray-600 text-sm">La commission est payée par l'acheteur</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">Vous recevez votre prix affiché</p>
-                      <p className="text-gray-600 text-sm">C'est l'acheteur qui paie 10% de commission</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">Valorisez ce que vous jetiez</p>
-                      <p className="text-gray-600 text-sm">Transformez vos chutes en revenus</p>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Vous pouvez vendre</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
-                    <span className="text-gray-700">Cheveux naturels non traités</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
-                    <span className="text-gray-700">Cheveux colorés</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
-                    <span className="text-gray-700">Cheveux méchés ou décolorés</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
-                    <span className="text-gray-700">Cheveux gris ou blancs naturels</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
-                    <span className="text-gray-700">Cheveux lisses / ondulés / bouclés</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
-                    <span className="text-gray-700">Mèches épaisses ou fines</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-teal-600 rounded-full"></div>
-                    <span className="text-gray-700">Cheveux longs (15cm à 70+ cm)</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Processus simple en 6 étapes</h3>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-2">1</div>
-                <p className="font-semibold text-gray-800">Attachez proprement la mèche</p>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-2">2</div>
-                <p className="font-semibold text-gray-800 text-sm">Mesurez la longueur</p>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-2">3</div>
-                <p className="font-semibold text-gray-800 text-sm">Indiquez poids, couleur, état</p>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-2">4</div>
-                <p className="font-semibold text-gray-800 text-sm">Fixez votre prix</p>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-2">5</div>
-                <p className="font-semibold text-gray-800 text-sm">Publiez gratuitement</p>
-              </div>
-              <div className="text-center">
-                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold mx-auto mb-2">6</div>
-                <p className="font-semibold text-gray-800">Touchez 100% du montant</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-8 md:py-10 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-6">
-            Pourquoi choisir notre Marketplace ?
+          <h2 className="text-2xl md:text-3xl font-extrabold text-gray-800 text-center mb-8">
+            Pourquoi choisir Natural Hair Market ?
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:border-emerald-300 transition-colors">
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
-                <CheckCircle className="w-6 h-6 text-emerald-600" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              { icon: CheckCircle, title: 'Gratuit pour les vendeurs', desc: 'Aucun frais d\'inscription ni de publication. Jamais.', color: 'emerald' },
+              { icon: Euro, title: '10% de commission acheteur', desc: 'Une commission transparente, appliquée au paiement seulement.', color: 'teal' },
+              { icon: Sparkles, title: 'Cheveux français & européens', desc: 'Les plus recherchés au monde pour leur qualité exceptionnelle.', color: 'emerald' },
+              { icon: Shield, title: 'Annonces vérifiées', desc: 'Qualité, propreté, photo réelle. Chaque annonce est contrôlée.', color: 'teal' },
+              { icon: Search, title: 'Transparence totale', desc: 'Aucun intermédiaire, aucune revente, prix fixé par le vendeur.', color: 'emerald' },
+              { icon: Users, title: 'Plateforme éthique', desc: 'Valorisation des cheveux coupés — lutte contre le gaspillage.', color: 'teal' },
+            ].map(({ icon: Icon, title, desc, color }) => (
+              <div key={title} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all">
+                <div className={`w-11 h-11 bg-${color}-100 rounded-lg flex items-center justify-center mb-3`}>
+                  <Icon className={`w-5 h-5 text-${color}-600`} />
+                </div>
+                <h3 className="text-base font-bold text-gray-800 mb-1">{title}</h3>
+                <p className="text-gray-500 text-sm">{desc}</p>
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Gratuit pour les vendeurs</h3>
-              <p className="text-gray-600">Les salons ne payent rien. Jamais.</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:border-emerald-300 transition-colors">
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
-                <Euro className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">10% de commission pour les acheteurs</h3>
-              <p className="text-gray-600">Une commission transparente, appliquée au paiement.</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:border-emerald-300 transition-colors">
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
-                <Sparkles className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Cheveux français & européens</h3>
-              <p className="text-gray-600">Les plus recherchés au monde.</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:border-emerald-300 transition-colors">
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Annonces vérifiées</h3>
-              <p className="text-gray-600">Qualité, propreté, photo réelle.</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:border-emerald-300 transition-colors">
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
-                <Search className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Transparence totale</h3>
-              <p className="text-gray-600">Aucun intermédiaire, aucune revente.</p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:border-emerald-300 transition-colors">
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-emerald-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Plateforme éthique</h3>
-              <p className="text-gray-600">Valorisation → lutte contre le gaspillage.</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="py-12 md:py-16 px-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-              Comment fonctionne notre Marketplace ?
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Une plateforme simple et sécurisée pour mettre en relation vendeurs et acheteurs de cheveux humains naturels.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-white p-8 rounded-2xl shadow-lg border border-emerald-100 hover:shadow-xl transition-shadow">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-800">Pour les Vendeurs</h3>
-              </div>
-              <p className="text-gray-600 leading-relaxed mb-6">
-                Vendez vos cheveux humains naturels facilement. Créez votre annonce en quelques clics, fixez votre prix et touchez des milliers d'acheteurs potentiels à la recherche de cheveux européens ou de cheveux naturels colorés.
-              </p>
-              <ol className="space-y-3">
-                <li className="flex gap-3 items-start">
-                  <span className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">1</span>
-                  <span className="text-gray-700">Photographiez et décrivez votre mèche</span>
-                </li>
-                <li className="flex gap-3 items-start">
-                  <span className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">2</span>
-                  <span className="text-gray-700">Fixez votre prix librement</span>
-                </li>
-                <li className="flex gap-3 items-start">
-                  <span className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">3</span>
-                  <span className="text-gray-700">Publiez gratuitement en quelques secondes</span>
-                </li>
-                <li className="flex gap-3 items-start">
-                  <span className="w-6 h-6 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">4</span>
-                  <span className="text-gray-700">Encaissez 100% du montant demandé</span>
-                </li>
-              </ol>
-            </div>
-
-            <div className="bg-white p-8 rounded-2xl shadow-lg border border-teal-100 hover:shadow-xl transition-shadow">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <ShoppingBag className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-800">Pour les Acheteurs</h3>
-              </div>
-              <p className="text-gray-600 leading-relaxed mb-6">
-                Trouvez les cheveux parfaits. Parcourez nos annonces sécurisées pour acheter des extensions de cheveux naturels de haute qualité, directement auprès de particuliers ou de professionnels.
-              </p>
-              <ol className="space-y-3">
-                <li className="flex gap-3 items-start">
-                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">1</span>
-                  <span className="text-gray-700">Parcourez les annonces et filtrez selon vos critères</span>
-                </li>
-                <li className="flex gap-3 items-start">
-                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">2</span>
-                  <span className="text-gray-700">Achat immédiat ou faites une offre</span>
-                </li>
-                <li className="flex gap-3 items-start">
-                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">3</span>
-                  <span className="text-gray-700">Payez en toute sécurité (prix + 10% de commission)</span>
-                </li>
-                <li className="flex gap-3 items-start">
-                  <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">4</span>
-                  <span className="text-gray-700">Recevez vos cheveux naturels à domicile</span>
-                </li>
-              </ol>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-8 md:py-10 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
+      {/* ─── CTA BANDE ─── */}
+      <section className="py-12 md:py-16 px-4 bg-gradient-to-r from-emerald-700 to-teal-700 text-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">
-            Le futur du marché du cheveu humain en France
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-3">
+            Prêt à rejoindre la marketplace ?
           </h2>
-          <div className="space-y-2 mb-6 text-base">
-            <p className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              Le vendeur ne paie rien
-            </p>
-            <p className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              L'acheteur paie un frais minimum et transparent
-            </p>
-            <p className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              Le marché devient équitable
-            </p>
-            <p className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              Les cheveux européens trouvent leur plateforme spécialisée
-            </p>
-            <p className="flex items-center justify-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              Les salons gagnent de l'argent avec ce qu'ils jetaient
-            </p>
+          <p className="text-emerald-100 text-lg mb-8 max-w-xl mx-auto">
+            Des milliers de mèches vous attendent. Inscrivez-vous gratuitement et commencez dès aujourd'hui.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={onSell ?? onLogin ?? onGetStarted}
+              className="px-8 py-4 bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-xl"
+            >
+              Vendre mes cheveux
+            </button>
+            <button
+              onClick={onGetStarted}
+              className="px-8 py-4 bg-white/10 hover:bg-white/20 border-2 border-white/50 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 backdrop-blur-sm"
+            >
+              Acheter des cheveux
+            </button>
           </div>
-          <button
-            onClick={onLogin ?? onGetStarted}
-            className="bg-white text-emerald-700 px-6 py-3 rounded-lg text-base font-bold hover:bg-gray-50 transition-all transform hover:scale-105 shadow-xl"
-          >
-            Se connecter
-          </button>
         </div>
       </section>
 
+      {/* ─── FAQ ─── */}
       <section className="py-12 md:py-16 px-4 bg-white">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-              Foire Aux Questions (FAQ)
+            <h2 className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-3">
+              Foire Aux Questions
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-500">
               Tout ce que vous devez savoir sur l'achat et la vente de cheveux naturels.
             </p>
           </div>
@@ -638,16 +539,21 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
         </div>
       </section>
 
-      <footer className="bg-gray-900 text-gray-300 py-8 px-4">
+      {/* ─── FOOTER ─── */}
+      <footer className="bg-gray-900 text-gray-300 py-10 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-white mb-2">Marketplace de cheveux humains naturels & colorés</h3>
-            <p className="mb-4 text-sm">
+            <img
+              src="/file_0000000094ac71f49db79e27f27b239c.png"
+              alt="Natural Hair Market"
+              className="h-10 w-auto mx-auto mb-3 opacity-80"
+            />
+            <p className="mb-4 text-sm text-gray-400">
               La première marketplace française dédiée aux cheveux naturels & colorés humains
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-2xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-4 mb-6 max-w-xl mx-auto">
             <div className="bg-gray-800 p-4 rounded-lg">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -655,13 +561,12 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h4 className="text-white font-semibold">Email</h4>
+                <h4 className="text-white font-semibold text-sm">Email</h4>
               </div>
               <a href="mailto:naturalhairmarket@gmail.com" className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">
                 naturalhairmarket@gmail.com
               </a>
             </div>
-
             <div className="bg-gray-800 p-4 rounded-lg">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -669,7 +574,7 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                 </div>
-                <h4 className="text-white font-semibold">Téléphone</h4>
+                <h4 className="text-white font-semibold text-sm">Téléphone</h4>
               </div>
               <a href="tel:+33784898647" className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">
                 +33 7 84 89 86 47
@@ -677,25 +582,24 @@ export function LandingPage({ onGetStarted, onLogin, onNavigate }: LandingPagePr
             </div>
           </div>
 
-          <nav className="flex flex-wrap justify-center gap-4 mb-6">
-            <a href="/a-propos" onClick={(e) => { e.preventDefault(); onNavigate?.('about'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">À propos</a>
-            <a href="/contact" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Contact</a>
-            <a href="/mentions-legales" onClick={(e) => { e.preventDefault(); onNavigate?.('terms'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Mentions légales</a>
-            <a href="/faq" onClick={(e) => { e.preventDefault(); onNavigate?.('faq'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">FAQ</a>
-            <a href="/cgu" onClick={(e) => { e.preventDefault(); onNavigate?.('terms'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">CGU</a>
-            <a href="/cgv" onClick={(e) => { e.preventDefault(); onNavigate?.('sales'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">CGV</a>
-            <a href="/remboursements" onClick={(e) => { e.preventDefault(); onNavigate?.('refund'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Remboursements</a>
-            <a href="/securite-qualite" onClick={(e) => { e.preventDefault(); onNavigate?.('safety'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Sécurité & Qualité</a>
-            <a href="/vendre-mes-cheveux" onClick={(e) => { e.preventDefault(); onNavigate?.('sell-my-hair'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Vendre mes cheveux</a>
-            <a href="/reglement-vendeur" onClick={(e) => { e.preventDefault(); onNavigate?.('seller-rules'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Règlement vendeur</a>
-            <a href="/reglement-acheteur" onClick={(e) => { e.preventDefault(); onNavigate?.('buyer-rules'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Règlement acheteur</a>
-            <a href="/politique-de-confidentialite" onClick={(e) => { e.preventDefault(); onNavigate?.('privacy'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Politique de confidentialité</a>
-            <a href="/guide-coupe-conservation" onClick={(e) => { e.preventDefault(); onNavigate?.('guide-coupe'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Guide de coupe et conservation</a>
-            <a href="/partenaires" onClick={(e) => { e.preventDefault(); onNavigate?.('partners'); }} className="text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors">Nos Partenaires</a>
+          <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2 mb-6">
+            <a href="/a-propos" onClick={(e) => { e.preventDefault(); onNavigate?.('about'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">À propos</a>
+            <a href="/mentions-legales" onClick={(e) => { e.preventDefault(); onNavigate?.('terms'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">Mentions légales</a>
+            <a href="/faq" onClick={(e) => { e.preventDefault(); onNavigate?.('faq'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">FAQ</a>
+            <a href="/cgu" onClick={(e) => { e.preventDefault(); onNavigate?.('terms'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">CGU</a>
+            <a href="/cgv" onClick={(e) => { e.preventDefault(); onNavigate?.('sales'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">CGV</a>
+            <a href="/remboursements" onClick={(e) => { e.preventDefault(); onNavigate?.('refund'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">Remboursements</a>
+            <a href="/securite-qualite" onClick={(e) => { e.preventDefault(); onNavigate?.('safety'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">Sécurité & Qualité</a>
+            <a href="/vendre-mes-cheveux" onClick={(e) => { e.preventDefault(); onNavigate?.('sell-my-hair'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">Vendre mes cheveux</a>
+            <a href="/reglement-vendeur" onClick={(e) => { e.preventDefault(); onNavigate?.('seller-rules'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">Règlement vendeur</a>
+            <a href="/reglement-acheteur" onClick={(e) => { e.preventDefault(); onNavigate?.('buyer-rules'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">Règlement acheteur</a>
+            <a href="/politique-de-confidentialite" onClick={(e) => { e.preventDefault(); onNavigate?.('privacy'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">Politique de confidentialité</a>
+            <a href="/guide-coupe-conservation" onClick={(e) => { e.preventDefault(); onNavigate?.('guide-coupe'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">Guide de coupe</a>
+            <a href="/partenaires" onClick={(e) => { e.preventDefault(); onNavigate?.('partners'); }} className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">Nos Partenaires</a>
           </nav>
 
-          <p className="text-sm text-gray-400 text-center">
-            © 2025 Marketplace de cheveux humains naturels & colorés. Tous droits réservés.
+          <p className="text-xs text-gray-500 text-center">
+            © 2025 Natural Hair Market — Tous droits réservés.
           </p>
         </div>
       </footer>

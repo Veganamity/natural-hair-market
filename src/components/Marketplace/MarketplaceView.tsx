@@ -16,16 +16,17 @@ interface MarketplaceViewProps {
   isGuest?: boolean;
   initialListingId?: string | null;
   onSellerClick?: (sellerId: string) => void;
+  externalSearch?: string;
 }
 
-export function MarketplaceView({ onListingClick, isGuest = false, initialListingId, onSellerClick }: MarketplaceViewProps) {
+export function MarketplaceView({ onListingClick, isGuest = false, initialListingId, onSellerClick, externalSearch }: MarketplaceViewProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [listings, setListings] = useState<Listing[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(externalSearch ?? '');
   const [filterType, setFilterType] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
   const [minPrice, setMinPrice] = useState('');
@@ -42,6 +43,10 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
     fetchListings();
     fetchFavorites();
   }, []);
+
+  useEffect(() => {
+    if (externalSearch !== undefined) setSearchQuery(externalSearch);
+  }, [externalSearch]);
 
   const fetchListings = async () => {
     setLoading(true);

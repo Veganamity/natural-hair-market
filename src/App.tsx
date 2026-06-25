@@ -40,7 +40,7 @@ import { Database } from './lib/database.types';
 import { supabase } from './lib/supabaseClient';
 import { extractListingIdFromPath, buildListingPath } from './lib/listingSlug';
 import { useUnreadOffersCount } from './hooks/useUnreadOffers';
-import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, ArrowLeft, ChevronDown, ShoppingCart } from 'lucide-react';
+import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, ArrowLeft, ChevronDown, ShoppingCart, Search, Scissors } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -149,6 +149,7 @@ function AppContent() {
   });
   const [paymentSuccessMessage, setPaymentSuccessMessage] = useState<string | null>(null);
   const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+  const [headerSearch, setHeaderSearch] = useState('');
 
   useEffect(() => {
     const hashPart = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
@@ -372,6 +373,10 @@ function AppContent() {
         onGetStarted={() => {
           navigateToView('marketplace');
         }}
+        onSell={() => {
+          setAuthMode('signup');
+          setCurrentView('auth' as ViewName);
+        }}
         onLogin={() => {
           setAuthMode('login');
           setCurrentView('auth' as ViewName);
@@ -453,10 +458,10 @@ function AppContent() {
     if (currentView === 'marketplace') {
       return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
-          <nav className="bg-white shadow-md sticky top-0 z-40">
+          <nav className="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-100">
             <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6">
-              <div className="flex items-center justify-between h-16">
-                <div className="flex items-center gap-1 min-w-0 flex-1">
+              <div className="flex items-center justify-between h-16 gap-3">
+                <div className="flex items-center gap-1 min-w-0 flex-shrink-0">
                   <button
                     onClick={() => navigateToView('landing')}
                     className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
@@ -464,29 +469,37 @@ function AppContent() {
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
-                  <h1 className="text-base sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
+                  <h1 className="text-base sm:text-lg font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
                     NaturalHairMarket
                   </h1>
                 </div>
-                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+
+                {/* Search bar */}
+                <div className="hidden sm:flex flex-1 max-w-sm items-center bg-gray-50 border border-gray-200 rounded-lg px-3 gap-2 h-9">
+                  <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher…"
+                    className="flex-1 bg-transparent text-sm outline-none text-gray-700 placeholder-gray-400"
+                    onFocus={() => {}}
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-shrink-0">
                   <LanguageSelector />
                   <button
-                    onClick={() => {
-                      setAuthMode('login');
-                      navigateToView('profile');
-                    }}
+                    onClick={() => { setAuthMode('login'); navigateToView('profile'); }}
                     className="px-2 py-1.5 sm:px-3 sm:py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium text-xs sm:text-sm whitespace-nowrap"
                   >
                     {t('nav.login')}
                   </button>
                   <button
-                    onClick={() => {
-                      setAuthMode('signup');
-                      navigateToView('profile');
-                    }}
-                    className="px-2 py-1.5 sm:px-3 sm:py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors text-xs sm:text-sm whitespace-nowrap"
+                    onClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
+                    className="px-2 py-1.5 sm:px-3 sm:py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold transition-all text-xs sm:text-sm whitespace-nowrap flex items-center gap-1.5 shadow-sm"
                   >
-                    {t('nav.signup')}
+                    <Scissors className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Déposer une annonce</span>
+                    <span className="sm:hidden">Vendre</span>
                   </button>
                 </div>
               </div>
@@ -529,10 +542,10 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
-      <nav className="bg-white shadow-md sticky top-0 z-40">
+      <nav className="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
+          <div className="flex items-center justify-between h-16 gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-shrink-0">
               {currentView !== 'marketplace' && (
                 <button
                   onClick={() => navigateToView('marketplace')}
@@ -542,15 +555,30 @@ function AppContent() {
                   <ArrowLeft className="w-4 h-4" />
                 </button>
               )}
-              <h1 className="text-base sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
+              <h1 className="text-base sm:text-lg font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent truncate">
                 NaturalHairMarket
               </h1>
-              <div className="hidden md:block ml-2">
+              <div className="hidden lg:block ml-2">
                 <LanguageSelector />
               </div>
             </div>
 
-            <div className="hidden md:flex items-center gap-1">
+            {/* Search bar — visible only on marketplace */}
+            {currentView === 'marketplace' && (
+              <div className="hidden sm:flex flex-1 max-w-sm items-center bg-gray-50 border border-gray-200 rounded-lg px-3 gap-2 h-9">
+                <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={headerSearch}
+                  onChange={(e) => setHeaderSearch(e.target.value)}
+                  placeholder="Rechercher des cheveux…"
+                  className="flex-1 bg-transparent text-sm outline-none text-gray-700 placeholder-gray-400"
+                />
+              </div>
+            )}
+
+            <div className="hidden md:flex items-center gap-1 flex-shrink-0">
+              {/* Buyer group */}
               <button
                 onClick={() => navigateToView('marketplace')}
                 className={`px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5 text-sm ${
@@ -657,16 +685,18 @@ function AppContent() {
                 )}
               </div>
 
+              {/* Seller CTA — amber to stand out */}
               <button
                 onClick={() => setShowCreateListing(true)}
-                className="ml-1 px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-1.5 text-sm"
+                className="ml-2 px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm shadow-sm"
               >
-                <Plus className="w-4 h-4" />
-                {t('nav.newListing')}
+                <Scissors className="w-4 h-4" />
+                Déposer une annonce
               </button>
               <button
                 onClick={signOut}
-                className="ml-1 p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
+                className="ml-1 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
+                title="Se déconnecter"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -781,13 +811,13 @@ function AppContent() {
               </button>
               <button
                 onClick={() => { setShowCreateListing(true); setMobileMenuOpen(false); }}
-                className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                className="w-full px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors flex items-center gap-2"
               >
-                <Plus className="w-5 h-5" />
-                {t('nav.newListing')}
+                <Scissors className="w-5 h-5" />
+                Déposer une annonce
               </button>
               <button
-                onClick={signOut}
+                onClick={() => { signOut(); setMobileMenuOpen(false); }}
                 className="w-full px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2"
               >
                 <LogOut className="w-5 h-5" />
@@ -815,6 +845,7 @@ function AppContent() {
             initialListingId={preselectedListingId}
             key={preselectedListingId || 'marketplace'}
             onSellerClick={navigateToSellerStore}
+            externalSearch={headerSearch}
           />
         )}
         {currentView === 'seller-store' && selectedSellerId && (
