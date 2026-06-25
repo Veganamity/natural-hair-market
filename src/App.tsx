@@ -9,6 +9,7 @@ import { ResetPasswordForm } from './components/Auth/ResetPasswordForm';
 import { MarketplaceView } from './components/Marketplace/MarketplaceView';
 import { CreateListingForm } from './components/Listings/CreateListingForm';
 import { ProfileView } from './components/Profile/ProfileView';
+import { ProfileCompletionModal } from './components/Profile/ProfileCompletionModal';
 import { FavoritesView } from './components/Favorites/FavoritesView';
 import { OffersView } from './components/Offers/OffersView';
 import { TransactionsView } from './components/Transactions/TransactionsView';
@@ -130,7 +131,7 @@ function getInitialView(): ViewName {
 }
 
 function AppContent() {
-  const { user, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const { t } = useLanguage();
   const { unreadCount } = useUnreadOffersCount();
   const { cartCount } = useCart();
@@ -542,6 +543,10 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
+      {/* Profil incomplet — modal bloquant */}
+      {user && profile && !(profile.full_name?.trim() && profile.phone?.trim() && profile.address_line1?.trim() && profile.postal_code?.trim() && profile.city?.trim()) && (
+        <ProfileCompletionModal />
+      )}
       <nav className="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-16 gap-2">

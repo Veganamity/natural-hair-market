@@ -208,6 +208,7 @@ export interface Database {
           accepts_marketplace_terms: boolean
           business_name: string | null
           address_complement: string | null
+          siret: string | null
         }
         Insert: {
           id: string
@@ -231,6 +232,7 @@ export interface Database {
           accepts_marketplace_terms?: boolean
           business_name?: string | null
           address_complement?: string | null
+          siret?: string | null
         }
         Update: {
           id?: string
@@ -254,10 +256,9 @@ export interface Database {
           accepts_marketplace_terms?: boolean
           business_name?: string | null
           address_complement?: string | null
+          siret?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey"
             columns: ["id"]
             isOneToOne: true
             referencedRelation: "users"
