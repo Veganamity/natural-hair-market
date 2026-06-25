@@ -114,8 +114,12 @@ type ViewName =
   | 'admin-salons' | 'admin-listings' | 'admin-buybacks' | 'salon-certifie' | 'seller-store'
   | 'my-buybacks' | 'partners' | 'listing-page' | 'not-found';
 
+function normalizePath(pathname: string): string {
+  return pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
+}
+
 function getInitialView(): ViewName {
-  const pathname = window.location.pathname;
+  const pathname = normalizePath(window.location.pathname);
   if (pathname.startsWith('/annonce/')) return 'listing-page';
   const hash = window.location.hash.slice(1).split('?')[0].split('&')[0];
   const pathView = PATH_TO_VIEW[pathname];
@@ -307,16 +311,8 @@ function AppContent() {
   };
 
   useEffect(() => {
-    // Never set canonical to /not-found — Google would classify the page as a Soft 404
-    if (currentView === 'not-found') {
-      const metaRobots = document.querySelector('meta[name="robots"]');
-      if (metaRobots) metaRobots.setAttribute('content', 'noindex, nofollow');
-      return;
-    }
-
-    // Restore robots for all real pages
-    const metaRobots = document.querySelector('meta[name="robots"]');
-    if (metaRobots) metaRobots.setAttribute('content', 'index, follow');
+    // Never set canonical to /not-found
+    if (currentView === 'not-found') return;
 
     // For listing pages, use the actual /annonce/... URL already in the browser
     let path: string;

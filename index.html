@@ -17,6 +17,7 @@
     <script>
       (function() {
         var path = window.location.pathname;
+        if (path.length > 1) path = path.replace(/\/$/, '');
         if (path && path !== '/') {
           var el = document.getElementById('canonical-url');
           if (el) el.href = 'https://www.naturalhairmarket.com' + path;
