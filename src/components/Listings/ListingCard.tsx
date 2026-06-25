@@ -1,6 +1,7 @@
 import { Heart, MapPin, Calendar, Globe, BadgeCheck } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { buildListingPath } from '../../lib/listingSlug';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 
@@ -55,8 +56,12 @@ export function ListingCard({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer">
-      <div className="relative" onClick={onClick}>
+    <a
+      href={buildListingPath(listing)}
+      onClick={(e) => { e.preventDefault(); onClick?.(); }}
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer block"
+    >
+      <div className="relative">
         <img
           src={mainImage}
           alt={listing.title}
@@ -72,6 +77,7 @@ export function ListingCard({
         <button
           onClick={(e) => {
             e.stopPropagation();
+            e.preventDefault();
             if (isOldApi && onFavoriteToggle) {
               onFavoriteToggle(listing.id);
             } else if (onFavoriteChange) {
@@ -91,7 +97,7 @@ export function ListingCard({
         </div>
       </div>
 
-      <div className="p-2.5" onClick={onClick}>
+      <div className="p-2.5">
         <h3 className="text-sm font-bold text-gray-800 mb-1.5 line-clamp-1">
           {listing.title}
         </h3>
@@ -145,6 +151,7 @@ export function ListingCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onSellerClick(seller.id);
             }}
             className="mt-1.5 w-full text-left text-[10px] text-emerald-600 hover:text-emerald-700 font-medium truncate transition-colors"
@@ -153,6 +160,6 @@ export function ListingCard({
           </button>
         )}
       </div>
-    </div>
+    </a>
   );
 }

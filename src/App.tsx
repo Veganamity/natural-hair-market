@@ -31,12 +31,14 @@ import BuybackAdmin from './components/Admin/BuybackAdmin';
 import MyBuybackRequests from './components/Buyback/MyBuybackRequests';
 import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
+import { ListingPage } from './components/Listings/ListingPage';
 import { NotFound } from './components/NotFound';
 import { CartView } from './components/Cart/CartView';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { SellerStorePage } from './components/Seller/SellerStorePage';
 import { Database } from './lib/database.types';
 import { supabase } from './lib/supabaseClient';
+import { extractListingIdFromPath, buildListingPath } from './lib/listingSlug';
 import { useUnreadOffersCount } from './hooks/useUnreadOffers';
 import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, ArrowLeft, ChevronDown, ShoppingCart } from 'lucide-react';
 
@@ -110,10 +112,11 @@ type ViewName =
   | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'faq' | 'about'
   | 'guide-coupe'
   | 'admin-salons' | 'admin-listings' | 'admin-buybacks' | 'salon-certifie' | 'seller-store'
-  | 'my-buybacks' | 'partners' | 'not-found';
+  | 'my-buybacks' | 'partners' | 'listing-page' | 'not-found';
 
 function getInitialView(): ViewName {
   const pathname = window.location.pathname;
+  if (pathname.startsWith('/annonce/')) return 'listing-page';
   const hash = window.location.hash.slice(1).split('?')[0].split('&')[0];
   const pathView = PATH_TO_VIEW[pathname];
   if (pathView) return pathView as ViewName;
@@ -134,6 +137,12 @@ function AppContent() {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [preselectedListingId, setPreselectedListingId] = useState<string | null>(null);
+  const [listingPageId, setListingPageId] = useState<string | null>(() => {
+    if (window.location.pathname.startsWith('/annonce/')) {
+      return extractListingIdFromPath(window.location.pathname);
+    }
+    return null;
+  });
   const [paymentSuccessMessage, setPaymentSuccessMessage] = useState<string | null>(null);
   const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
 
@@ -197,10 +206,20 @@ function AppContent() {
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (event.state?.view) {
+        if (event.state.view === 'listing-page' && event.state.listingId) {
+          setListingPageId(event.state.listingId);
+        }
         setCurrentView(event.state.view as ViewName);
         return;
       }
-      const pathView = PATH_TO_VIEW[window.location.pathname];
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/annonce/')) {
+        const id = extractListingIdFromPath(pathname);
+        if (id) setListingPageId(id);
+        setCurrentView('listing-page');
+        return;
+      }
+      const pathView = PATH_TO_VIEW[pathname];
       if (pathView) {
         setCurrentView(pathView as ViewName);
         return;
@@ -317,6 +336,14 @@ function AppContent() {
     window.scrollTo(0, 0);
   };
 
+  const navigateToListingPage = (listing: { id: string; hair_length: string; hair_type: string; hair_color: string }) => {
+    const path = buildListingPath(listing);
+    setListingPageId(listing.id);
+    setCurrentView('listing-page');
+    window.history.pushState({ view: 'listing-page', listingId: listing.id }, '', path);
+    window.scrollTo(0, 0);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
@@ -337,6 +364,33 @@ function AppContent() {
         }}
         onNavigate={(view) => navigateToView(view)}
       />;
+    }
+
+    if (currentView === 'listing-page' && listingPageId) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
+          <nav className="bg-white shadow-md sticky top-0 z-40">
+            <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button onClick={() => navigateToView('marketplace')} className="p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">NaturalHairMarket</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setAuthMode('login'); navigateToView('profile'); }} className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium text-sm">Se connecter</button>
+                <button onClick={() => { setAuthMode('signup'); navigateToView('profile'); }} className="px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 text-sm">S'inscrire</button>
+              </div>
+            </div>
+          </nav>
+          <ListingPage
+            listingId={listingPageId}
+            onBack={() => navigateToView('marketplace')}
+            onLoginClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
+            onBuyClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
+          />
+        </div>
+      );
     }
 
     const PUBLIC_VIEWS = new Set([
@@ -753,6 +807,17 @@ function AppContent() {
           <SellerStorePage
             sellerId={selectedSellerId}
             onBack={() => navigateToView('marketplace')}
+          />
+        )}
+        {currentView === 'listing-page' && listingPageId && (
+          <ListingPage
+            listingId={listingPageId}
+            onBack={() => navigateToView('marketplace')}
+            onLoginClick={() => navigateToView('profile')}
+            onBuyClick={(id) => {
+              setPreselectedListingId(id);
+              navigateToView('marketplace');
+            }}
           />
         )}
         {currentView === 'cart' && <CartView />}

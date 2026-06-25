@@ -1,5 +1,6 @@
 import { Heart, MapPin, Calendar, Globe, BadgeCheck } from 'lucide-react';
 import { Database } from '../../lib/database.types';
+import { buildListingPath } from '../../lib/listingSlug';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 
@@ -48,8 +49,12 @@ export function ListingListItem({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer">
-      <div className="flex flex-col sm:flex-row gap-4 p-4" onClick={onClick}>
+    <a
+      href={buildListingPath(listing)}
+      onClick={(e) => { e.preventDefault(); onClick?.(); }}
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer block"
+    >
+      <div className="flex flex-col sm:flex-row gap-4 p-4">
         <div className="relative w-full sm:w-48 h-48 sm:h-32 flex-shrink-0">
           <img
             src={mainImage}
@@ -59,6 +64,7 @@ export function ListingListItem({
           <button
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               if (onFavoriteToggle) {
                 onFavoriteToggle(listing.id);
               }
@@ -116,6 +122,7 @@ export function ListingListItem({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     onSellerClick(seller.id);
                   }}
                   className="text-emerald-600 hover:text-emerald-700 font-medium text-xs transition-colors"
@@ -138,6 +145,6 @@ export function ListingListItem({
           </div>
         </div>
       </div>
-    </div>
+    </a>
   );
 }
