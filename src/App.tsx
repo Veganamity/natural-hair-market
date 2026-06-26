@@ -447,7 +447,7 @@ function AppContent() {
             {currentView === 'refund' && <RefundPolicy />}
             {currentView === 'safety' && <SafetyQuality />}
             {currentView === 'seller-rules' && <SellerRules />}
-            {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
+            {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => { setAuthMode('signup'); setCurrentView('auth' as ViewName); }} />}
             {currentView === 'buyer-rules' && <BuyerRules />}
             {currentView === 'faq' && <FAQ onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
             {currentView === 'about' && <AboutUs onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
@@ -897,7 +897,7 @@ function AppContent() {
         {currentView === 'refund' && <RefundPolicy />}
         {currentView === 'safety' && <SafetyQuality />}
         {currentView === 'seller-rules' && <SellerRules />}
-        {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => navigateToView('marketplace')} />}
+        {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => setShowCreateListing(true)} />}
         {currentView === 'buyer-rules' && <BuyerRules />}
         {currentView === 'faq' && <FAQ onClose={() => navigateToView('marketplace')} />}
         {currentView === 'about' && <AboutUs onClose={() => navigateToView('marketplace')} />}

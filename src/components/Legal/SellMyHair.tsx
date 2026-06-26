@@ -8,34 +8,26 @@ import { useState, useRef, useEffect } from 'react';
 import {
   ChevronDown,
   ChevronUp,
-  Camera,
   Ruler,
   Layers,
   Palette,
   AlertTriangle,
-  Package,
   DollarSign,
   Shield,
   ArrowRight,
-  User,
   Scissors,
   Droplets,
   Wind,
+  Package,
   CheckCircle,
-  Upload,
-  Send,
   Sparkles,
-  MapPin,
-  CreditCard,
-  Mail,
-  Phone,
   Plus,
   Trash2,
   Zap,
   Star,
   Users,
+  Tag,
 } from 'lucide-react';
-import { supabase } from '../../lib/supabaseClient';
 
 interface SellMyHairProps {
   onStartSelling?: () => void;
@@ -140,15 +132,15 @@ function getPrice(condition: Condition, color: ColorType | '', length: string): 
 const faqs: { q: string; a: string }[] = [
   {
     q: "Combien puis-je gagner en vendant mes cheveux ?",
-    a: "Le prix rachat cheveux naturels dépend principalement de la longueur et de la couleur. Pour des cheveux châtains naturels de 40 cm, comptez environ 56 € / 100 g. Pour des cheveux blonds ou roux de la même longueur, le tarif monte à 112 € / 100 g. Les mèches très longues (70 cm et plus) peuvent atteindre 200 à 300 € pour 100 g. Utilisez notre calculateur gratuit pour obtenir une estimation précise selon votre profil.",
+    a: "Le prix de vente de vos cheveux dépend principalement de la longueur et de la couleur. Pour des cheveux châtains naturels de 40 cm, comptez environ 56 € / 100 g. Pour des cheveux blonds ou roux de la même longueur, le tarif monte à 112 € / 100 g. Les mèches très longues (70 cm et plus) peuvent atteindre 200 à 300 € pour 100 g. Utilisez notre calculateur gratuit pour obtenir une estimation précise et fixer le prix de votre annonce.",
   },
   {
     q: "Quels types de cheveux sont acceptés pour vendre ses cheveux ?",
-    a: "Natural Hair Market accepte tous types de cheveux humains : cheveux naturels vierges (jamais colorés), cheveux colorés, décolorés, méchés, traités au lissage ou à la kératine. Toutes les textures sont acceptées : raides, ondulés, bouclés, crépus. La longueur minimale est de 15 cm. Il est obligatoire de mentionner l'état exact et les traitements subis dans votre annonce ou demande de rachat.",
+    a: "Natural Hair Market accepte tous types de cheveux humains : cheveux naturels vierges (jamais colorés), cheveux colorés, décolorés, méchés, traités au lissage ou à la kératine. Toutes les textures sont acceptées : raides, ondulés, bouclés, crépus. La longueur minimale est de 15 cm. Il est obligatoire de mentionner l'état exact et les traitements subis dans votre annonce.",
   },
   {
     q: "Comment se passe l'envoi de mes cheveux ?",
-    a: "Pour le rachat direct : une fois votre demande acceptée, notre équipe vous envoie sous 48 h une confirmation avec l'adresse d'expédition. Vous envoyez vos cheveux par courrier suivi (frais à votre charge). Pour la marketplace : vous expédiez directement à l'acheteur dès que la commande est validée. Dans les deux cas, vos cheveux doivent être soigneusement préparés (lavés, séchés, tressés en queue de cheval) et emballés dans un sac congélation fermé.",
+    a: "Une fois votre annonce publiée et un acheteur trouvé, vous expédiez directement à l'acheteur dès que la commande est validée. Vos cheveux doivent être soigneusement préparés (lavés, séchés, tressés en queue de cheval) et emballés dans un sac congélation fermé.",
   },
   {
     q: "Quelle est la longueur minimale pour vendre ses cheveux naturels ?",
@@ -156,7 +148,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Comment vendre ses cheveux en ligne sur Natural Hair Market ?",
-    a: "Deux options s'offrent à vous : (1) Déposer une annonce gratuite sur notre marketplace — créez votre compte, publiez vos photos et fixez votre propre prix ; vous encaissez 100 % du montant lors de la vente. (2) Soumettre une demande de rachat direct — remplissez le formulaire ci-dessus avec les caractéristiques de votre mèche et votre IBAN ; notre équipe vous recontacte sous 48 h pour confirmer le prix et les modalités d'envoi.",
+    a: "Créez votre compte gratuitement, publiez vos photos, utilisez notre calculateur de prix pour fixer un tarif juste, et attendez qu'un acheteur vous contacte. Vous encaissez 100 % du montant lors de la vente. La publication est totalement gratuite et sans commission côté vendeur.",
   },
 ];
 
@@ -224,7 +216,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
     document.title = 'Vendre mes cheveux - Obtenez le meilleur prix | Natural Hair Market';
     if (metaDesc) {
-      metaDesc.content = 'Vendez vos cheveux naturels facilement sur Natural Hair Market. Estimation gratuite, paiement rapide et sécurisé. Découvrez comment vendre vos cheveux en 3 étapes simples.';
+      metaDesc.content = 'Vendez vos cheveux naturels facilement sur Natural Hair Market. Estimation gratuite, publication gratuite, acheteurs verifies. Decouvrez comment vendre vos cheveux en 3 etapes simples.';
     }
 
     return () => {
@@ -233,13 +225,11 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
     };
   }, []);
 
-  // --- Calculateur (etat de la meche en cours) ---
+  // --- Calculateur ---
   const [condition, setCondition] = useState<Condition | ''>('');
   const [colorType, setColorType] = useState<ColorType | ''>('');
   const [length, setLength] = useState('');
   const [weightGrams, setWeightGrams] = useState('');
-
-  // --- Liste des meches ajoutees ---
   const [strands, setStrands] = useState<Strand[]>([]);
 
   const availableLengths = ALL_LENGTHS;
@@ -249,7 +239,6 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
   const exactPrice = ratePerHundred != null && !isNaN(grams) && grams > 0
     ? Math.round(ratePerHundred * grams / 100 * 100) / 100
     : null;
-  const calculatedPrice = rateStr;
 
   const canAddStrand = !!condition && (condition === 'colored' || !!colorType) && !!length;
 
@@ -276,173 +265,10 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
   const totalExactPrice = strands.reduce((sum, s) => sum + (s.exactPrice ?? 0), 0);
   const allStrandsHavePrice = strands.length > 0 && strands.every(s => s.exactPrice != null);
 
-  // Meche "courante" (si l'utilisateur n'a pas encore clique Ajouter)
-  const currentStrandAsStrands = (): Strand[] => {
-    if (strands.length > 0) return strands;
-    if (!condition || !length) return [];
-    return [{
-      id: 'current',
-      condition: condition as Condition,
-      colorType: colorType as ColorType | '',
-      length,
-      weightGrams,
-      rateStr,
-      exactPrice,
-    }];
-  };
+  const calculatorRef = useRef<HTMLDivElement>(null);
 
-  // --- Formulaire ---
-  const formRef = useRef<HTMLDivElement>(null);
-  const [form, setForm] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    salon_name: '',
-    address_line1: '',
-    postal_code: '',
-    city: '',
-    iban: '',
-    bank_holder_name: '',
-  });
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError, setSubmitError] = useState('');
-  const [submittedSummary, setSubmittedSummary] = useState<{
-    name: string; email: string; phone: string;
-    condition: string; color: string; length: string; price: string;
-    address: string; iban: string; holder: string;
-    submittedAt: string; strands: Strand[];
-  } | null>(null);
-
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
-  };
-
-  const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitError('');
-
-    const effectiveStrands = currentStrandAsStrands();
-
-    if (effectiveStrands.length === 0) {
-      setSubmitError('Veuillez ajouter au moins une meche avant de soumettre.');
-      return;
-    }
-    for (const s of effectiveStrands) {
-      if (s.condition === 'natural' && !s.colorType) {
-        setSubmitError('Veuillez selectionner la couleur pour chaque meche naturelle.');
-        return;
-      }
-    }
-
-    const primaryStrand = effectiveStrands[0];
-    const condition = primaryStrand.condition;
-    const colorType = primaryStrand.colorType;
-    const length = primaryStrand.length;
-    const totalGrams = effectiveStrands.reduce((sum, s) => sum + (parseFloat(s.weightGrams) || 0), 0);
-    const totalPrice = allStrandsHavePrice ? totalExactPrice : null;
-    const priceLabel = effectiveStrands.length === 1
-      ? (primaryStrand.exactPrice != null
-          ? `${primaryStrand.exactPrice.toFixed(2)} € (${primaryStrand.weightGrams}g × ${primaryStrand.rateStr})`
-          : primaryStrand.rateStr || 'Non calcule')
-      : totalPrice != null
-          ? `${totalPrice.toFixed(2)} € total (${effectiveStrands.length} meches)`
-          : `${effectiveStrands.length} meches – tarifs variables`;
-
-    setSubmitting(true);
-
-    try {
-      let photo_url: string | null = null;
-
-      if (photoFile) {
-        const ext = photoFile.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: uploadError, data } = await supabase.storage
-          .from('buyback-photos')
-          .upload(fileName, photoFile, { upsert: false });
-        if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage
-          .from('buyback-photos')
-          .getPublicUrl(data.path);
-        photo_url = publicUrl;
-      }
-
-      const { error: insertError } = await supabase
-        .from('hair_buyback_requests')
-        .insert({
-          first_name: form.first_name.trim(),
-          last_name: form.last_name.trim(),
-          email: form.email.trim(),
-          phone: form.phone.trim(),
-          salon_name: form.salon_name.trim() || null,
-          photo_url,
-          hair_condition: condition,
-          hair_color: condition === 'natural' ? colorType || null : null,
-          hair_length: length,
-          calculated_price: priceLabel,
-          weight_grams: totalGrams > 0 ? Math.round(totalGrams) : null,
-          exact_price: totalPrice,
-          strands_json: effectiveStrands.length > 1 ? effectiveStrands.map(s => ({
-            condition: s.condition,
-            colorType: s.colorType,
-            length: s.length,
-            weightGrams: s.weightGrams,
-            rateStr: s.rateStr,
-            exactPrice: s.exactPrice,
-          })) : null,
-          address_line1: form.address_line1.trim() || null,
-          postal_code: form.postal_code.trim() || null,
-          city: form.city.trim() || null,
-          country: 'FR',
-          iban: form.iban.trim() || null,
-          bank_holder_name: form.bank_holder_name.trim() || null,
-          status: 'pending',
-        });
-
-      if (insertError) throw insertError;
-
-      setSubmittedSummary({
-        name: `${form.first_name.trim()} ${form.last_name.trim()}`,
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        condition: effectiveStrands.length === 1
-          ? (condition === 'colored' ? 'Colores / Meches' : 'Naturels (Vierges)')
-          : `${effectiveStrands.length} meches`,
-        color: effectiveStrands.length === 1
-          ? (colorType === 'chestnut' ? 'Chatain / Brun' : colorType === 'blond_roux_gris' ? 'Blond / Roux / Gris' : '')
-          : '',
-        length: effectiveStrands.length === 1 ? length : effectiveStrands.map(s => s.length).join(', '),
-        price: priceLabel,
-        address: [form.address_line1.trim(), form.postal_code.trim(), form.city.trim()].filter(Boolean).join(', '),
-        iban: form.iban.trim(),
-        holder: form.bank_holder_name.trim(),
-        submittedAt: new Date().toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        strands: effectiveStrands,
-      });
-      setSubmitSuccess(true);
-      setForm({ first_name: '', last_name: '', email: '', phone: '', salon_name: '', address_line1: '', postal_code: '', city: '', iban: '', bank_holder_name: '' });
-      setPhotoFile(null);
-      setPhotoPreview(null);
-      setStrands([]);
-      setCondition('');
-      setColorType('');
-      setLength('');
-      setWeightGrams('');
-    } catch (err) {
-      setSubmitError((err as Error).message || 'Une erreur est survenue. Veuillez reessayer.');
-    } finally {
-      setSubmitting(false);
-    }
+  const scrollToCalculator = () => {
+    calculatorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
@@ -453,13 +279,13 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
         <div className="max-w-4xl mx-auto px-4 py-12 md:py-16 text-center">
           <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5 text-emerald-700 text-sm font-medium mb-5">
             <Scissors className="w-4 h-4" />
-            Rachat & vente de cheveux humains
+            Vente de cheveux humains
           </div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
             Vendre mes cheveux&nbsp;: la solution simple et sécurisée
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-            Vous souhaitez <strong>vendre vos cheveux naturels</strong> ? Natural Hair Market vous offre deux options : déposer une annonce gratuite sur notre marketplace ou soumettre une demande de rachat direct. Estimez le <strong>prix rachat cheveux naturels</strong> en quelques secondes, préparez-les selon nos consignes, et recevez votre paiement rapidement et en toute sécurité.
+            Vous souhaitez <strong>vendre vos cheveux naturels</strong> ? Estimez leur valeur en quelques secondes grâce à notre calculateur, puis déposez votre annonce gratuitement sur Natural Hair Market. Fixez votre propre prix et recevez votre paiement en toute sécurité.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
@@ -467,14 +293,14 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors shadow-sm text-base"
             >
               <Scissors className="w-5 h-5" />
-              Vendre sur la marketplace
+              Déposer mon annonce
             </button>
             <button
-              onClick={scrollToForm}
+              onClick={scrollToCalculator}
               className="inline-flex items-center gap-2 border-2 border-emerald-200 text-emerald-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-emerald-50 transition-colors text-base"
             >
-              <Send className="w-5 h-5" />
-              Rachat direct de mes cheveux
+              <DollarSign className="w-5 h-5" />
+              Estimer le prix de mes cheveux
             </button>
           </div>
         </div>
@@ -482,10 +308,9 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
       <div className="max-w-4xl mx-auto px-4 py-10 space-y-12">
 
-        {/* ===== SEO : H1 + Intro + Avantages + Témoignages + CTA ===== */}
+        {/* SEO intro */}
         <section className="space-y-8">
 
-          {/* H2 SEO principal */}
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mb-4">
               Vendre ses cheveux en ligne&nbsp;:<br className="hidden md:block" />
@@ -503,7 +328,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                 icon: <Zap className="w-7 h-7 text-amber-500" />,
                 bg: 'bg-amber-50 border-amber-100',
                 title: 'Paiement rapide',
-                desc: 'Virement bancaire sous 5 jours ouvrables après réception et validation de vos cheveux.',
+                desc: 'Virement bancaire sous 5 jours ouvrables après réception et validation de vos cheveux par l\'acheteur.',
               },
               {
                 icon: <Star className="w-7 h-7 text-emerald-600" />,
@@ -529,17 +354,17 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           {/* CTA principal */}
           <div className="text-center">
             <button
-              onClick={scrollToForm}
+              onClick={onStartSelling}
               className="inline-flex items-center gap-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-emerald-200 text-base"
             >
               <Scissors className="w-5 h-5" />
-              Je vends mes cheveux maintenant
+              Je dépose mon annonce maintenant
               <ArrowRight className="w-5 h-5" />
             </button>
-            <p className="text-xs text-gray-400 mt-3">Gratuit · Sans engagement · Réponse sous 48h</p>
+            <p className="text-xs text-gray-400 mt-3">Gratuit · Sans engagement · Acheteurs vérifiés</p>
           </div>
 
-          {/* 3 témoignages clients */}
+          {/* Témoignages */}
           <div>
             <h2 className="text-xl font-bold text-gray-900 text-center mb-5">Ils ont vendu leurs cheveux sur NaturalHairMarket</h2>
             <div className="grid sm:grid-cols-3 gap-4">
@@ -587,13 +412,12 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
         </section>
 
-        {/* ===== SECTION SEO : Étapes + Critères + Processus paiement ===== */}
+        {/* SEO contenu */}
         <section className="space-y-8">
-
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8 space-y-4 text-gray-600 text-sm md:text-base leading-relaxed">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900">Comment vendre ses cheveux naturels en 3 étapes ?</h2>
             <p>
-              <strong>Vendre ses cheveux en ligne</strong> n'a jamais été aussi simple grâce à Natural Hair Market. Notre plateforme propose deux façons de valoriser vos cheveux : déposer une annonce gratuite sur la marketplace pour fixer votre propre prix, ou soumettre une demande de <strong>rachat direct</strong> à notre équipe pour recevoir un paiement rapide et sans effort de vente.
+              <strong>Vendre ses cheveux en ligne</strong> n'a jamais été aussi simple grâce à Natural Hair Market. Déposez une annonce gratuite sur la marketplace pour fixer votre propre prix et atteindre des milliers d'acheteurs vérifiés en France et en Europe.
             </p>
 
             <div className="grid md:grid-cols-3 gap-4 pt-2">
@@ -601,21 +425,21 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                 {
                   num: '1',
                   title: 'Estimez votre prix',
-                  text: 'Utilisez notre calculateur gratuit pour connaître le prix rachat cheveux naturels selon votre longueur, couleur et état. Les cheveux blonds, roux ou gris naturels atteignent les tarifs les plus élevés.',
+                  text: 'Utilisez notre calculateur gratuit pour connaître le prix marché de vos cheveux selon votre longueur, couleur et état. Ce prix sert de base pour fixer le tarif de votre annonce.',
                   color: 'bg-emerald-50 border-emerald-100',
                   numColor: 'bg-emerald-600',
                 },
                 {
                   num: '2',
                   title: 'Préparez votre mèche',
-                  text: 'Lavez, séchez et tressez vos cheveux selon nos consignes obligatoires. La longueur minimale est de 15 cm. Des cheveux bien préparés garantissent un rachat accepté et un paiement plus rapide.',
+                  text: 'Lavez, séchez et tressez vos cheveux selon nos consignes. La longueur minimale est de 15 cm. Des cheveux bien préparés garantissent une vente réussie et un paiement plus rapide.',
                   color: 'bg-amber-50 border-amber-100',
                   numColor: 'bg-amber-500',
                 },
                 {
                   num: '3',
-                  title: 'Recevez votre paiement',
-                  text: 'Déposez une annonce sur la marketplace (paiement lors de la vente) ou soumettez une demande de rachat direct. Dans les deux cas, le virement est effectué sous 5 jours ouvrables après réception.',
+                  title: 'Publiez et encaissez',
+                  text: 'Créez votre annonce gratuite, ajoutez vos photos et fixez votre prix. Dès qu\'un acheteur valide sa commande, le paiement est sécurisé par Stripe et libéré à la réception.',
                   color: 'bg-teal-50 border-teal-100',
                   numColor: 'bg-teal-600',
                 },
@@ -630,34 +454,30 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 pt-2">Quels critères influencent le prix de vente de vos cheveux ?</h2>
             <p>
-              Le <strong>prix rachat cheveux naturels</strong> dépend de plusieurs facteurs clés. La <strong>longueur</strong> est le premier critère : à partir de 15 cm pour les mèches colorées, les tarifs augmentent progressivement jusqu'à plus de 300 € pour des cheveux naturels de plus de 70 cm. La <strong>couleur</strong> est déterminante : les cheveux blonds, roux et gris naturels sont des "pépites" très recherchées et atteignent des prix deux à trois fois supérieurs aux châtains. Les cheveux <strong>naturels vierges</strong> (jamais colorés ni traités chimiquement) sont les plus valorisés. Les cheveux colorés ou décolorés sont également acceptés, mais leur valeur est réduite.
+              Le <strong>prix rachat cheveux naturels</strong> dépend de plusieurs facteurs clés. La <strong>longueur</strong> est le premier critère : à partir de 15 cm pour les mèches colorées, les tarifs augmentent progressivement jusqu'à plus de 300 € pour des cheveux naturels de plus de 70 cm. La <strong>couleur</strong> est déterminante : les cheveux blonds, roux et gris naturels sont des "pépites" très recherchées et atteignent des prix deux à trois fois supérieurs aux châtains. Les cheveux <strong>naturels vierges</strong> (jamais colorés ni traités chimiquement) sont les plus valorisés.
             </p>
             <p>
-              La <strong>densité</strong> — mesurée en grammes — joue aussi un rôle important. Une mèche de 200 g vaut bien sûr davantage qu'une mèche de 80 g à longueur égale. Enfin, l'<strong>état général</strong> des cheveux (absence de fourches excessives, de cassures ou de porosité élevée) conditionne l'acceptation de votre demande de rachat.
+              La <strong>densité</strong> — mesurée en grammes — joue aussi un rôle important. Une mèche de 200 g vaut bien sûr davantage qu'une mèche de 80 g à longueur égale. Enfin, l'<strong>état général</strong> des cheveux (absence de fourches excessives, de cassures ou de porosité élevée) influence le prix que les acheteurs sont prêts à payer.
             </p>
 
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 pt-2">Processus de paiement sécurisé</h2>
             <p>
-              Lorsque vous <strong>vendez ses cheveux</strong> via le rachat direct, votre paiement est effectué par virement bancaire dans les 5 jours ouvrables suivant la réception et la validation de votre mèche. Lorsque vous choisissez la marketplace pour <strong>vendre ses cheveux en ligne</strong>, le paiement est déclenché dès qu'un acheteur valide votre commande — les fonds sont sécurisés par Stripe et libérés après confirmation de réception par l'acheteur.
-            </p>
-            <p>
-              Dans les deux cas, aucun frais n'est prélevé sur le montant versé au vendeur. Natural Hair Market ne perçoit aucune commission côté vendeur : vous encaissez 100 % du prix convenu. C'est l'une des raisons pour lesquelles notre plateforme est le premier choix pour <strong>vendre ses cheveux naturels</strong> en France.
+              Lorsque vous <strong>vendez vos cheveux</strong> sur la marketplace, le paiement est déclenché dès qu'un acheteur valide votre commande — les fonds sont sécurisés par Stripe et libérés après confirmation de réception par l'acheteur. Aucun frais n'est prélevé sur le montant versé au vendeur. Natural Hair Market ne perçoit aucune commission côté vendeur : vous encaissez 100 % du prix convenu.
             </p>
           </div>
-
         </section>
 
         {/* ===== SECTION A : Calculateur de prix ===== */}
-        <section>
+        <section ref={calculatorRef}>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">A</div>
             <h2 className="text-2xl font-bold text-gray-900">Calculateur de prix – Estimez la valeur de vos cheveux</h2>
           </div>
-          <p className="text-gray-500 mb-6 text-sm ml-11">Selectionnez les caracteristiques de vos cheveux pour obtenir une estimation de rachat instantanee.</p>
+          <p className="text-gray-500 mb-6 text-sm ml-11">Ce calculateur est <strong>indicatif</strong> : il vous aide à fixer le bon prix sur votre annonce selon le marché actuel.</p>
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
 
-            {/* Choix 1 : Etat */}
+            {/* Etat */}
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-3">1. Etat des cheveux</p>
               <div className="grid sm:grid-cols-2 gap-3">
@@ -686,7 +506,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               </div>
             </div>
 
-            {/* Choix 2 : Couleur (si naturels) */}
+            {/* Couleur */}
             {condition === 'natural' && (
               <div>
                 <p className="text-sm font-semibold text-gray-700 mb-3">2. Couleur naturelle</p>
@@ -715,7 +535,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               </div>
             )}
 
-            {/* Choix 3 : Longueur */}
+            {/* Longueur */}
             {(condition === 'colored' || (condition === 'natural' && colorType)) && (
               <div>
                 <p className="text-sm font-semibold text-gray-700 mb-3">
@@ -734,7 +554,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               </div>
             )}
 
-            {/* Choix 4 : Poids en grammes */}
+            {/* Poids */}
             {rateStr && (
               <div>
                 <p className="text-sm font-semibold text-gray-700 mb-3">
@@ -753,16 +573,14 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-400">g</span>
                 </div>
-                <p className="text-xs text-gray-400 mt-1.5">Tarif applicable : <span className="font-semibold text-emerald-700">{rateStr}</span></p>
+                <p className="text-xs text-gray-400 mt-1.5">Tarif marche : <span className="font-semibold text-emerald-700">{rateStr}</span></p>
               </div>
             )}
 
             {/* Meches deja ajoutees */}
             {strands.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-gray-700">
-                  Meches ajoutees ({strands.length})
-                </p>
+                <p className="text-sm font-semibold text-gray-700">Meches ({strands.length})</p>
                 {strands.map((s, i) => (
                   <div key={s.id} className="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5">
                     <div className="flex-1 min-w-0">
@@ -793,11 +611,11 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               </div>
             )}
 
-            {/* Resultat meche courante */}
+            {/* Résultat */}
             {rateStr && (
               <div className={`rounded-xl p-5 border-2 ${exactPrice != null ? 'bg-emerald-50 border-emerald-400' : 'bg-gray-50 border-gray-200'}`}>
                 <p className="text-sm font-medium text-gray-600 mb-1 text-center">
-                  {strands.length > 0 ? 'Cette meche' : 'Estimation de rachat'}
+                  {strands.length > 0 ? 'Cette meche' : 'Prix indicatif du marche'}
                 </p>
                 {exactPrice != null ? (
                   <div className="text-center">
@@ -810,9 +628,9 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                     <p className="text-xs text-gray-500 mt-1">Entrez le poids pour obtenir votre estimation precise.</p>
                   </div>
                 )}
-                <p className="text-xs text-gray-400 mt-2 text-center">Prix final confirme apres pesee et verification a reception.</p>
+                <p className="text-xs text-gray-400 mt-2 text-center">Utilisez ce tarif comme reference pour fixer le prix de votre annonce.</p>
 
-                {/* Bouton Ajouter cette meche */}
+                {/* Ajouter une meche */}
                 {canAddStrand && (
                   <button
                     type="button"
@@ -824,26 +642,42 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                   </button>
                 )}
 
-                {/* Bouton soumettre */}
+                {/* CTA déposer une annonce */}
                 <button
-                  onClick={scrollToForm}
-                  className="mt-3 w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors text-sm"
+                  onClick={onStartSelling}
+                  className="mt-3 w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
                 >
-                  <Send className="w-4 h-4" />
-                  {strands.length > 0 ? `Soumettre ma demande (${strands.length} meche${strands.length > 1 ? 's' : ''})` : 'Transmettre ma demande de rachat'}
+                  <Tag className="w-4 h-4" />
+                  {exactPrice != null
+                    ? `Déposer mon annonce — prix suggéré ${exactPrice.toFixed(2)} €`
+                    : 'Déposer mon annonce sur la marketplace'}
+                </button>
+              </div>
+            )}
+
+            {/* CTA si rien de sélectionné */}
+            {!rateStr && (
+              <div className="text-center pt-2">
+                <p className="text-xs text-gray-400 mb-3">Ou déposez votre annonce directement sans estimer le prix</p>
+                <button
+                  onClick={onStartSelling}
+                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
+                >
+                  <Scissors className="w-4 h-4" />
+                  Déposer mon annonce
                 </button>
               </div>
             )}
           </div>
         </section>
 
-{/* ===== SECTION B : Consignes de preparation ===== */}
+        {/* ===== SECTION B : Consignes ===== */}
         <section>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">B</div>
             <h2 className="text-2xl font-bold text-gray-900">Consignes de preparation obligatoires</h2>
           </div>
-          <p className="text-gray-500 mb-6 text-sm ml-11">Ces 5 etapes sont indispensables pour que votre demande soit acceptee. Des cheveux mal prepares seront retournes.</p>
+          <p className="text-gray-500 mb-6 text-sm ml-11">Ces 5 etapes sont indispensables pour garantir la qualite de votre lot et rassurer les acheteurs.</p>
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
             <img
@@ -865,517 +699,21 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
           <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
             <p className="text-amber-800 text-sm">
-              <strong>Longueur minimale : 15 cm.</strong> Pas de lissage, juste seche au seche-cheveux. Les cheveux doivent correspondre fidelement aux photos transmises.
+              <strong>Longueur minimale : 15 cm.</strong> Pas de lissage, juste seche au seche-cheveux. Les cheveux doivent correspondre fidelement aux photos de votre annonce.
             </p>
           </div>
         </section>
 
-        {/* ===== SECTION C : Formulaire de soumission ===== */}
-        <section ref={formRef}>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">C</div>
-            <h2 className="text-2xl font-bold text-gray-900">Transmettre ma demande de rachat</h2>
-          </div>
-          <p className="text-gray-500 mb-6 text-sm ml-11">
-            Remplissez le formulaire ci-dessous. Notre equipe vous contactera sous 48h pour confirmer le rachat et les modalites d'envoi.
-          </p>
-
-          {submitSuccess && submittedSummary ? (
-            <div className="space-y-4" id="buyback-receipt">
-              {/* Confirmation header */}
-              <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-6 text-center">
-                <div className="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle className="w-8 h-8 text-emerald-600" />
-                </div>
-                <h3 className="text-xl font-bold text-emerald-800 mb-1">Demande envoyee avec succes !</h3>
-                <p className="text-emerald-700 text-sm">Notre equipe vous contactera sous <strong>48h ouvrables</strong>.</p>
-              </div>
-
-              {/* Recapitulatif imprimable */}
-              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-                <div className="bg-gray-800 px-5 py-4 flex items-center justify-between">
-                  <div>
-                    <p className="text-white font-bold text-sm">Recapitulatif de votre demande</p>
-                    <p className="text-gray-400 text-xs mt-0.5">Soumis le {submittedSummary.submittedAt}</p>
-                  </div>
-                  <Scissors className="w-5 h-5 text-emerald-400" />
-                </div>
-
-                <div className="p-5 space-y-4">
-                  {/* Identite */}
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Vos coordonnees</p>
-                    <div className="grid sm:grid-cols-2 gap-2 text-sm">
-                      <div className="flex items-center gap-2 text-gray-700"><User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />{submittedSummary.name}</div>
-                      <div className="flex items-center gap-2 text-gray-700"><Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />{submittedSummary.email}</div>
-                      <div className="flex items-center gap-2 text-gray-700"><Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />{submittedSummary.phone}</div>
-                      {submittedSummary.address && <div className="flex items-start gap-2 text-gray-700"><MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />{submittedSummary.address}</div>}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-100" />
-
-                  {/* Meches */}
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
-                      {submittedSummary.strands.length > 1 ? `Meches (${submittedSummary.strands.length})` : 'Caracteristiques des cheveux'}
-                    </p>
-                    {submittedSummary.strands.length > 1 ? (
-                      <div className="space-y-2">
-                        {submittedSummary.strands.map((s, i) => (
-                          <div key={s.id} className="bg-gray-50 rounded-xl px-3 py-2 flex items-center justify-between gap-3">
-                            <div>
-                              <p className="text-xs font-semibold text-gray-800">Meche {i + 1} — {strandLabel(s)}</p>
-                              {s.weightGrams && <p className="text-xs text-gray-500">{s.weightGrams}g</p>}
-                            </div>
-                            <p className="text-sm font-bold text-emerald-700 flex-shrink-0">
-                              {s.exactPrice != null ? `${s.exactPrice.toFixed(2)} €` : s.rateStr}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid sm:grid-cols-3 gap-2">
-                        <div className="bg-gray-50 rounded-xl p-3">
-                          <p className="text-xs text-gray-500 mb-0.5">Etat</p>
-                          <p className="text-sm font-semibold text-gray-800">{submittedSummary.condition}</p>
-                        </div>
-                        {submittedSummary.color && (
-                          <div className="bg-gray-50 rounded-xl p-3">
-                            <p className="text-xs text-gray-500 mb-0.5">Couleur</p>
-                            <p className="text-sm font-semibold text-gray-800">{submittedSummary.color}</p>
-                          </div>
-                        )}
-                        <div className="bg-gray-50 rounded-xl p-3">
-                          <p className="text-xs text-gray-500 mb-0.5">Longueur</p>
-                          <p className="text-sm font-semibold text-gray-800">{submittedSummary.length}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="border-t border-gray-100" />
-
-                  {/* Tarif */}
-                  <div className="flex items-center justify-between bg-emerald-50 rounded-xl px-4 py-3">
-                    <p className="text-sm text-gray-700 font-medium">Tarif indicatif de rachat</p>
-                    <p className="text-lg font-black text-emerald-700">{submittedSummary.price}</p>
-                  </div>
-
-                  {/* IBAN */}
-                  {submittedSummary.iban && (
-                    <>
-                      <div className="border-t border-gray-100" />
-                      <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Coordonnees bancaires</p>
-                        <div className="bg-gray-50 rounded-xl p-3 space-y-1">
-                          <p className="text-xs text-gray-500">Titulaire : <span className="font-semibold text-gray-700">{submittedSummary.holder}</span></p>
-                          <p className="text-xs font-mono text-gray-700 break-all">{submittedSummary.iban}</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Note */}
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                    <p className="text-xs text-amber-800 leading-relaxed">
-                      <strong>Prochaine etape :</strong> Notre equipe examine votre demande et vous envoie une etiquette d'expedition prepayee sous 48h. Attendez notre confirmation avant d'envoyer vos cheveux.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => window.print()}
-                  className="flex-1 inline-flex items-center justify-center gap-2 border-2 border-gray-200 hover:border-gray-300 bg-white text-gray-700 font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm"
-                >
-                  Imprimer ce recapitulatif
-                </button>
-                <button
-                  onClick={() => { setSubmitSuccess(false); setSubmittedSummary(null); }}
-                  className="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Faire une nouvelle demande
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <form onSubmit={handleSubmit} className="space-y-5">
-
-                {/* Caracteristiques des cheveux – multi-meches */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-bold text-gray-800">Meches a racheter</p>
-                    {strands.length > 0 && (
-                      <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                        {strands.length} meche{strands.length > 1 ? 's' : ''} ajoutee{strands.length > 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Meches ajoutees */}
-                  {strands.length > 0 && (
-                    <div className="space-y-2">
-                      {strands.map((s, i) => (
-                        <div key={s.id} className="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2.5">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-emerald-800">Meche {i + 1} — {strandLabel(s)}</p>
-                            <p className="text-xs text-emerald-600 mt-0.5">
-                              {s.exactPrice != null
-                                ? `${s.exactPrice.toFixed(2)} € (${s.weightGrams}g × ${s.rateStr})`
-                                : s.rateStr || ''}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeStrand(s.id)}
-                            className="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors flex-shrink-0"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                      {/* Total */}
-                      {strands.length > 1 && (
-                        <div className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-2.5">
-                          <p className="text-xs font-bold text-gray-300">Total estimatif</p>
-                          <p className="text-base font-black text-emerald-400">
-                            {allStrandsHavePrice ? `${totalExactPrice.toFixed(2)} €` : 'A determiner'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Formulaire d'ajout de meche */}
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-4">
-                    <p className="text-xs font-bold text-emerald-800">
-                      {strands.length === 0 ? 'Caracteristiques de votre meche' : 'Ajouter une autre meche'}
-                    </p>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-2">Etat <span className="text-red-500">*</span></label>
-                      <div className="grid sm:grid-cols-2 gap-2">
-                        {[
-                          { value: 'natural', label: 'Naturels (Vierges)', desc: 'Jamais colores ni traites' },
-                          { value: 'colored', label: 'Colores / Meches', desc: 'Coloration ou decoloration' },
-                        ].map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => { setCondition(opt.value as Condition); setColorType(''); setLength(''); }}
-                            className={`p-3 rounded-xl border-2 text-left transition-all ${
-                              condition === opt.value
-                                ? 'border-emerald-500 bg-white'
-                                : 'border-gray-200 bg-white hover:border-emerald-300'
-                            }`}
-                          >
-                            <p className={`font-semibold text-xs ${condition === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {condition === 'natural' && (
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-2">Couleur naturelle <span className="text-red-500">*</span></label>
-                        <div className="grid sm:grid-cols-2 gap-2">
-                          {[
-                            { value: 'chestnut', label: 'Chatain / Brun', dot: 'bg-amber-800' },
-                            { value: 'blond_roux_gris', label: 'Blond / Roux / Gris', dot: 'bg-yellow-300 border border-yellow-400' },
-                          ].map((opt) => (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => { setColorType(opt.value as ColorType); setLength(''); }}
-                              className={`p-3 rounded-xl border-2 text-left transition-all flex items-center gap-2 ${
-                                colorType === opt.value
-                                  ? 'border-emerald-500 bg-white'
-                                  : 'border-gray-200 bg-white hover:border-emerald-300'
-                              }`}
-                            >
-                              <div className={`w-5 h-5 rounded-full flex-shrink-0 ${opt.dot}`} />
-                              <p className={`font-semibold text-xs ${colorType === opt.value ? 'text-emerald-700' : 'text-gray-800'}`}>{opt.label}</p>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {(condition === 'colored' || (condition === 'natural' && colorType)) && (
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-700 mb-2">Longueur <span className="text-red-500">*</span></label>
-                        <select
-                          value={length}
-                          onChange={(e) => { setLength(e.target.value); setWeightGrams(''); }}
-                          className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-gray-800 focus:border-emerald-500 outline-none text-sm bg-white"
-                        >
-                          <option value="">-- Choisir une longueur --</option>
-                          {availableLengths.map((l) => (
-                            <option key={l} value={l}>{l}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    {rateStr && (
-                      <div className="space-y-2">
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Poids (grammes)</label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              min="1"
-                              max="2000"
-                              step="1"
-                              placeholder="Ex : 150"
-                              value={weightGrams}
-                              onChange={(e) => setWeightGrams(e.target.value)}
-                              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:border-emerald-500 outline-none bg-white"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-400">g</span>
-                          </div>
-                        </div>
-                        <div className={`rounded-xl p-2.5 flex items-center justify-between gap-3 border ${exactPrice != null ? 'bg-white border-emerald-300' : 'bg-white border-gray-200'}`}>
-                          <p className="text-xs text-gray-600">{exactPrice != null ? `Estimation pour ${grams}g` : 'Tarif / 100g'}</p>
-                          <p className={`text-sm font-black ${exactPrice != null ? 'text-emerald-700' : 'text-gray-500'}`}>
-                            {exactPrice != null ? `${exactPrice.toFixed(2)} €` : rateStr}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Bouton Ajouter cette meche */}
-                    {canAddStrand && (
-                      <button
-                        type="button"
-                        onClick={addStrand}
-                        className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-emerald-400 hover:border-emerald-600 hover:bg-emerald-100 text-emerald-700 font-semibold py-2.5 rounded-xl transition-all text-sm"
-                      >
-                        <Plus className="w-4 h-4" />
-                        {strands.length === 0 ? 'Ajouter cette meche' : 'Ajouter une meche supplementaire'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Coordonnees */}
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Prenom <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      required
-                      value={form.first_name}
-                      onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-                      placeholder="Marie"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Nom <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      required
-                      value={form.last_name}
-                      onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-                      placeholder="Dupont"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email <span className="text-red-500">*</span></label>
-                    <input
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      placeholder="marie@exemple.fr"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Telephone <span className="text-red-500">*</span></label>
-                    <input
-                      type="tel"
-                      required
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="06 12 34 56 78"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                    Nom du salon <span className="text-gray-400 font-normal">(optionnel – si vous etes professionnel)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.salon_name}
-                    onChange={(e) => setForm({ ...form, salon_name: e.target.value })}
-                    placeholder="Salon Belleza Paris"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none"
-                  />
-                </div>
-
-                {/* Adresse d'expedition */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-blue-600" />
-                    <p className="text-sm font-bold text-blue-800">Adresse d'expedition</p>
-                  </div>
-                  <p className="text-xs text-blue-700">Necessaire pour la creation de l'etiquette d'envoi une fois votre demande acceptee.</p>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Adresse <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      required
-                      value={form.address_line1}
-                      onChange={(e) => setForm({ ...form, address_line1: e.target.value })}
-                      placeholder="12 rue de la Paix"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">Code postal <span className="text-red-500">*</span></label>
-                      <input
-                        type="text"
-                        required
-                        value={form.postal_code}
-                        onChange={(e) => setForm({ ...form, postal_code: e.target.value })}
-                        placeholder="75001"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1.5">Ville <span className="text-red-500">*</span></label>
-                      <input
-                        type="text"
-                        required
-                        value={form.city}
-                        onChange={(e) => setForm({ ...form, city: e.target.value })}
-                        placeholder="Paris"
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Coordonnees bancaires */}
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-amber-600" />
-                    <p className="text-sm font-bold text-amber-800">Coordonnees bancaires pour le virement</p>
-                  </div>
-                  <p className="text-xs text-amber-700">Vos coordonnees sont securisees et accessibles uniquement par l'equipe NaturalHairMarket pour effectuer votre virement.</p>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Titulaire du compte <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      required
-                      value={form.bank_holder_name}
-                      onChange={(e) => setForm({ ...form, bank_holder_name: e.target.value })}
-                      placeholder="Marie Dupont"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">IBAN <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      required
-                      value={form.iban}
-                      onChange={(e) => setForm({ ...form, iban: e.target.value.toUpperCase() })}
-                      placeholder="FR76 3000 6000 0112 3456 7890 189"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                    Photo de vos cheveux <span className="text-gray-400 font-normal">(recommande – accelere le traitement)</span>
-                  </label>
-                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-6 cursor-pointer hover:border-emerald-300 hover:bg-emerald-50 transition-all">
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="Apercu" className="w-full max-h-48 object-contain rounded-lg" />
-                    ) : (
-                      <>
-                        <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                        <p className="text-sm font-medium text-gray-600">Cliquez pour ajouter une photo</p>
-                        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP – Max 10 Mo</p>
-                      </>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handlePhotoChange}
-                    />
-                  </label>
-                  {photoPreview && (
-                    <button
-                      type="button"
-                      onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
-                      className="mt-2 text-xs text-red-500 hover:text-red-700 underline"
-                    >
-                      Supprimer la photo
-                    </button>
-                  )}
-                </div>
-
-                {submitError && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
-                    {submitError}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-base"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Envoi en cours...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      Transmettre ma demande de rachat
-                    </>
-                  )}
-                </button>
-                <p className="text-xs text-gray-400 text-center">
-                  En soumettant ce formulaire, vous acceptez d'etre contacte par NaturalHairMarket concernant votre demande de rachat.
-                </p>
-              </form>
-            </div>
-          )}
-        </section>
-
-        {/* Comment ca se passe */}
+        {/* ===== SECTION C : Comment ça marche sur la marketplace ===== */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Comment se deroule le rachat ?</h2>
-          <p className="text-gray-500 mb-6 text-sm">De votre demande au paiement, voici les etapes.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Comment fonctionne la marketplace ?</h2>
+          <p className="text-gray-500 mb-6 text-sm">De la creation de votre annonce au paiement, voici les etapes.</p>
           <div className="space-y-4">
             {[
-              { num: 1, title: "Soumission de votre demande", body: "Remplissez le formulaire ci-dessus avec vos coordonnees et les caracteristiques de vos cheveux. Notre equipe reçoit votre demande et l'examine.", icon: <Send className="w-5 h-5 text-emerald-600" /> },
-              { num: 2, title: "Validation et accord de prix", body: "Nous vous contactons sous 48h pour valider la demande et confirmer le prix. En cas de blond/roux/gris de plus de 55 cm, un devis personnalise vous est fourni.", icon: <CheckCircle className="w-5 h-5 text-emerald-600" /> },
-              { num: 3, title: "Envoi de vos cheveux", body: "Une fois l'accord confirme, vous envoyez vos cheveux par courrier suivi a l'adresse communiquee. Les frais d'envoi sont a votre charge.", icon: <Package className="w-5 h-5 text-emerald-600" /> },
-              { num: 4, title: "Verification et paiement", body: "A reception, nous verifions que les cheveux correspondent a la description. Le paiement est effectue par virement dans les 5 jours ouvrables.", icon: <Shield className="w-5 h-5 text-emerald-600" /> },
+              { num: 1, title: "Creez votre compte gratuitement", body: "Inscrivez-vous en 2 minutes sur Natural Hair Market. Votre profil vendeur est immediatement actif.", icon: <Sparkles className="w-5 h-5 text-emerald-600" /> },
+              { num: 2, title: "Publiez votre annonce", body: "Ajoutez vos photos, utilisez notre calculateur pour fixer le bon prix, et decrivez l'etat de vos cheveux. La publication est totalement gratuite.", icon: <Tag className="w-5 h-5 text-emerald-600" /> },
+              { num: 3, title: "Un acheteur valide votre commande", body: "Notre equipe valide les acheteurs. Des qu'un acheteur paie, vous recevez une notification et les instructions d'expedition.", icon: <CheckCircle className="w-5 h-5 text-emerald-600" /> },
+              { num: 4, title: "Verification et paiement", body: "A reception, l'acheteur confirme la conformite. Le paiement est effectue par virement dans les 5 jours ouvrables. Vous encaissez 100% du prix.", icon: <Shield className="w-5 h-5 text-emerald-600" /> },
             ].map((step) => (
               <div key={step.num} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex gap-4">
                 <div className="flex-shrink-0">
@@ -1393,10 +731,10 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           </div>
         </section>
 
-        {/* Prix & marketplace */}
+        {/* Prix & critères */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Prix &amp; criteres de rachat</h2>
-          <p className="text-gray-500 mb-6 text-sm">Ces elements influencent directement la valeur percue de votre lot.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Prix &amp; criteres de valorisation</h2>
+          <p className="text-gray-500 mb-6 text-sm">Ces elements influencent directement la valeur percue de votre lot par les acheteurs.</p>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3"><Ruler className="w-5 h-5 text-emerald-600" /><h3 className="font-semibold text-gray-800">Longueur</h3></div>
@@ -1408,7 +746,7 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3"><AlertTriangle className="w-5 h-5 text-amber-500" /><h3 className="font-semibold text-gray-800">Etat</h3></div>
-              <p className="text-gray-600 text-sm leading-relaxed">Des cheveux en bon etat, propres et sans fourches excessives auront une valeur plus elevee. Signalez toujours la secheresse, les cassures ou la porosite excessive.</p>
+              <p className="text-gray-600 text-sm leading-relaxed">Des cheveux en bon etat, propres et sans fourches excessives se vendront plus cher. Signalez toujours la secheresse, les cassures ou la porosite excessive dans votre annonce.</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center gap-2 mb-3"><Palette className="w-5 h-5 text-emerald-600" /><h3 className="font-semibold text-gray-800">Couleur</h3></div>
@@ -1444,18 +782,14 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           </div>
         </section>
 
-        {/* CTA */}
+        {/* CTA final */}
         <section className="bg-emerald-600 rounded-2xl p-8 text-center text-white">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-2xl mb-4">
             <Scissors className="w-7 h-7 text-white" />
           </div>
           <h2 className="text-2xl font-bold mb-3">Prêt(e) à vendre vos cheveux naturels ?</h2>
-          <p className="text-emerald-100 mb-2 max-w-md mx-auto leading-relaxed text-sm">
-            Choisissez votre mode de vente et commencez dès maintenant.
-          </p>
-          <p className="text-emerald-200 mb-6 max-w-lg mx-auto leading-relaxed text-xs">
-            <strong>Marketplace :</strong> publiez gratuitement et fixez votre prix.&nbsp;
-            <strong>Rachat direct :</strong> soumettez votre mèche, on s'occupe de tout.
+          <p className="text-emerald-100 mb-6 max-w-md mx-auto leading-relaxed text-sm">
+            Créez votre compte gratuitement, publiez votre annonce en quelques minutes et rejoignez des milliers de vendeurs sur Natural Hair Market.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
@@ -1463,18 +797,18 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               className="inline-flex items-center justify-center gap-2 bg-white text-emerald-700 font-semibold px-7 py-3 rounded-xl hover:bg-emerald-50 transition-colors shadow-sm text-sm"
             >
               <Scissors className="w-4 h-4" />
-              Vendre sur la marketplace
+              Déposer mon annonce gratuitement
             </button>
             <button
-              onClick={scrollToForm}
+              onClick={scrollToCalculator}
               className="inline-flex items-center justify-center gap-2 border-2 border-white/40 text-white font-semibold px-7 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm"
             >
-              <Send className="w-4 h-4" />
-              Rachat direct de mes cheveux
+              <DollarSign className="w-4 h-4" />
+              Estimer le prix de mes cheveux
             </button>
           </div>
           <p className="text-emerald-200 text-xs mt-4">
-            Réponse sous 48h · Prix rachat cheveux naturels transparents · Paiement sécurisé
+            Publication gratuite · Prix rachat cheveux naturels transparents · Paiement sécurisé
           </p>
         </section>
 
