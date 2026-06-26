@@ -33,6 +33,7 @@ import MyBuybackRequests from './components/Buyback/MyBuybackRequests';
 import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
 import { ListingPage } from './components/Listings/ListingPage';
+import { AppFooter } from './components/AppFooter';
 import { NotFound } from './components/NotFound';
 import { CartView } from './components/Cart/CartView';
 import { CartProvider, useCart } from './contexts/CartContext';
@@ -409,6 +410,7 @@ function AppContent() {
             onLoginClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
             onBuyClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
           />
+          <AppFooter onNavigate={navigateToView} />
         </div>
       );
     }
@@ -452,6 +454,7 @@ function AppContent() {
             {currentView === 'guide-coupe' && <GuideCoupe onStartSelling={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
             {currentView === 'partners' && <Partners />}
           </main>
+          <AppFooter onNavigate={navigateToView} />
         </div>
       );
     }
@@ -916,26 +919,7 @@ function AppContent() {
         />
       )}
 
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-gray-500 text-xs text-center">
-              © 2025 Marketplace de cheveux humains naturels & colorés. Tous droits réservés.
-            </p>
-            <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-              <a href="/about" onClick={(e) => { e.preventDefault(); navigateToView('about'); }} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium transition-colors whitespace-nowrap">À propos</a>
-              <a href="/marketplace" onClick={(e) => { e.preventDefault(); navigateToView('marketplace'); }} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium transition-colors whitespace-nowrap">Marketplace</a>
-              <a href="/vendre-mes-cheveux" onClick={(e) => { e.preventDefault(); navigateToView('sell-my-hair'); }} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium transition-colors whitespace-nowrap">Vendre mes cheveux</a>
-              <a href="/guide-coupe-conservation" onClick={(e) => { e.preventDefault(); navigateToView('guide-coupe'); }} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium transition-colors whitespace-nowrap">Guide de coupe</a>
-              <a href="/faq" onClick={(e) => { e.preventDefault(); navigateToView('faq'); }} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium transition-colors whitespace-nowrap">FAQ</a>
-              <a href="/terms" onClick={(e) => { e.preventDefault(); navigateToView('terms'); }} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium transition-colors whitespace-nowrap">CGU</a>
-              <a href="/cgv" onClick={(e) => { e.preventDefault(); navigateToView('sales'); }} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium transition-colors whitespace-nowrap">CGV</a>
-              <a href="/privacy" onClick={(e) => { e.preventDefault(); navigateToView('privacy'); }} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium transition-colors whitespace-nowrap">Confidentialité</a>
-              <a href="/partenaires" onClick={(e) => { e.preventDefault(); navigateToView('partners'); }} className="text-emerald-600 hover:text-emerald-700 text-xs font-medium transition-colors whitespace-nowrap">Partenaires</a>
-            </nav>
-          </div>
-        </div>
-      </footer>
+      <AppFooter onNavigate={navigateToView} />
     </div>
   );
 }
