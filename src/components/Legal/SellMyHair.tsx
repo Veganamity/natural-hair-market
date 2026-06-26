@@ -139,32 +139,24 @@ function getPrice(condition: Condition, color: ColorType | '', length: string): 
 // --- FAQ ---
 const faqs: { q: string; a: string }[] = [
   {
-    q: "Qui peut vendre ses cheveux sur NaturalHairMarket ?",
-    a: "Toute personne majeure (18 ans et plus) proprietaire de ses cheveux peut vendre sur la plateforme. Les particuliers comme les professionnels (salons) sont les bienvenus.",
+    q: "Combien puis-je gagner en vendant mes cheveux ?",
+    a: "Le prix rachat cheveux naturels dépend principalement de la longueur et de la couleur. Pour des cheveux châtains naturels de 40 cm, comptez environ 56 € / 100 g. Pour des cheveux blonds ou roux de la même longueur, le tarif monte à 112 € / 100 g. Les mèches très longues (70 cm et plus) peuvent atteindre 200 à 300 € pour 100 g. Utilisez notre calculateur gratuit pour obtenir une estimation précise selon votre profil.",
   },
   {
-    q: "Quels types de cheveux sont acceptes ?",
-    a: "Les cheveux humains naturels, colores, decolores ou traites (lissage, keratine, henne, etc.) sont acceptes, a condition que l'etat et les traitements soient clairement mentionnes dans l'annonce. Toutes les textures sont acceptees : raides, ondules, boucles, crepus.",
+    q: "Quels types de cheveux sont acceptés pour vendre ses cheveux ?",
+    a: "Natural Hair Market accepte tous types de cheveux humains : cheveux naturels vierges (jamais colorés), cheveux colorés, décolorés, méchés, traités au lissage ou à la kératine. Toutes les textures sont acceptées : raides, ondulés, bouclés, crépus. La longueur minimale est de 15 cm. Il est obligatoire de mentionner l'état exact et les traitements subis dans votre annonce ou demande de rachat.",
   },
   {
-    q: "Les cheveux decolores ou colores sont-ils acceptes ?",
-    a: "Oui. Les cheveux decolores et colores sont acceptes sur NaturalHairMarket. Il est obligatoire de le preciser dans l'annonce afin que l'acheteur puisse evaluer la qualite en connaissance de cause.",
+    q: "Comment se passe l'envoi de mes cheveux ?",
+    a: "Pour le rachat direct : une fois votre demande acceptée, notre équipe vous envoie sous 48 h une confirmation avec l'adresse d'expédition. Vous envoyez vos cheveux par courrier suivi (frais à votre charge). Pour la marketplace : vous expédiez directement à l'acheteur dès que la commande est validée. Dans les deux cas, vos cheveux doivent être soigneusement préparés (lavés, séchés, tressés en queue de cheval) et emballés dans un sac congélation fermé.",
   },
   {
-    q: "Comment envoyer mes photos ?",
-    a: "Lors de la creation de votre annonce sur la plateforme, vous pouvez telecharger vos photos directement. Privilegiez un fond clair, une bonne lumiere naturelle, et prenez au moins une photo de pres et une de loin pour montrer la longueur reelle.",
+    q: "Quelle est la longueur minimale pour vendre ses cheveux naturels ?",
+    a: "La longueur minimale acceptée est de 15 cm mesurés du bas de l'élastique jusqu'aux pointes, après coupe. En dessous de cette longueur, les cheveux ne sont pas valorisables sur le marché des extensions et perruques. Plus les cheveux sont longs, plus leur valeur augmente significativement : un lot de 70 cm peut valoir 3 à 5 fois plus qu'un lot de 40 cm à poids équivalent.",
   },
   {
-    q: "Paiement : quand et comment ?",
-    a: "Le paiement est effectue via la plateforme NaturalHairMarket de facon securisee. Les fonds sont proteges jusqu'a confirmation de reception par l'acheteur. Le versement au vendeur intervient selon les conditions affichees dans l'interface.",
-  },
-  {
-    q: "Comment je contacte NaturalHairMarket ?",
-    a: "Vous pouvez contacter l'equipe par email a naturalhairmarket@gmail.com ou par telephone au +33 7 84 89 86 47 pour toute question relative a votre annonce ou a une transaction.",
-  },
-  {
-    q: "Puis-je vendre plusieurs fois sur la plateforme ?",
-    a: "Oui, vous pouvez creer plusieurs annonces et vendre autant de fois que vous le souhaitez, dans la limite des regles de la plateforme. Chaque lot de cheveux doit faire l'objet d'une annonce distincte avec ses propres photos et description.",
+    q: "Comment vendre ses cheveux en ligne sur Natural Hair Market ?",
+    a: "Deux options s'offrent à vous : (1) Déposer une annonce gratuite sur notre marketplace — créez votre compte, publiez vos photos et fixez votre propre prix ; vous encaissez 100 % du montant lors de la vente. (2) Soumettre une demande de rachat direct — remplissez le formulaire ci-dessus avec les caractéristiques de votre mèche et votre IBAN ; notre équipe vous recontacte sous 48 h pour confirmer le prix et les modalités d'envoi.",
   },
 ];
 
@@ -230,9 +222,9 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
     const metaDesc = document.getElementById('meta-description') as HTMLMetaElement | null;
     const prevDesc = metaDesc?.content ?? '';
 
-    document.title = 'Vendre mes cheveux en France et en Europe | NaturalHairMarket';
+    document.title = 'Vendre mes cheveux - Obtenez le meilleur prix | Natural Hair Market';
     if (metaDesc) {
-      metaDesc.content = 'Vendez vos cheveux naturels en France et en Europe sur NaturalHairMarket. Marketplace 100% gratuite, paiement rapide et acheteurs vérifiés. Estimez le prix de vos cheveux maintenant !';
+      metaDesc.content = 'Vendez vos cheveux naturels facilement sur Natural Hair Market. Estimation gratuite, paiement rapide et sécurisé. Découvrez comment vendre vos cheveux en 3 étapes simples.';
     }
 
     return () => {
@@ -464,27 +456,25 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
             Rachat & vente de cheveux humains
           </div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-            Vendre mes cheveux naturels ou colores&nbsp;:
-            <br className="hidden md:block" />
-            <span className="text-emerald-600"> prix, preparation et demande de rachat</span>
+            Vendre mes cheveux&nbsp;: la solution simple et sécurisée
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
-            Estimez la valeur de vos cheveux en quelques secondes, preparez-les selon nos consignes, puis transmettez votre demande de rachat directement a NaturalHairMarket.
+            Vous souhaitez <strong>vendre vos cheveux naturels</strong> ? Natural Hair Market vous offre deux options : déposer une annonce gratuite sur notre marketplace ou soumettre une demande de rachat direct. Estimez le <strong>prix rachat cheveux naturels</strong> en quelques secondes, préparez-les selon nos consignes, et recevez votre paiement rapidement et en toute sécurité.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={scrollToForm}
+              onClick={onStartSelling}
               className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors shadow-sm text-base"
             >
-              <Send className="w-5 h-5" />
-              Transmettre ma demande
+              <Scissors className="w-5 h-5" />
+              Vendre sur la marketplace
             </button>
             <button
-              onClick={onStartSelling}
+              onClick={scrollToForm}
               className="inline-flex items-center gap-2 border-2 border-emerald-200 text-emerald-700 font-semibold px-8 py-3.5 rounded-xl hover:bg-emerald-50 transition-colors text-base"
             >
-              Voir le marketplace
-              <ArrowRight className="w-5 h-5" />
+              <Send className="w-5 h-5" />
+              Rachat direct de mes cheveux
             </button>
           </div>
         </div>
@@ -495,14 +485,14 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
         {/* ===== SEO : H1 + Intro + Avantages + Témoignages + CTA ===== */}
         <section className="space-y-8">
 
-          {/* H1 SEO principal */}
+          {/* H2 SEO principal */}
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mb-4">
-              Vendre mes cheveux en France et en Europe&nbsp;:<br className="hidden md:block" />
-              <span className="text-emerald-600"> la marketplace de référence pour le rachat de cheveux</span>
-            </h1>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mb-4">
+              Vendre ses cheveux en ligne&nbsp;:<br className="hidden md:block" />
+              <span className="text-emerald-600"> la marketplace de référence pour le prix rachat cheveux naturels</span>
+            </h2>
             <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              NaturalHairMarket est la première marketplace française spécialisée dans la vente de cheveux naturels humains. Que vous souhaitiez <strong>vendre vos cheveux</strong>, <strong>vendre ses cheveux</strong> pour la première fois, ou obtenir un <strong>rachat de cheveux</strong> rapide et sécurisé, notre plateforme met en relation vendeurs particuliers et acheteurs professionnels vérifiés partout en France. Publication gratuite, paiement garanti, réponse sous 48h.
+              Natural Hair Market est la première marketplace française spécialisée dans la <strong>vente de cheveux naturels</strong> en ligne. Que vous souhaitiez <strong>vendre vos cheveux naturels</strong> pour la première fois ou <strong>vendre ses cheveux</strong> régulièrement, notre plateforme met en relation vendeurs particuliers et acheteurs professionnels vérifiés partout en France. Publication d'annonce gratuite, paiement garanti, réponse sous 48h.
             </p>
           </div>
 
@@ -593,6 +583,66 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
                 </div>
               ))}
             </div>
+          </div>
+
+        </section>
+
+        {/* ===== SECTION SEO : Étapes + Critères + Processus paiement ===== */}
+        <section className="space-y-8">
+
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8 space-y-4 text-gray-600 text-sm md:text-base leading-relaxed">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">Comment vendre ses cheveux naturels en 3 étapes ?</h2>
+            <p>
+              <strong>Vendre ses cheveux en ligne</strong> n'a jamais été aussi simple grâce à Natural Hair Market. Notre plateforme propose deux façons de valoriser vos cheveux : déposer une annonce gratuite sur la marketplace pour fixer votre propre prix, ou soumettre une demande de <strong>rachat direct</strong> à notre équipe pour recevoir un paiement rapide et sans effort de vente.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-4 pt-2">
+              {[
+                {
+                  num: '1',
+                  title: 'Estimez votre prix',
+                  text: 'Utilisez notre calculateur gratuit pour connaître le prix rachat cheveux naturels selon votre longueur, couleur et état. Les cheveux blonds, roux ou gris naturels atteignent les tarifs les plus élevés.',
+                  color: 'bg-emerald-50 border-emerald-100',
+                  numColor: 'bg-emerald-600',
+                },
+                {
+                  num: '2',
+                  title: 'Préparez votre mèche',
+                  text: 'Lavez, séchez et tressez vos cheveux selon nos consignes obligatoires. La longueur minimale est de 15 cm. Des cheveux bien préparés garantissent un rachat accepté et un paiement plus rapide.',
+                  color: 'bg-amber-50 border-amber-100',
+                  numColor: 'bg-amber-500',
+                },
+                {
+                  num: '3',
+                  title: 'Recevez votre paiement',
+                  text: 'Déposez une annonce sur la marketplace (paiement lors de la vente) ou soumettez une demande de rachat direct. Dans les deux cas, le virement est effectué sous 5 jours ouvrables après réception.',
+                  color: 'bg-teal-50 border-teal-100',
+                  numColor: 'bg-teal-600',
+                },
+              ].map((item) => (
+                <div key={item.num} className={`border rounded-xl p-5 ${item.color}`}>
+                  <div className={`w-8 h-8 ${item.numColor} text-white rounded-full font-bold text-sm flex items-center justify-center mb-3`}>{item.num}</div>
+                  <h3 className="font-bold text-gray-800 mb-2 text-sm">{item.title}</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">{item.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 pt-2">Quels critères influencent le prix de vente de vos cheveux ?</h2>
+            <p>
+              Le <strong>prix rachat cheveux naturels</strong> dépend de plusieurs facteurs clés. La <strong>longueur</strong> est le premier critère : à partir de 15 cm pour les mèches colorées, les tarifs augmentent progressivement jusqu'à plus de 300 € pour des cheveux naturels de plus de 70 cm. La <strong>couleur</strong> est déterminante : les cheveux blonds, roux et gris naturels sont des "pépites" très recherchées et atteignent des prix deux à trois fois supérieurs aux châtains. Les cheveux <strong>naturels vierges</strong> (jamais colorés ni traités chimiquement) sont les plus valorisés. Les cheveux colorés ou décolorés sont également acceptés, mais leur valeur est réduite.
+            </p>
+            <p>
+              La <strong>densité</strong> — mesurée en grammes — joue aussi un rôle important. Une mèche de 200 g vaut bien sûr davantage qu'une mèche de 80 g à longueur égale. Enfin, l'<strong>état général</strong> des cheveux (absence de fourches excessives, de cassures ou de porosité élevée) conditionne l'acceptation de votre demande de rachat.
+            </p>
+
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 pt-2">Processus de paiement sécurisé</h2>
+            <p>
+              Lorsque vous <strong>vendez ses cheveux</strong> via le rachat direct, votre paiement est effectué par virement bancaire dans les 5 jours ouvrables suivant la réception et la validation de votre mèche. Lorsque vous choisissez la marketplace pour <strong>vendre ses cheveux en ligne</strong>, le paiement est déclenché dès qu'un acheteur valide votre commande — les fonds sont sécurisés par Stripe et libérés après confirmation de réception par l'acheteur.
+            </p>
+            <p>
+              Dans les deux cas, aucun frais n'est prélevé sur le montant versé au vendeur. Natural Hair Market ne perçoit aucune commission côté vendeur : vous encaissez 100 % du prix convenu. C'est l'une des raisons pour lesquelles notre plateforme est le premier choix pour <strong>vendre ses cheveux naturels</strong> en France.
+            </p>
           </div>
 
         </section>
@@ -1369,8 +1419,8 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
 
         {/* FAQ */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Questions frequentes sur la vente de cheveux</h2>
-          <p className="text-gray-500 mb-6 text-sm">Tout ce que vous devez savoir avant de vendre vos cheveux.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Questions fréquentes sur la vente de cheveux</h2>
+          <p className="text-gray-500 mb-6 text-sm">Tout ce que vous devez savoir avant de vendre ses cheveux naturels en ligne.</p>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100">
             {faqs.map((faq, i) => (
               <div key={i}>
@@ -1399,28 +1449,32 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-2xl mb-4">
             <Scissors className="w-7 h-7 text-white" />
           </div>
-          <h2 className="text-2xl font-bold mb-3">Pret(e) a vendre vos cheveux ?</h2>
-          <p className="text-emerald-100 mb-6 max-w-md mx-auto leading-relaxed text-sm">
-            Estimez la valeur de vos cheveux, preparez-les selon nos consignes, et transmettez votre demande en quelques minutes.
+          <h2 className="text-2xl font-bold mb-3">Prêt(e) à vendre vos cheveux naturels ?</h2>
+          <p className="text-emerald-100 mb-2 max-w-md mx-auto leading-relaxed text-sm">
+            Choisissez votre mode de vente et commencez dès maintenant.
+          </p>
+          <p className="text-emerald-200 mb-6 max-w-lg mx-auto leading-relaxed text-xs">
+            <strong>Marketplace :</strong> publiez gratuitement et fixez votre prix.&nbsp;
+            <strong>Rachat direct :</strong> soumettez votre mèche, on s'occupe de tout.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={scrollToForm}
+              onClick={onStartSelling}
               className="inline-flex items-center justify-center gap-2 bg-white text-emerald-700 font-semibold px-7 py-3 rounded-xl hover:bg-emerald-50 transition-colors shadow-sm text-sm"
             >
-              <Send className="w-4 h-4" />
-              Faire ma demande de rachat
+              <Scissors className="w-4 h-4" />
+              Vendre sur la marketplace
             </button>
             <button
-              onClick={onStartSelling}
+              onClick={scrollToForm}
               className="inline-flex items-center justify-center gap-2 border-2 border-white/40 text-white font-semibold px-7 py-3 rounded-xl hover:bg-white/10 transition-colors text-sm"
             >
-              <User className="w-4 h-4" />
-              Voir le marketplace
+              <Send className="w-4 h-4" />
+              Rachat direct de mes cheveux
             </button>
           </div>
           <p className="text-emerald-200 text-xs mt-4">
-            Reponse sous 48h · Criteres transparents · Paiement securise
+            Réponse sous 48h · Prix rachat cheveux naturels transparents · Paiement sécurisé
           </p>
         </section>
 
