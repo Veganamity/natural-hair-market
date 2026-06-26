@@ -101,7 +101,7 @@ Deno.serve(async (req: Request) => {
       amount: Math.round(totalAmount * 100),
       currency: "eur",
       automatic_payment_methods: { enabled: true },
-      capture_method: "automatic",
+      capture_method: "manual",
       application_fee_amount: commissionAmount,
       transfer_data: { destination: sellerProfile.stripe_account_id },
       metadata,
@@ -123,7 +123,7 @@ Deno.serve(async (req: Request) => {
         stripe_payment_intent_id: paymentIntent.id,
         status: "pending",
         payment_method: "card",
-        capture_method: "automatic",
+        capture_method: "manual",
         delivery_status: "pending",
       };
 

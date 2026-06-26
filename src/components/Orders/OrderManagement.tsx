@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { Package, Clock, CheckCircle, XCircle, Download, AlertTriangle, Shield } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, Download, AlertTriangle, Shield, AlertOctagon } from 'lucide-react';
 import { ShippingLabelManager } from '../Shipping/ShippingLabelManager';
 import { TrackingInfo } from '../Shipping/TrackingInfo';
 import { downloadInvoicePDF } from '../../lib/invoiceGenerator';
@@ -80,7 +80,41 @@ export function OrderManagement() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
+  const [disputeModal, setDisputeModal] = useState<{ transactionId: string } | null>(null);
+  const [disputeReason, setDisputeReason] = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const handleOpenDispute = async (transactionId: string, reason: string) => {
+    setProcessingId(transactionId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/open-dispute`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ transactionId, reason }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to open dispute');
+
+      setDisputeModal(null);
+      setDisputeReason('');
+      alert('Litige ouvert. L\'administrateur examinera votre demande dans les plus brefs délais.');
+      fetchTransactions();
+    } catch (error: any) {
+      alert(`Erreur: ${error.message}`);
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   useEffect(() => {
     if (user) fetchTransactions();
@@ -234,6 +268,7 @@ export function OrderManagement() {
       cancelled: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Annulé' },
       refunded: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Remboursé' },
       failed: { bg: 'bg-red-100', text: 'text-red-800', label: 'Échoué' },
+      disputed: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Litige en cours' },
     };
 
     const badge = badges[status] || badges.pending;
@@ -318,8 +353,9 @@ export function OrderManagement() {
           const isBuyerView = transaction.buyer_id === user?.id;
           const otherParty = isSellerView ? transaction.buyer : transaction.seller;
           const notYetShipped = !['shipped', 'delivered'].includes(transaction.delivery_status);
-          const canCancel = ['pending', 'processing', 'completed'].includes(transaction.status) && notYetShipped;
-          const canConfirmDelivery = isBuyerView && transaction.delivery_status === 'shipped' && ['pending', 'processing', 'completed'].includes(transaction.status);
+          const canCancel = ['pending', 'processing', 'completed'].includes(transaction.status) && notYetShipped && transaction.status !== 'disputed';
+          const canConfirmDelivery = isBuyerView && transaction.delivery_status === 'shipped' && ['pending', 'processing', 'completed'].includes(transaction.status) && transaction.status !== 'disputed';
+          const canDispute = isBuyerView && transaction.delivery_status === 'shipped' && ['pending', 'processing'].includes(transaction.status);
           const hasPaymentIntent = !!transaction.stripe_payment_intent_id;
 
           return (
@@ -343,6 +379,20 @@ export function OrderManagement() {
 
                   <DeadlineBanner transaction={transaction} isSellerView={isSellerView} />
 
+                  {transaction.status === 'disputed' && (
+                    <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 mb-3 flex items-start gap-2">
+                      <AlertOctagon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-800">Litige en cours</p>
+                        <p className="text-xs text-amber-700 mt-0.5">
+                          L'administrateur examine votre litige. Les fonds sont bloqués jusqu'à résolution.
+                        </p>
+                        {(transaction as any).dispute_reason && (
+                          <p className="text-xs text-amber-600 mt-1 italic">"{(transaction as any).dispute_reason}"</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   {transaction.status === 'processing' && (
                     <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-3">
                       <div className="flex items-center gap-2 text-emerald-800">
@@ -409,6 +459,16 @@ export function OrderManagement() {
                       {processingId === transaction.id ? 'En cours...' : 'Confirmer réception'}
                     </button>
                   )}
+                  {canDispute && (
+                    <button
+                      onClick={() => setDisputeModal({ transactionId: transaction.id })}
+                      disabled={processingId === transaction.id}
+                      className="px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <AlertOctagon className="w-4 h-4" />
+                      Signaler un problème
+                    </button>
+                  )}
                   {canCancel && (
                     <button
                       onClick={() => handleCancelOrder(transaction.id, hasPaymentIntent, isBuyerView)}
@@ -467,6 +527,50 @@ export function OrderManagement() {
           );
         })}
       </div>
+
+      {/* Dispute modal */}
+      {disputeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertOctagon className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Signaler un problème</h3>
+                <p className="text-sm text-gray-500">Les fonds resteront bloqués jusqu'à résolution par l'administrateur.</p>
+              </div>
+            </div>
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Décrivez le problème <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={disputeReason}
+                onChange={(e) => setDisputeReason(e.target.value)}
+                rows={4}
+                placeholder="Ex: Le colis est arrivé endommagé, la mèche ne correspond pas à la description..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setDisputeModal(null); setDisputeReason(''); }}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleOpenDispute(disputeModal.transactionId, disputeReason)}
+                disabled={!disputeReason.trim() || processingId === disputeModal.transactionId}
+                className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {processingId === disputeModal.transactionId ? 'Envoi...' : 'Ouvrir le litige'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -80,6 +80,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Libérer automatiquement les fonds si l'acheteur n'a pas confirmé sous 14 jours après expédition
+    //    Les transactions en litige (disputed) sont exclues — elles attendent la décision admin
     const autoReleaseDate = new Date();
     autoReleaseDate.setDate(autoReleaseDate.getDate() - DELIVERY_AUTO_RELEASE_DAYS);
 
