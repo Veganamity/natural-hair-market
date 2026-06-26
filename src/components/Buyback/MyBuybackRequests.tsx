@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import {
   Scissors, Clock, CheckCircle, XCircle, Banknote,
-  Calendar, ChevronLeft, Palette, Ruler,
+  Calendar, ChevronLeft, Palette, Ruler, Download, AlertTriangle,
 } from 'lucide-react';
 
 interface BuybackRequest {
@@ -15,7 +15,7 @@ interface BuybackRequest {
   hair_color: string | null;
   hair_length: string;
   calculated_price: string;
-  status: 'pending' | 'accepted' | 'paid' | 'refused';
+  status: 'pending' | 'accepted' | 'paid' | 'refused' | 'cancelled';
   final_price: number | null;
   paid_at: string | null;
   shipping_label_url: string | null;
@@ -25,6 +25,9 @@ interface BuybackRequest {
     weightGrams: string; rateStr: string; exactPrice: number | null;
   }> | null;
   exact_price: number | null;
+  cancellation_reason: string | null;
+  cancelled_at: string | null;
+  label_sent_at: string | null;
 }
 
 const CONDITION_LABELS: Record<string, string> = {
@@ -38,10 +41,11 @@ const COLOR_LABELS: Record<string, string> = {
 };
 
 const STATUS_CONFIG = {
-  pending:  { label: 'En attente d\'examen',    bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-700',   dot: 'bg-amber-400',   icon: Clock },
-  accepted: { label: 'Accepte – Virement en cours', bg: 'bg-blue-50', border: 'border-blue-200',   text: 'text-blue-700',    dot: 'bg-blue-500',    icon: CheckCircle },
-  paid:     { label: 'Paye',                    bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500', icon: Banknote },
-  refused:  { label: 'Non retenu',              bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-600',     dot: 'bg-red-400',     icon: XCircle },
+  pending:   { label: 'En attente d\'examen',       bg: 'bg-amber-50',   border: 'border-amber-200',   text: 'text-amber-700',   dot: 'bg-amber-400',   icon: Clock },
+  accepted:  { label: 'Accepte – Envoi en attente', bg: 'bg-blue-50',    border: 'border-blue-200',    text: 'text-blue-700',    dot: 'bg-blue-500',    icon: CheckCircle },
+  paid:      { label: 'Paye',                       bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500', icon: Banknote },
+  refused:   { label: 'Non retenu',                 bg: 'bg-red-50',     border: 'border-red-200',     text: 'text-red-600',     dot: 'bg-red-400',     icon: XCircle },
+  cancelled: { label: 'Annule',                     bg: 'bg-gray-50',    border: 'border-gray-200',    text: 'text-gray-600',    dot: 'bg-gray-400',    icon: AlertTriangle },
 };
 
 interface Props {
@@ -62,7 +66,7 @@ export default function MyBuybackRequests({ onBack }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any)
       .from('hair_buyback_requests')
-      .select('id, created_at, first_name, last_name, hair_condition, hair_color, hair_length, calculated_price, status, final_price, paid_at, shipping_label_url, shipping_tracking_number, strands_json, exact_price')
+      .select('id, created_at, first_name, last_name, hair_condition, hair_color, hair_length, calculated_price, status, final_price, paid_at, shipping_label_url, shipping_tracking_number, strands_json, exact_price, cancellation_reason, cancelled_at, label_sent_at')
       .order('created_at', { ascending: false });
     setRequests((data ?? []) as BuybackRequest[]);
     setLoading(false);
@@ -176,8 +180,26 @@ export default function MyBuybackRequests({ onBack }: Props) {
                   )}
 
                   {req.status === 'accepted' && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800">
-                      Demande acceptee ! Le virement bancaire sera effectue dans les 5 jours ouvrables sur votre IBAN. Vous recevrez l'etiquette d'expedition par email.
+                    <div className="space-y-3">
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-800">
+                        Demande acceptee ! Vous avez recu un email avec votre etiquette d'expedition prepayee. Une fois vos cheveux recus et verifies, le virement sera effectue sous 5 jours ouvrables.
+                      </div>
+                      {req.shipping_label_url && (
+                        <a
+                          href={req.shipping_label_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors w-fit"
+                        >
+                          <Download className="w-4 h-4" />
+                          Telecharger mon etiquette d'expedition
+                        </a>
+                      )}
+                      {req.shipping_tracking_number && (
+                        <p className="text-xs text-gray-500">
+                          Numero de suivi : <span className="font-semibold text-gray-700">{req.shipping_tracking_number}</span>
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -193,12 +215,42 @@ export default function MyBuybackRequests({ onBack }: Props) {
                       {req.paid_at && (
                         <p className="text-xs text-gray-500 mt-0.5">Le {formatDate(req.paid_at)}</p>
                       )}
+                      {req.shipping_label_url && (
+                        <a
+                          href={req.shipping_label_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-emerald-700 hover:text-emerald-900 font-semibold mt-2"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Etiquette d'expedition
+                        </a>
+                      )}
                     </div>
                   )}
 
                   {req.status === 'refused' && (
                     <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
                       Nous n'avons pas pu retenir cette demande. N'hesitez pas a nous contacter pour plus d'informations.
+                    </div>
+                  )}
+
+                  {req.status === 'cancelled' && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                      <p className="text-sm text-gray-700 font-medium mb-1">
+                        L'acceptation de votre demande a ete annulee par notre equipe. Nous nous en excusons.
+                      </p>
+                      {req.cancellation_reason && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Motif : <span className="italic">{req.cancellation_reason}</span>
+                        </p>
+                      )}
+                      {req.cancelled_at && (
+                        <p className="text-xs text-gray-400 mt-1">Le {formatDate(req.cancelled_at)}</p>
+                      )}
+                      <p className="text-xs text-gray-500 mt-2">
+                        Pour toute question : <a href="mailto:naturalhairmarket@gmail.com" className="text-emerald-600 hover:underline">naturalhairmarket@gmail.com</a>
+                      </p>
                     </div>
                   )}
                 </div>
