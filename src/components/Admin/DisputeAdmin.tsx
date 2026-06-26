@@ -15,6 +15,8 @@ interface DisputedTransaction {
   dispute_resolved_at: string | null;
   dispute_resolution: string | null;
   stripe_payment_intent_id: string | null;
+  buyer_id: string;
+  seller_id: string;
   listing: { title: string } | null;
   buyer_profile: { full_name: string | null; email: string } | null;
   seller_profile: { full_name: string | null; email: string } | null;
@@ -43,10 +45,8 @@ export default function DisputeAdmin() {
       .select(`
         id, created_at, amount, seller_amount, status, delivery_status,
         dispute_opened_at, dispute_reason, dispute_resolved_at, dispute_resolution,
-        stripe_payment_intent_id,
-        listing:listings(title),
-        buyer_profile:profiles!transactions_buyer_id_fkey(full_name, email),
-        seller_profile:profiles!transactions_seller_id_fkey(full_name, email)
+        stripe_payment_intent_id, buyer_id, seller_id,
+        listing:listings(title)
       `)
       .order('dispute_opened_at', { ascending: false });
 
@@ -59,14 +59,40 @@ export default function DisputeAdmin() {
     const { data, error } = await query;
     if (error) {
       setMessage({ type: 'error', text: `Erreur: ${error.message}` });
-    } else {
-      setDisputes((data || []) as any);
+      setLoading(false);
+      return;
     }
+
+    const rows = (data || []) as any[];
+
+    const allUserIds = [...new Set([
+      ...rows.map((r: any) => r.buyer_id),
+      ...rows.map((r: any) => r.seller_id),
+    ].filter(Boolean))];
+
+    let profileMap: Record<string, { full_name: string | null; email: string }> = {};
+    if (allUserIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', allUserIds);
+      for (const p of profilesData || []) {
+        profileMap[p.id] = { full_name: p.full_name, email: p.email };
+      }
+    }
+
+    const enriched = rows.map((r: any) => ({
+      ...r,
+      buyer_profile: profileMap[r.buyer_id] || null,
+      seller_profile: profileMap[r.seller_id] || null,
+    }));
+
+    setDisputes(enriched as DisputedTransaction[]);
     setLoading(false);
   };
 
   const resolveDispute = async (transactionId: string, resolution: 'refund_buyer' | 'pay_seller') => {
-    const label = resolution === 'refund_buyer' ? 'rembourser l\'acheteur' : 'payer le vendeur';
+    const label = resolution === 'refund_buyer' ? "rembourser l'acheteur" : 'payer le vendeur';
     if (!confirm(`Confirmer la résolution : ${label} ?`)) return;
 
     setProcessingId(transactionId);
@@ -184,16 +210,16 @@ export default function DisputeAdmin() {
                         <User className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Acheteur</p>
-                          <p className="text-gray-800 font-semibold">{(tx.buyer_profile as any)?.full_name || '—'}</p>
-                          <p className="text-gray-500 text-xs">{(tx.buyer_profile as any)?.email}</p>
+                          <p className="text-gray-800 font-semibold">{tx.buyer_profile?.full_name || '—'}</p>
+                          <p className="text-gray-500 text-xs">{tx.buyer_profile?.email}</p>
                         </div>
                       </div>
                       <div className="flex items-start gap-2">
                         <User className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Vendeur</p>
-                          <p className="text-gray-800 font-semibold">{(tx.seller_profile as any)?.full_name || '—'}</p>
-                          <p className="text-gray-500 text-xs">{(tx.seller_profile as any)?.email}</p>
+                          <p className="text-gray-800 font-semibold">{tx.seller_profile?.full_name || '—'}</p>
+                          <p className="text-gray-500 text-xs">{tx.seller_profile?.email}</p>
                         </div>
                       </div>
                     </div>
@@ -242,7 +268,7 @@ export default function DisputeAdmin() {
                         className="px-4 py-2.5 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                       >
                         <RotateCcw className="w-4 h-4" />
-                        {processingId === tx.id ? 'En cours...' : 'Rembourser l\'acheteur'}
+                        {processingId === tx.id ? 'En cours...' : "Rembourser l'acheteur"}
                       </button>
                       <button
                         onClick={() => resolveDispute(tx.id, 'pay_seller')}
