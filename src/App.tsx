@@ -585,7 +585,7 @@ function AppContent() {
               </div>
             )}
 
-            <div className="hidden md:flex items-center gap-1 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-0.5 flex-shrink-0">
               {/* Buyer group */}
               <button
                 onClick={() => navigateToView('marketplace')}
@@ -696,10 +696,11 @@ function AppContent() {
               {/* Seller CTA — amber to stand out */}
               <button
                 onClick={() => setShowCreateListing(true)}
-                className="ml-2 px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm shadow-sm"
+                className="ml-2 px-3 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm shadow-sm whitespace-nowrap flex-shrink-0"
               >
-                <Scissors className="w-4 h-4" />
-                Déposer une annonce
+                <Scissors className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden lg:inline">Déposer une annonce</span>
+                <span className="lg:hidden">Vendre</span>
               </button>
               <button
                 onClick={signOut}
