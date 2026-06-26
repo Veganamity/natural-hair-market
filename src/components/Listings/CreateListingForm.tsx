@@ -154,6 +154,18 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
       const title = generateTitle();
       const description = generateDescription();
 
+      if (uploadedImages.length === 0) {
+        throw new Error('Veuillez ajouter au moins une photo de vos cheveux.');
+      }
+
+      if (!formData.hair_texture) {
+        throw new Error('Veuillez sélectionner la texture de vos cheveux.');
+      }
+
+      if (!formData.hair_weight) {
+        throw new Error('Veuillez indiquer le poids de vos cheveux.');
+      }
+
       if (!formData.certification_accepted) {
         throw new Error('Vous devez certifier l\'authenticité des cheveux pour publier cette annonce.');
       }
@@ -359,14 +371,14 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Texture
+                Texture *
               </label>
               <select
                 value={formData.hair_texture}
                 onChange={(e) => setFormData({ ...formData, hair_texture: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               >
-                <option value="">Sélectionnez (optionnel)</option>
+                <option value="">Sélectionnez</option>
                 <option value="très fin">Très fin</option>
                 <option value="fin">Fin</option>
                 <option value="moyen">Moyen</option>
@@ -377,7 +389,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Poids (optionnel)
+                Poids *
               </label>
               <div className="relative">
                 <input
@@ -503,7 +515,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Image className="w-4 h-4 inline mr-1" />
-              Photos des cheveux
+              Photos des cheveux *
             </label>
 
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-emerald-500 transition-colors">
