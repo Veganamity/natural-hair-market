@@ -104,6 +104,10 @@ Deno.serve(async (req: Request) => {
       capture_method: "manual",
       application_fee_amount: commissionAmount,
       transfer_data: { destination: sellerProfile.stripe_account_id },
+      // Extended authorizations : prolonge le blocage jusqu'à 30 jours si la carte l'autorise
+      payment_method_options: {
+        card: { request_extended_authorization: "if_available" },
+      },
       metadata,
     });
 
