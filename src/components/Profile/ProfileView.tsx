@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors } from 'lucide-react';
+import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors, AlertOctagon } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
 import { StripeOnboardingModal } from '../Stripe/StripeConnectEmbedded';
 import { COUNTRIES } from '../../lib/countries';
@@ -774,6 +774,13 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               >
                 <Scissors className="w-5 h-5" />
                 Rachats de cheveux
+              </button>
+              <button
+                onClick={() => onNavigate?.('admin-disputes')}
+                className="px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors flex items-center gap-2"
+              >
+                <AlertOctagon className="w-5 h-5" />
+                Gestion des Litiges
               </button>
             </div>
           </div>
