@@ -123,9 +123,9 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
     const metaDesc = document.getElementById('meta-description') as HTMLMetaElement | null;
     const prevDesc = metaDesc?.content ?? '';
 
-    document.title = 'Achat cheveux naturels européens - Qualité premium | Natural Hair Market';
+    document.title = 'Acheter des cheveux naturels européens bruts - Qualité premium | Natural Hair Market';
     if (metaDesc) {
-      metaDesc.content = 'Achetez des cheveux naturels européens de qualité sur Natural Hair Market. Stocks disponibles, traçabilité garantie et livraison sécurisée en France.';
+      metaDesc.content = 'Achetez des cheveux naturels européens bruts, vierges et traçables sur Natural Hair Market. Idéal pour perruquiers, extensions et particuliers. Qualité certifiée, livraison sécurisée.';
     }
 
     return () => {
@@ -145,8 +145,7 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
             Marché cheveux naturels européens
           </div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-            Achat de cheveux naturels&nbsp;européens&nbsp;:
-            qualité et traçabilité garanties
+            Acheter des cheveux naturels européens&nbsp;: bruts, vierges et traçables
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
             Natural Hair Market est le premier marché en ligne dédié à l'<strong>achat de cheveux naturels européens</strong>. Parcourez des stocks de mèches vierges et colorées, directement sourcées auprès de particuliers en France et en Europe. Traçabilité complète, paiement sécurisé et livraison avec signature.
@@ -176,55 +175,62 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8 space-y-5 text-gray-600 text-sm md:text-base leading-relaxed">
 
           <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-            Pourquoi les cheveux naturels européens sont-ils si recherchés ?
+            Pourquoi acheter des cheveux naturels européens ?
           </h2>
           <p>
-            Sur le <strong>marché cheveux naturels</strong>, les mèches d'origine européenne occupent une place à part. Leur structure capillaire — fine, lisse et à cuticule naturellement alignée — les distingue des cheveux asiatiques ou synthétiques souvent présents dans les circuits d'extensions classiques. Pour les perruquiers, les stylistes spécialisés en extensions et les salons, les <strong>cheveux naturels européens</strong> constituent la matière première de référence pour les créations haut de gamme.
+            Sur le marché mondial des cheveux humains, les <strong>cheveux naturels européens</strong> occupent une place d'exception. Leur structure capillaire — fine, lisse, à cuticule naturellement alignée — les distingue radicalement des fibres synthétiques ou des cheveux asiatiques traités chimiquement que l'on retrouve dans la plupart des circuits d'extensions industriels. Pour les perruquiers, les fabricants d'extensions et les salons spécialisés, l'<strong>achat cheveux naturels européens</strong> représente un investissement dans la qualité, la durabilité et le rendu naturel inégalé de leurs créations.
           </p>
           <p>
-            La richesse chromatique naturelle est l'autre atout majeur. Les châtains profonds, les blonds vénitiens, les roux ardents et les gris argentés que l'on trouve en Europe centrale et occidentale sont des teintes quasi impossibles à reproduire de manière synthétique sans altérer la texture. Les acheteurs professionnels qui recherchent des <strong>cheveux naturels européens</strong> pour la vente en salons ou en ateliers de perruques savent que la couleur naturelle n'est pas seulement un critère esthétique : c'est un gage de durabilité et de compatibilité avec les procédés de coloration et de décoloration.
+            La diversité chromatique naturelle des cheveux européens est l'autre atout décisif. Les châtains profonds, les blonds vénitiens, les roux ardents et les gris argentés typiques de l'Europe occidentale et centrale sont des teintes quasi impossibles à reproduire fidèlement avec des fibres synthétiques ou des cheveux colorés. Pour tout professionnel ou particulier souhaitant <strong>acheter cheveux naturels européens</strong> à des fins d'extensions ou de confection de perruques, cette authenticité chromatique est un critère non négociable.
           </p>
           <p>
-            Enfin, la légèreté et la finesse des cheveux européens garantissent un port confortable pour les clients finaux des extensions et des intégrations capillaires. Une mèche de 50 cm d'origine européenne pèse sensiblement moins qu'une mèche asiatique de même longueur, ce qui réduit la traction sur les cheveux naturels et prolonge la durée de vie de l'extension.
+            Natural Hair Market est la première plateforme française dédiée à l'<strong>achat de cheveux naturels</strong> en circuit direct. Chaque mèche disponible provient d'un vendeur particulier ou d'un salon partenaire localisé en France ou en Europe. La traçabilité est totale, le sourcing est éthique et chaque transaction est sécurisée par Stripe.
           </p>
 
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 pt-2">
-            Acheter des cheveux naturels : comment fonctionne notre plateforme ?
+            Cheveux bruts vs cheveux traités : pourquoi choisir les bruts ?
           </h2>
           <p>
-            Natural Hair Market est une <em>marketplace de particulier à particulier</em> : chaque lot de cheveux mis en vente provient d'une personne réelle — souvent une femme ou un homme qui a décidé de couper ses cheveux et de les vendre plutôt que de les jeter. Ce modèle de <strong>achats cheveux naturels européens</strong> garantit une traçabilité totale, chose impossible avec les circuits d'importation classiques.
+            La distinction entre <strong>cheveux naturels bruts</strong> et cheveux traités est fondamentale pour tout acheteur professionnel. Les <strong>cheveux vierges européens</strong> — aussi appelés cheveux bruts ou <strong>cheveux naturels non colorés</strong> — n'ont jamais subi de traitement chimique : aucune coloration, aucune décoloration, aucun lissage brésilien, aucun défrisage. Leur structure interne (cortex et cuticule) est donc intacte, ce qui leur confère des propriétés que les cheveux traités ne peuvent plus offrir.
           </p>
           <p>
-            Lorsque vous <strong>achetez des cheveux naturels</strong> sur notre plateforme, vous accédez à une annonce qui précise la longueur mesurée, la couleur naturelle, l'état de conservation (vierge, coloré, méchuré), le poids estimé et des photos réelles prises par le vendeur. Vous pouvez consulter le profil du vendeur, poser des questions directement et passer commande en toute confiance.
+            Les avantages des <strong>cheveux naturels bruts</strong> pour l'<strong>achat cheveux naturels pour extensions</strong> ou pour la confection de perruques sont multiples. Premièrement, leur résistance : un cheveu vierge supporte mieux les procédés de coloration, de décoloration et de chaleur que des cheveux déjà fragilisés par des traitements antérieurs. Deuxièmement, leur durabilité : une extension en cheveux bruts européens peut durer deux à trois fois plus longtemps qu'une extension en cheveux traités. Troisièmement, leur rendu : la cuticule intacte réfléchit la lumière uniformément, donnant un aspect brillant et sain absolument naturel.
           </p>
           <p>
-            Le paiement est systématiquement sécurisé par Stripe : les fonds sont réservés dès la commande mais ne sont libérés au vendeur qu'après votre confirmation de réception. Si les cheveux ne correspondent pas à la description, vous disposez d'un délai pour ouvrir un litige et obtenir un remboursement intégral. Ce mécanisme de protection est unique sur le <strong>marché cheveux naturels</strong> en France.
+            Pour l'<strong>achat cheveux naturels pour perruque</strong> médicale ou artistique, les cheveux bruts sont systématiquement préférés : leur légèreté, leur résistance au lavage répété et leur comportement prévisible face aux outils coiffants en font la matière première idéale. Sur Natural Hair Market, chaque annonce précise explicitement si les cheveux sont vierges, colorés ou traités, pour vous permettre de faire un choix éclairé.
           </p>
 
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 pt-2">
-            Les garanties proposées : traçabilité, éthique et qualité
+            Pour qui : particuliers, perruquiers et fabricants d'extensions
           </h2>
           <p>
-            La traçabilité est au cœur de notre démarche. Contrairement aux revendeurs de cheveux en gros qui importent des lots anonymes, chaque mèche disponible sur Natural Hair Market est associée à un vendeur identifié, localisé en France ou en Europe. L'origine est connue, le vendeur est vérifié, et la transaction laisse une trace complète.
+            Natural Hair Market est conçu pour répondre aux besoins de plusieurs profils d'acheteurs. Les <strong>perruquiers et ateliers de perruques</strong> y trouvent un approvisionnement régulier en <strong>cheveux vierges européens</strong> de toutes longueurs, idéaux pour la confection sur mesure. La traçabilité et l'éthique du sourcing répondent aux exigences croissantes de leurs clients professionnels et médicaux.
           </p>
           <p>
-            Sur le plan éthique, notre modèle est irréprochable : les vendeurs sont des personnes qui ont librement décidé de vendre leurs propres cheveux, à un prix qu'ils ont eux-mêmes fixé. Il n'y a ni intermédiaire, ni exploitation, ni opacité. Pour les acheteurs professionnels soucieux de la responsabilité de leur chaîne d'approvisionnement, cet aspect représente un avantage décisif.
+            Les <strong>fabricants d'extensions et salons spécialisés</strong> qui cherchent un <strong>fournisseur cheveux naturels européens</strong> fiable apprécient la qualité constante des mèches disponibles et la possibilité de passer des commandes régulières. Chaque lot est photographié, mesuré et décrit avec précision par le vendeur. L'<strong>achat cheveux naturels pour extensions</strong> n'a jamais été aussi transparent.
           </p>
           <p>
-            La qualité est contrôlée à double niveau : d'abord par notre équipe de modération qui valide chaque annonce, puis par l'acheteur à réception. Les descriptions doivent être précises et les photos conformes à la réalité. Tout écart signalé dans les 72 heures suivant la réception est traité par notre équipe support.
+            Enfin, les <strong>particuliers</strong> — qu'ils recherchent des extensions personnelles de haute qualité ou des cheveux pour une perruque médicale suite à une chimiothérapie ou une alopécie — bénéficient du même niveau de protection et de qualité que les professionnels. La plateforme est accessible à tous, sans minimum de commande.
           </p>
 
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 pt-2">
-            Qui achète des cheveux naturels européens ?
+            Nos garanties : traçabilité, éthique, qualité et origine certifiée
           </h2>
           <p>
-            Les profils d'acheteurs sur Natural Hair Market sont variés. Les <strong>professionnels</strong> — perruquiers, ateliers d'extensions sur mesure, salons spécialisés, créateurs de postiches — représentent une part significative de nos acheteurs. Ils recherchent des mèches longues (50 cm et plus), de couleur naturelle rare, pour des commandes unitaires ou des approvisionnements réguliers.
+            La traçabilité est au cœur de notre démarche. Contrairement aux revendeurs de cheveux en gros qui importent des lots anonymes depuis l'Asie, chaque mèche disponible sur Natural Hair Market est associée à un vendeur identifié, localisé en France ou en Europe. L'origine est connue, vérifiable, et chaque transaction laisse une trace complète. C'est ce qui fait de notre plateforme un véritable <strong>fournisseur cheveux naturels européens</strong> de référence.
           </p>
           <p>
-            Les <strong>particuliers</strong> constituent l'autre grand profil : personnes ayant subi des traitements médicaux entraînant une perte capillaire, ou simplement souhaitant des extensions de qualité supérieure pour leur usage personnel. Pour ces acheteurs, la transparence sur l'origine et la qualité des cheveux est primordiale.
+            Sur le plan éthique, notre modèle est irréprochable : les vendeurs sont des personnes qui ont librement décidé de vendre leurs propres cheveux, à un prix qu'ils ont eux-mêmes fixé. Il n'y a ni intermédiaire, ni exploitation, ni opacité. La qualité est contrôlée à double niveau : d'abord par notre équipe de modération qui valide chaque annonce, puis par l'acheteur à réception. Tout écart signalé dans les 72 heures suivant la réception est traité par notre équipe support avec possibilité de remboursement intégral.
+          </p>
+
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900 pt-2">
+            Comment acheter sur Natural Hair Market : 3 étapes simples
+          </h2>
+          <p>
+            L'<strong>achat cheveux naturels</strong> sur notre plateforme se déroule en trois étapes intuitives. <strong>Étape 1</strong> : créez votre compte gratuitement et parcourez le catalogue filtrable par longueur, couleur, texture et état (vierge ou coloré). <strong>Étape 2</strong> : sélectionnez la mèche qui correspond à vos besoins, vérifiez les photos et la description, puis passez commande via notre système de paiement Stripe sécurisé. <strong>Étape 3</strong> : recevez votre commande, vérifiez sa conformité et confirmez la réception pour libérer le paiement au vendeur. En cas de problème, notre équipe intervient immédiatement.
           </p>
           <p>
-            Quelle que soit votre situation, Natural Hair Market simplifie le processus d'<strong>achat cheveux naturels</strong> en France. Créez votre compte gratuitement, explorez le catalogue en temps réel et effectuez votre premier achat en quelques minutes.
+            Ce processus simple et sécurisé fait de Natural Hair Market la solution de référence pour tout <strong>achat cheveux naturels européens</strong> en France, qu'il s'agisse d'une commande unique ou d'un approvisionnement professionnel régulier.
           </p>
 
         </section>
