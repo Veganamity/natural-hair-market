@@ -123,9 +123,9 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
     const metaDesc = document.getElementById('meta-description') as HTMLMetaElement | null;
     const prevDesc = metaDesc?.content ?? '';
 
-    document.title = 'Acheter des cheveux naturels européens bruts - Qualité premium | Natural Hair Market';
+    document.title = 'Achat Cheveux Naturels Européens | Natural Hair Market';
     if (metaDesc) {
-      metaDesc.content = 'Achetez des cheveux naturels européens bruts, vierges et traçables sur Natural Hair Market. Idéal pour perruquiers, extensions et particuliers. Qualité certifiée, livraison sécurisée.';
+      metaDesc.content = 'Découvrez notre sélection exclusive de cheveux naturels européens haut de gamme. Idéal pour des extensions, perruques et tissages de qualité professionnelle.';
     }
 
     return () => {
@@ -145,7 +145,7 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
             Marché cheveux naturels européens
           </div>
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-            Acheter des cheveux naturels européens&nbsp;: bruts, vierges et traçables
+            Achat de Cheveux Naturels Européens
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed mb-8">
             Natural Hair Market est le premier marché en ligne dédié à l'<strong>achat de cheveux naturels européens</strong>. Parcourez des stocks de mèches vierges et colorées, directement sourcées auprès de particuliers en France et en Europe. Traçabilité complète, paiement sécurisé et livraison avec signature.
