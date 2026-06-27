@@ -31,6 +31,7 @@ import {
 
 interface SellMyHairProps {
   onStartSelling?: () => void;
+  onNavigate?: (view: string) => void;
 }
 
 // --- Prix calculés ---
@@ -206,7 +207,7 @@ function strandLabel(s: Strand): string {
   return `${condLabel}${colorLabel} — ${s.length}`;
 }
 
-export function SellMyHair({ onStartSelling }: SellMyHairProps) {
+export function SellMyHair({ onStartSelling, onNavigate }: SellMyHairProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
@@ -303,6 +304,14 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
               Estimer le prix de mes cheveux
             </button>
           </div>
+          <p className="text-xs text-gray-400 mt-4">
+            <button
+              onClick={() => onNavigate?.('landing')}
+              className="text-emerald-600 hover:underline text-xs"
+            >
+              ← Retour à l'accueil
+            </button>
+          </p>
         </div>
       </div>
 
@@ -758,7 +767,16 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
         {/* FAQ */}
         <section>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Questions fréquentes sur la vente de cheveux</h2>
-          <p className="text-gray-500 mb-6 text-sm">Tout ce que vous devez savoir avant de vendre ses cheveux naturels en ligne.</p>
+          <p className="text-gray-500 mb-6 text-sm">
+            Tout ce que vous devez savoir avant de vendre ses cheveux naturels en ligne. Vous pouvez aussi{' '}
+            <button
+              onClick={() => onNavigate?.('faq')}
+              className="text-emerald-600 hover:underline font-semibold"
+            >
+              consultez notre FAQ
+            </button>
+            {' '}générale.
+          </p>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100">
             {faqs.map((faq, i) => (
               <div key={i}>
@@ -809,6 +827,13 @@ export function SellMyHair({ onStartSelling }: SellMyHairProps) {
           </div>
           <p className="text-emerald-200 text-xs mt-4">
             Publication gratuite · Prix rachat cheveux naturels transparents · Paiement sécurisé
+          </p>
+          <p className="text-emerald-200 text-xs mt-2">
+            Des questions ?{' '}
+            <a href="mailto:naturalhairmarket@gmail.com" className="underline hover:text-white">
+              Contactez-nous
+            </a>
+            {' '}— notre équipe répond sous 24h.
           </p>
         </section>
 

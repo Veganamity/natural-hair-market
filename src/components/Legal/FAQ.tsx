@@ -2,9 +2,10 @@ import { X, HelpCircle } from 'lucide-react';
 
 interface FAQProps {
   onClose: () => void;
+  onNavigate?: (view: string) => void;
 }
 
-export function FAQ({ onClose }: FAQProps) {
+export function FAQ({ onClose, onNavigate }: FAQProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full my-8">
@@ -70,6 +71,16 @@ export function FAQ({ onClose }: FAQProps) {
             <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b-2 border-emerald-600 pb-2">
               2. Pour les vendeurs (salons & particuliers)
             </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Consultez aussi notre guide dédié pour{' '}
+              <button
+                onClick={() => onNavigate?.('sell-my-hair')}
+                className="text-emerald-600 font-semibold hover:underline"
+              >
+                vendre mes cheveux naturels
+              </button>
+              {' '}— estimateur de prix inclus.
+            </p>
 
             <div className="space-y-4">
               <div>
@@ -396,6 +407,15 @@ export function FAQ({ onClose }: FAQProps) {
                   </div>
                 </div>
               </div>
+              <p className="text-sm text-gray-500 mt-4">
+                <a
+                  href="mailto:naturalhairmarket@gmail.com"
+                  className="text-emerald-600 font-semibold hover:underline"
+                >
+                  Une question ? Contactez-nous
+                </a>
+                {' '}— notre équipe répond dans les 24h.
+              </p>
             </div>
           </section>
         </div>

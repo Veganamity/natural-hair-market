@@ -458,10 +458,10 @@ function AppContent() {
             {currentView === 'refund' && <RefundPolicy />}
             {currentView === 'safety' && <SafetyQuality />}
             {currentView === 'seller-rules' && <SellerRules />}
-            {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => { setAuthMode('signup'); setCurrentView('auth' as ViewName); }} />}
+            {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => { setAuthMode('signup'); setCurrentView('auth' as ViewName); }} onNavigate={(view) => navigateToView(view as ViewName)} />}
             {currentView === 'buyer-rules' && <BuyerRules />}
-            {currentView === 'faq' && <FAQ onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
-            {currentView === 'about' && <AboutUs onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
+            {currentView === 'faq' && <FAQ onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} onNavigate={(view) => navigateToView(view as ViewName)} />}
+            {currentView === 'about' && <AboutUs onClose={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} onNavigate={(view) => navigateToView(view as ViewName)} />}
             {currentView === 'guide-coupe' && <GuideCoupe onStartSelling={() => { setCurrentView('landing'); window.history.pushState({}, '', '/'); }} />}
             {currentView === 'partners' && <Partners />}
             {currentView === 'buy-european-hair' && (
@@ -922,10 +922,10 @@ function AppContent() {
         {currentView === 'refund' && <RefundPolicy />}
         {currentView === 'safety' && <SafetyQuality />}
         {currentView === 'seller-rules' && <SellerRules />}
-        {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => setShowCreateListing(true)} />}
+        {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => setShowCreateListing(true)} onNavigate={(view) => navigateToView(view as ViewName)} />}
         {currentView === 'buyer-rules' && <BuyerRules />}
-        {currentView === 'faq' && <FAQ onClose={() => navigateToView('marketplace')} />}
-        {currentView === 'about' && <AboutUs onClose={() => navigateToView('marketplace')} />}
+        {currentView === 'faq' && <FAQ onClose={() => navigateToView('marketplace')} onNavigate={(view) => navigateToView(view as ViewName)} />}
+        {currentView === 'about' && <AboutUs onClose={() => navigateToView('marketplace')} onNavigate={(view) => navigateToView(view as ViewName)} />}
         {currentView === 'guide-coupe' && <GuideCoupe onStartSelling={() => navigateToView('sell-my-hair')} />}
         {currentView === 'buy-european-hair' && (
           <BuyEuropeanHair

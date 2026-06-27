@@ -2,9 +2,10 @@ import { X, Info, Shield, CheckCircle, Heart, Users, TrendingUp, Package, Credit
 
 interface AboutUsProps {
   onClose: () => void;
+  onNavigate?: (view: string) => void;
 }
 
-export function AboutUs({ onClose }: AboutUsProps) {
+export function AboutUs({ onClose, onNavigate }: AboutUsProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full my-8">
@@ -367,6 +368,16 @@ export function AboutUs({ onClose }: AboutUsProps) {
                 <span>Une plateforme sécurisée et simple d'utilisation</span>
               </div>
             </div>
+            <p className="text-emerald-100 text-sm mt-5 text-center">
+              Prêt à{' '}
+              <button
+                onClick={() => onNavigate?.('sell-my-hair')}
+                className="underline font-semibold hover:text-white"
+              >
+                commencer à vendre vos cheveux
+              </button>
+              {' '}? Créez votre annonce en quelques minutes.
+            </p>
           </section>
 
           {/* Nous contacter */}
@@ -407,7 +418,14 @@ export function AboutUs({ onClose }: AboutUsProps) {
               </a>
             </div>
             <p className="text-center text-gray-600 text-sm mt-4">
-              Notre équipe est disponible pour répondre à toutes vos questions.
+              Notre équipe est disponible pour répondre à toutes vos questions.{' '}
+              <a
+                href="mailto:naturalhairmarket@gmail.com"
+                className="text-emerald-600 font-semibold hover:underline"
+              >
+                Nous contacter
+              </a>
+              {' '}— réponse sous 24h.
             </p>
           </section>
 

@@ -13,7 +13,7 @@ interface LandingPageProps {
   onGetStarted: () => void;
   onSell?: () => void;
   onLogin?: () => void;
-  onNavigate?: (view: 'faq' | 'about' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'privacy' | 'guide-coupe' | 'partners') => void;
+  onNavigate?: (view: 'faq' | 'about' | 'terms' | 'sales' | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'privacy' | 'guide-coupe' | 'partners' | 'buy-european-hair') => void;
 }
 
 export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: LandingPageProps) {
@@ -185,6 +185,29 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
             <p>
               Que vous soyez un particulier souhaitant <strong>vendre ses cheveux</strong> après une coupe, un salon de coiffure cherchant à valoriser ses chutes, ou un acheteur en quête des meilleures mèches de <strong>cheveux naturels</strong> du marché, Natural Hair Market est la solution éthique, rapide et fiable qu'il vous faut. Rejoignez notre communauté grandissante et donnez une seconde vie à vos cheveux naturels dès aujourd'hui.
             </p>
+            <p>
+              Prêt à vous lancer ?{' '}
+              <button
+                onClick={() => onNavigate?.('sell-my-hair')}
+                className="text-emerald-700 font-semibold hover:underline"
+              >
+                Vendre vos cheveux naturels
+              </button>
+              {' '}sur notre marketplace ou{' '}
+              <button
+                onClick={() => onNavigate?.('buy-european-hair')}
+                className="text-emerald-700 font-semibold hover:underline"
+              >
+                acheter des cheveux naturels
+              </button>
+              {' '}européens de qualité.{' '}
+              <button
+                onClick={() => onNavigate?.('about')}
+                className="text-emerald-700 font-semibold hover:underline"
+              >
+                En savoir plus sur Natural Hair Market
+              </button>
+              {' '}et notre démarche éthique.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
             <button
