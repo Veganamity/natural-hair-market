@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { X, Info, Shield, CheckCircle, Heart, Users, TrendingUp, Package, CreditCard, Truck } from 'lucide-react';
 
 interface AboutUsProps {
@@ -6,6 +7,15 @@ interface AboutUsProps {
 }
 
 export function AboutUs({ onClose, onNavigate }: AboutUsProps) {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'À propos de Natural Hair Market | Natural Hair Market';
+    if (m) m.content = "Découvrez Natural Hair Market, la première marketplace française dédiée à l'achat et la vente de cheveux naturels humains entre particuliers et salons en Europe.";
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full my-8">

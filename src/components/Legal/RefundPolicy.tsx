@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
 import { FileText, Scale, AlertCircle, Shield, CheckCircle, XCircle, Clock, Mail, Phone } from 'lucide-react';
 
 export function RefundPolicy() {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'Politique de Remboursement | Natural Hair Market';
+    if (m) m.content = 'Politique de remboursement de Natural Hair Market : conditions, délais et procédures pour obtenir le remboursement de votre achat de cheveux naturels.';
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">

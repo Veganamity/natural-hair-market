@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
 import { FileText, Scale, Users, Shield, Ban, Building2, Gavel, Globe, Lock } from 'lucide-react';
 
 export function TermsOfService() {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'Mentions Légales & CGU | Natural Hair Market';
+    if (m) m.content = "Mentions légales et Conditions Générales d'Utilisation de Natural Hair Market, marketplace française de vente et d'achat de cheveux naturels humains.";
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">

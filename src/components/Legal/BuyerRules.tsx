@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
 import { ShoppingBag, CheckCircle, XCircle, AlertTriangle, Shield, CreditCard, Package, FileText, Ban, Eye, Scale, Mail, Phone } from 'lucide-react';
 
 export function BuyerRules() {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'Règlement acheteur | Natural Hair Market';
+    if (m) m.content = 'Consultez le règlement acheteur de Natural Hair Market : garanties, paiement sécurisé, protection des transactions et politique de remboursement.';
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserCheck, CheckCircle, XCircle, AlertTriangle, Shield, Package, Clock, CreditCard, Scale, FileText, Ban, DollarSign, Mail, Phone, ChevronDown, ChevronUp, Star, Ruler, Palette, Layers, Camera } from 'lucide-react';
 
 const faqs = [
@@ -38,6 +38,15 @@ const faqs = [
 
 export function SellerRules() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'Règlement vendeur - Vendre ses cheveux | Natural Hair Market';
+    if (m) m.content = "Règlement vendeur de Natural Hair Market : critères d'acceptation, prix libre, obligations d'expédition et conditions pour vendre ses cheveux naturels.";
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { ExternalLink, Handshake } from 'lucide-react';
 
 interface Partner {
@@ -17,6 +18,15 @@ const partners: Partner[] = [
 ];
 
 export function Partners() {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'Nos Partenaires | Natural Hair Market';
+    if (m) m.content = 'Découvrez les partenaires de Natural Hair Market : annuaires beauté, professionnels de la coiffure et acteurs de référence du secteur capillaire en France.';
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
+
   return (
     <article className="max-w-3xl mx-auto">
       {/* Hero */}

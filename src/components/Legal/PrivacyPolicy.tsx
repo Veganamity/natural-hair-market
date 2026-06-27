@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
 import { Shield, Lock, Eye, Database, Mail, User, FileText } from 'lucide-react';
 
 export function PrivacyPolicy() {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'Politique de Confidentialité | Natural Hair Market';
+    if (m) m.content = 'Politique de confidentialité de Natural Hair Market : collecte, utilisation et protection de vos données personnelles conformément au RGPD.';
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">

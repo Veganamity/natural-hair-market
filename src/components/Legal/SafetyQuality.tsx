@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
 import { Shield, CheckCircle, XCircle, AlertTriangle, Award, Eye, Users, Mail, Phone } from 'lucide-react';
 
 export function SafetyQuality() {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'Sécurité & Qualité des cheveux naturels | Natural Hair Market';
+    if (m) m.content = 'Découvrez nos critères de qualité et mesures de sécurité pour garantir des cheveux naturels authentiques. Contrôle, vérification et normes sur Natural Hair Market.';
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">

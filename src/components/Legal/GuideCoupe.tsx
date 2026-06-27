@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Scissors, Droplets, Package, Truck, CheckCircle, ArrowRight } from 'lucide-react';
 
 interface GuideCoupeProps {
@@ -5,6 +6,15 @@ interface GuideCoupeProps {
 }
 
 export function GuideCoupe({ onStartSelling }: GuideCoupeProps) {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'Guide de coupe et conservation des cheveux | Natural Hair Market';
+    if (m) m.content = 'Guide complet pour préparer, couper et conserver vos cheveux avant la vente. Conseils pratiques pour maximiser la valeur de votre mèche sur Natural Hair Market.';
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
+
   const steps = [
     {
       number: '1',

@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
 import { FileText, Scale, ShoppingCart, CreditCard, AlertCircle, Shield, Ban, Truck, Gavel } from 'lucide-react';
 
 export function SalesTerms() {
+  useEffect(() => {
+    const prevTitle = document.title;
+    const m = document.getElementById('meta-description') as HTMLMetaElement | null;
+    const prevDesc = m?.content ?? '';
+    document.title = 'Conditions Générales de Vente | Natural Hair Market';
+    if (m) m.content = "Consultez les Conditions Générales de Vente de Natural Hair Market. Règles applicables à l'achat et à la vente de cheveux naturels sur notre plateforme.";
+    return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
