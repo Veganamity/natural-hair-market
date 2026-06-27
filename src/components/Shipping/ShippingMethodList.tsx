@@ -152,7 +152,7 @@ function cleanMethodName(name: string): string {
 }
 
 export function ShippingMethodList({ methods, selectedMethodId, onSelect, listingAmount = 0 }: ShippingMethodListProps) {
-  const isHighValue = listingAmount >= 150;
+  const isHighValue = listingAmount >= 1;
 
   const grouped: Record<'relay' | 'home' | 'express', SendcloudMethod[]> = {
     relay: [],
@@ -172,7 +172,7 @@ export function ShippingMethodList({ methods, selectedMethodId, onSelect, listin
         <div className="flex items-start gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
           <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
           <p className="text-[11px] text-emerald-800 font-medium">
-            Article de valeur — seules les livraisons sécurisées (signature ou point relais) sont proposées.
+            Livraison sécurisée obligatoire — signature à domicile ou retrait en point relais avec pièce d'identité.
           </p>
         </div>
       )}
