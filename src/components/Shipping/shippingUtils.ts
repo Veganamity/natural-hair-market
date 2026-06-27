@@ -8,8 +8,37 @@ export interface SendcloudMethod {
   max_weight: number;
 }
 
+export const SIGNATURE_SURCHARGE = 2.50;
+
 export function isRelayMethod(method: SendcloudMethod): boolean {
   return method.service_point_input === 'required';
+}
+
+// Transforms all home/express methods into "avec signature" variants (+2.50€).
+// Relay methods are left unchanged (they are already secure by nature).
+export function applySignatureSurcharge(methods: SendcloudMethod[]): SendcloudMethod[] {
+  return methods.map(m => {
+    if (isRelayMethod(m)) return m;
+
+    const n = m.name ?? '';
+    const carrier = (m.carrier ?? '').toLowerCase();
+    const nameLower = n.toLowerCase();
+
+    let newName: string;
+    if (carrier.includes('colissimo') || nameLower.includes('colissimo')) {
+      newName = 'Colissimo Domicile avec signature';
+    } else if (carrier.includes('chronopost') || nameLower.includes('chronopost')) {
+      newName = 'Chronopost Domicile avec signature';
+    } else {
+      newName = n.replace(/\s*\(contre signature\)/i, '').trim() + ' avec signature';
+    }
+
+    return {
+      ...m,
+      price: (m.price ?? 0) + SIGNATURE_SURCHARGE,
+      name: newName,
+    };
+  });
 }
 
 // Returns the carrier slug to pass to the Sendcloud service point widget

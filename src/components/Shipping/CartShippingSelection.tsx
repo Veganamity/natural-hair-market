@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { AddressSelector, ShippingAddress } from '../Payment/AddressSelector';
 import { SendcloudServicePointWidget, ServicePoint } from './SendcloudServicePointWidget';
-import { SendcloudMethod, isRelayMethod, getCarrierSlug } from './shippingUtils';
+import { SendcloudMethod, isRelayMethod, getCarrierSlug, applySignatureSurcharge } from './shippingUtils';
 import { ShippingMethodList } from './ShippingMethodList';
 
 interface CartShippingSelectionProps {
@@ -19,11 +19,13 @@ interface CartShippingSelectionProps {
   }) => void;
   selectedMethod?: string;
   totalWeightGrams: number;
+  totalAmount?: number;
 }
 
 export function CartShippingSelection({
   onShippingSelected,
   totalWeightGrams,
+  totalAmount = 0,
 }: CartShippingSelectionProps) {
   const [selectedAddress, setSelectedAddress] = useState<ShippingAddress | null>(null);
   const [shippingMethods, setShippingMethods] = useState<SendcloudMethod[]>([]);
@@ -70,7 +72,7 @@ export function CartShippingSelection({
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Erreur lors du chargement des méthodes');
 
-      const methods: SendcloudMethod[] = data.shipping_methods || [];
+      const methods: SendcloudMethod[] = applySignatureSurcharge(data.shipping_methods || []);
       setShippingMethods(methods);
       if (methods.length > 0) setSelectedMethodId(methods[0].id);
     } catch (err: any) {
@@ -152,6 +154,7 @@ export function CartShippingSelection({
                 setSelectedMethodId(id);
                 setSelectedServicePoint(null);
               }}
+              listingAmount={totalAmount}
             />
           )}
         </div>

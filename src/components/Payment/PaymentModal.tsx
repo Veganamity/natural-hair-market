@@ -203,6 +203,7 @@ export function PaymentModal({
                   onShippingSelected={setShippingData}
                   selectedMethod={shippingData?.method}
                   weight={weightGrams}
+                  listingAmount={amount}
                 />
               </div>
 

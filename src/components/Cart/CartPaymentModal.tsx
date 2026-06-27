@@ -197,6 +197,7 @@ export function CartPaymentModal({ sellerCart, onClose, onSuccess }: CartPayment
                 onShippingSelected={setShippingData}
                 selectedMethod={shippingData?.method}
                 totalWeightGrams={sellerCart.totalWeight}
+                totalAmount={itemsTotal}
               />
 
               <div className="p-2 bg-gray-50 rounded-lg">

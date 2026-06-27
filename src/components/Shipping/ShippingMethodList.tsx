@@ -1,10 +1,11 @@
-import { Check, MapPin, Home, Zap } from 'lucide-react';
+import { Check, MapPin, Home, Zap, ShieldCheck } from 'lucide-react';
 import { SendcloudMethod, isRelayMethod } from './shippingUtils';
 
 interface ShippingMethodListProps {
   methods: SendcloudMethod[];
   selectedMethodId: number | null;
   onSelect: (id: number) => void;
+  listingAmount?: number;
 }
 
 function getCarrierKey(carrier: string, name: string): string {
@@ -150,7 +151,9 @@ function cleanMethodName(name: string): string {
     .trim();
 }
 
-export function ShippingMethodList({ methods, selectedMethodId, onSelect }: ShippingMethodListProps) {
+export function ShippingMethodList({ methods, selectedMethodId, onSelect, listingAmount = 0 }: ShippingMethodListProps) {
+  const isHighValue = listingAmount >= 150;
+
   const grouped: Record<'relay' | 'home' | 'express', SendcloudMethod[]> = {
     relay: [],
     home: [],
@@ -165,6 +168,15 @@ export function ShippingMethodList({ methods, selectedMethodId, onSelect }: Ship
 
   return (
     <div className="space-y-4">
+      {isHighValue && (
+        <div className="flex items-start gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+          <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+          <p className="text-[11px] text-emerald-800 font-medium">
+            Article de valeur — seules les livraisons sécurisées (signature ou point relais) sont proposées.
+          </p>
+        </div>
+      )}
+
       {categoryOrder.map((cat) => {
         const items = grouped[cat];
         if (items.length === 0) return null;
@@ -182,6 +194,7 @@ export function ShippingMethodList({ methods, selectedMethodId, onSelect }: Ship
                 const ck = getCarrierKey(m.carrier, m.name);
                 const accent = CARRIER_ACCENT[ck] ?? CARRIER_ACCENT.other;
                 const label = cleanMethodName(m.name);
+                const isRelay = isRelayMethod(m);
 
                 return (
                   <button
@@ -202,10 +215,12 @@ export function ShippingMethodList({ methods, selectedMethodId, onSelect }: Ship
                         {label}
                       </p>
                       <p className="text-[10px] text-gray-400 mt-0.5">
-                        {cat === 'relay' && 'Retrait en point relais'}
-                        {cat === 'home' && 'Livree chez vous'}
-                        {cat === 'express' && 'Livraison rapide'}
+                        {isRelay ? 'Retrait en point relais' : cat === 'express' ? 'Livraison rapide' : 'Livree chez vous'}
                       </p>
+                      <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-emerald-50 border border-emerald-200 rounded text-[9px] font-semibold text-emerald-700">
+                        <ShieldCheck className="w-2.5 h-2.5" />
+                        {isRelay ? 'Carte d\'identité requise' : 'Livraison sécurisée avec signature'}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
