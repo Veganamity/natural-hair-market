@@ -54,7 +54,7 @@ const GUARANTEES = [
     icon: <CheckCircle className="w-6 h-6 text-blue-600" />,
     bg: 'bg-blue-50 border-blue-100',
     title: 'Traçabilité garantie',
-    desc: 'Chaque lot est associé à un vendeur identifié. Origine européenne, sourcing direct particulier à particulier.',
+    desc: 'Chaque lot est associé à un vendeur identifié. Origine européenne, sourcing direct particulier à particulier, professionnel à professionnel, particulier à professionnel et professionnel à particulier.',
   },
   {
     icon: <Award className="w-6 h-6 text-amber-500" />,
@@ -228,7 +228,7 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
             Vous achetez en sachant exactement ce que vous recevez.
           </p>
           <p className="text-gray-600 leading-relaxed mb-4">
-            Les <strong>cheveux naturels humains</strong> proposés proviennent exclusivement de particuliers ayant vendu leurs propres cheveux.{' '}
+            Les <strong>cheveux naturels humains</strong> proposés proviennent exclusivement de particuliers ayant vendu leurs propres cheveux et de salons de coiffure.{' '}
             Aucun lot importé en masse. Aucune fibre synthétique.{' '}
             Chaque mèche correspond à une personne réelle, localisée en France ou en Europe.{' '}
             La traçabilité est totale et vérifiable.
