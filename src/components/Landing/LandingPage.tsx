@@ -113,10 +113,15 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
             La marketplace de référence en Europe
           </div>
 
-          <h1 className="text-3xl md:text-6xl font-extrabold leading-tight mb-3 md:mb-4 tracking-tight">
-            Vente & achat de cheveux naturels<br />
+          <h1 className="text-3xl md:text-6xl font-extrabold leading-tight mb-2 md:mb-3 tracking-tight">
+            Achat et Vente de Cheveux Naturels<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-200">— Natural Hair Market</span>
           </h1>
+
+          <p className="text-base md:text-xl font-semibold text-emerald-100 max-w-2xl mx-auto mb-4 md:mb-6 leading-snug">
+            La 1ère marketplace sécurisée pour acheter des cheveux naturels européens.<br className="hidden sm:block" />
+            <span className="text-amber-300">✔</span> Dépôt d&apos;annonce 100% gratuit pour les vendeurs.
+          </p>
 
           <p className="text-sm md:text-xl text-emerald-100 max-w-2xl mx-auto mb-5 md:mb-10 leading-relaxed">
             <span className="hidden md:inline">La première marketplace française dédiée à la vente de cheveux naturels entre particuliers et professionnels. Publication gratuite pour les vendeurs, paiement sécurisé, livraison assurée.</span>
