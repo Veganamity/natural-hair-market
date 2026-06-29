@@ -157,6 +157,84 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
         </div>
       </section>
 
+      {/* ─── CARROUSEL ANNONCES RÉCENTES ─── */}
+      <section className="py-8 md:py-16 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-6 md:mb-8">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-semibold text-xs mb-2 md:mb-3">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Nouvelles annonces
+              </div>
+              <h2 className="text-xl md:text-3xl font-extrabold text-gray-900">
+                {t('landing.recentListings')}
+              </h2>
+              <p className="text-xs md:text-sm text-gray-500 mt-1">{t('landing.recentListingsSubtitle')}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCarouselIndex(i => Math.max(0, i - 1))}
+                disabled={carouselIndex === 0}
+                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setCarouselIndex(i => Math.min(featuredListings.length - 1, i + 1))}
+                disabled={featuredListings.length === 0 || carouselIndex >= featuredListings.length - 6}
+                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onGetStarted}
+                className="hidden sm:flex items-center gap-1.5 ml-2 text-emerald-600 hover:text-emerald-700 font-semibold text-sm transition-colors"
+              >
+                Voir tout →
+              </button>
+            </div>
+          </div>
+
+          {loading && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="rounded-xl bg-gray-100 animate-pulse aspect-[3/4]" />
+              ))}
+            </div>
+          )}
+
+          {!loading && featuredListings.length > 0 && (
+            <div className="overflow-hidden">
+              <div
+                className="flex gap-3 transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(calc(-${carouselIndex} * (100% / 6 + 0.5rem)))` }}
+              >
+                {featuredListings.map((listing) => (
+                  <div key={listing.id} className="flex-shrink-0 w-[calc(50%-6px)] sm:w-[calc(33.33%-8px)] md:w-[calc(25%-9px)] lg:w-[calc(16.67%-10px)]">
+                    <ListingCard listing={listing} onClick={onGetStarted} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg max-w-2xl mx-auto">
+              <p className="font-semibold text-sm">{error}</p>
+            </div>
+          )}
+
+          <div className="text-center mt-6 md:mt-8">
+            <button
+              onClick={onGetStarted}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:from-emerald-700 hover:to-teal-700 transition-all transform hover:scale-105 shadow-lg"
+            >
+              {t('landing.viewAllListings')}
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* ─── INTRO SEO ─── */}
       <section className="py-12 md:py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
@@ -330,84 +408,6 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
               </button>
             </div>
 
-          </div>
-        </div>
-      </section>
-
-      {/* ─── CARROUSEL ANNONCES RÉCENTES ─── */}
-      <section className="py-12 md:py-16 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-semibold text-xs mb-3">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Nouvelles annonces
-              </div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">
-                {t('landing.recentListings')}
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">{t('landing.recentListingsSubtitle')}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCarouselIndex(i => Math.max(0, i - 1))}
-                disabled={carouselIndex === 0}
-                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setCarouselIndex(i => Math.min(featuredListings.length - 1, i + 1))}
-                disabled={featuredListings.length === 0 || carouselIndex >= featuredListings.length - 6}
-                className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={onGetStarted}
-                className="hidden sm:flex items-center gap-1.5 ml-2 text-emerald-600 hover:text-emerald-700 font-semibold text-sm transition-colors"
-              >
-                Voir tout →
-              </button>
-            </div>
-          </div>
-
-          {loading && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-xl bg-gray-100 animate-pulse aspect-[3/4]" />
-              ))}
-            </div>
-          )}
-
-          {!loading && featuredListings.length > 0 && (
-            <div className="overflow-hidden">
-              <div
-                className="flex gap-3 transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(calc(-${carouselIndex} * (100% / 6 + 0.5rem)))` }}
-              >
-                {featuredListings.map((listing) => (
-                  <div key={listing.id} className="flex-shrink-0 w-[calc(50%-6px)] sm:w-[calc(33.33%-8px)] md:w-[calc(25%-9px)] lg:w-[calc(16.67%-10px)]">
-                    <ListingCard listing={listing} onClick={onGetStarted} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg max-w-2xl mx-auto">
-              <p className="font-semibold text-sm">{error}</p>
-            </div>
-          )}
-
-          <div className="text-center mt-8">
-            <button
-              onClick={onGetStarted}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:from-emerald-700 hover:to-teal-700 transition-all transform hover:scale-105 shadow-lg"
-            >
-              {t('landing.viewAllListings')}
-            </button>
           </div>
         </div>
       </section>
