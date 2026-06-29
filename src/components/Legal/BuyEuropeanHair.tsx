@@ -161,7 +161,6 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
           <p className="text-gray-600 leading-relaxed mb-4">
             Natural Hair Market propose le plus large choix de <strong>cheveux naturels humains</strong> en Europe.{' '}
             Vous y trouvez des <strong>cheveux européens</strong> vierges aux teintes naturelles rares — blond platine, châtain, roux, gris argenté —{' '}
-            mais aussi des cheveux d'origine russe, ukrainienne ou brésilienne.{' '}
             Chaque annonce précise l'origine, la texture et l'état exact du lot.
           </p>
           <p className="text-gray-600 leading-relaxed mb-4">
@@ -173,7 +172,7 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
             Les cheveux crépus sont prisés pour les perruques sur mesure.
           </p>
           <p className="text-gray-600 leading-relaxed mb-5">
-            Les longueurs disponibles couvrent tous les besoins : courtes (30–40 cm) — moyennes (40–55 cm) — longues (55–70 cm) — très longues (70 cm et plus).{' '}
+            Les longueurs disponibles couvrent tous les besoins : Très courtes (15–30 cm) — courtes (30–40 cm) — moyennes (40–55 cm) — longues (55–70 cm) — très longues (70 cm et plus).{' '}
             Les plus grands lots atteignent 90 cm. Chaque vendeur indique la longueur exacte avec photos à l'appui.
           </p>
 
