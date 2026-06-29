@@ -152,8 +152,8 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
           {/* [PHOTO : collage de différentes textures de cheveux disponibles] */}
           <div className="w-full h-40 bg-gradient-to-r from-amber-50 to-rose-50 rounded-xl border border-gray-100 overflow-hidden mb-5">
             <img
-              src="https://images.pexels.com/photos/3807517/pexels-photo-3807517.jpeg?auto=compress&cs=tinysrgb&w=800"
-              alt="Collage de différentes textures de cheveux disponibles sur la marketplace"
+              src="/Nano_Banana-2026-06-29-13-24-29 copy.png"
+              alt="Mèches de cheveux européens naturels avec étiquettes d'origine sur une table en bois"
               className="w-full h-full object-cover"
             />
           </div>
