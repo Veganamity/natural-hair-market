@@ -107,39 +107,40 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-700/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative max-w-5xl mx-auto px-4 py-16 md:py-24 text-center">
-          <div className="inline-flex items-center gap-2 bg-emerald-700/50 border border-emerald-500/40 text-emerald-200 px-4 py-1.5 rounded-full text-sm font-medium mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
+        <div className="relative max-w-5xl mx-auto px-4 py-8 md:py-24 text-center">
+          <div className="inline-flex items-center gap-2 bg-emerald-700/50 border border-emerald-500/40 text-emerald-200 px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-3 md:mb-6">
+            <Sparkles className="w-3 h-3 md:w-3.5 md:h-3.5" />
             La marketplace de référence en Europe
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight mb-4 tracking-tight">
+          <h1 className="text-3xl md:text-6xl font-extrabold leading-tight mb-3 md:mb-4 tracking-tight">
             Vente & achat de cheveux naturels<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-200">— Natural Hair Market</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-emerald-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-            La première marketplace française dédiée à la vente de cheveux naturels entre particuliers et professionnels. Publication gratuite pour les vendeurs, paiement sécurisé, livraison assurée.
+          <p className="text-sm md:text-xl text-emerald-100 max-w-2xl mx-auto mb-5 md:mb-10 leading-relaxed">
+            <span className="hidden md:inline">La première marketplace française dédiée à la vente de cheveux naturels entre particuliers et professionnels. Publication gratuite pour les vendeurs, paiement sécurisé, livraison assurée.</span>
+            <span className="md:hidden">Publication gratuite · Paiement sécurisé · Livraison assurée</span>
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center">
             <button
               onClick={onSell ?? onLogin ?? onGetStarted}
-              className="flex items-center gap-2.5 px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-xl w-full sm:w-auto justify-center"
+              className="flex items-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-base md:text-lg transition-all transform hover:scale-105 shadow-xl w-full sm:w-auto justify-center"
             >
-              <Scissors className="w-5 h-5" />
+              <Scissors className="w-4 h-4 md:w-5 md:h-5" />
               Je vends mes cheveux
             </button>
             <button
               onClick={onGetStarted}
-              className="flex items-center gap-2.5 px-8 py-4 bg-white/10 hover:bg-white/20 border-2 border-white/50 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 backdrop-blur-sm w-full sm:w-auto justify-center"
+              className="flex items-center gap-2 px-6 py-3.5 md:px-8 md:py-4 bg-white/10 hover:bg-white/20 border-2 border-white/50 text-white rounded-xl font-bold text-base md:text-lg transition-all transform hover:scale-105 backdrop-blur-sm w-full sm:w-auto justify-center"
             >
-              <ShoppingBag className="w-5 h-5" />
-              J'achète des cheveux naturels
+              <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
+              J'achète des cheveux
             </button>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 mt-10 text-emerald-200 text-sm">
+          <div className="hidden md:flex flex-wrap justify-center gap-x-8 gap-y-2 mt-10 text-emerald-200 text-sm">
             <div className="flex items-center gap-1.5">
               <CheckCircle className="w-4 h-4 text-emerald-400" />
               <span>Publication gratuite pour les vendeurs</span>
