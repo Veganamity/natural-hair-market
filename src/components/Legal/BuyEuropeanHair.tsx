@@ -146,7 +146,7 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
         {/* SECTION 1 — Types de cheveux */}
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 md:p-8">
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">
-            Cheveux européens, russes, brésiliens — tous les types disponibles
+            Cheveux européens — tous les types disponibles
           </h2>
 
           {/* [PHOTO : collage de différentes textures de cheveux disponibles] */}
