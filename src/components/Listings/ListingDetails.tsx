@@ -56,6 +56,10 @@ export function ListingDetails({
   }, [listing.seller_id]);
 
   useEffect(() => {
+    supabase.rpc('increment_listing_views', { listing_id: listing.id });
+  }, [listing.id]);
+
+  useEffect(() => {
     if (!listing.description) return;
     const metaDesc = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     const prevContent = metaDesc?.getAttribute('content') ?? '';
