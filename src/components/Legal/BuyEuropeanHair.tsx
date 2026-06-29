@@ -215,8 +215,8 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
           {/* [PHOTO : badge/sceau de vérification ou vendeur en action] */}
           <div className="w-full h-40 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-gray-100 overflow-hidden mb-5">
             <img
-              src="https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg?auto=compress&cs=tinysrgb&w=800"
-              alt="Vendeur vérifié sur la marketplace cheveux naturels Natural Hair Market"
+              src="/Nano_Banana-2026-06-29-14-21-06.png"
+              alt="Vérification humaine, traçabilité et protection acheteur sur Natural Hair Market"
               className="w-full h-full object-cover"
             />
           </div>
