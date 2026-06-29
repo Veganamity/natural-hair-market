@@ -114,8 +114,8 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
           {/* [PHOTO : exemple de mèche de cheveux européens de haute qualité] */}
           <div className="w-full max-w-2xl mx-auto rounded-2xl border border-gray-100 mb-8 overflow-hidden shadow-sm">
             <img
-              src="/Nano_Banana-2026-06-29-13-24-29.png"
-              alt="Mèches de cheveux naturels européens de différentes origines et textures — Natural Hair Market"
+              src="/Nano_Banana-2026-06-29-13-46-45.png"
+              alt="Large choix de mèches de cheveux naturels humains européens — Natural Hair Market"
               className="w-full h-auto object-cover"
             />
           </div>
