@@ -318,8 +318,8 @@ function AppContent() {
       description: 'Découvrez les partenaires de Natural Hair Market : salons certifiés et prestataires de services.',
     },
     'buy-european-hair': {
-      title: 'Achat cheveux naturels européens - Qualité premium | Natural Hair Market',
-      description: 'Achetez des cheveux naturels européens de qualité sur Natural Hair Market. Stocks disponibles, traçabilité garantie et livraison sécurisée en France.',
+      title: 'Achats cheveux naturels européens - Qualité premium | Natural Hair Market',
+      description: 'Achats de cheveux naturels européens de qualité sur Natural Hair Market. Stocks disponibles, traçabilité garantie et livraison sécurisée en France.',
     },
   };
 

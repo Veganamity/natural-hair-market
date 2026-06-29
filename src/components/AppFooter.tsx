@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { label: 'Politique de confidentialité', href: '/politique-de-confidentialite', view: 'privacy' },
   { label: 'Guide de coupe', href: '/guide-coupe-conservation', view: 'guide-coupe' },
   { label: 'Nos Partenaires', href: '/partenaires', view: 'partners' },
-  { label: 'Acheter cheveux européens', href: '/achat-cheveux-naturels-europeens', view: 'buy-european-hair' },
+  { label: 'Achats cheveux naturels européens', href: '/achat-cheveux-naturels-europeens', view: 'buy-european-hair' },
 ];
 
 export function AppFooter({ onNavigate }: AppFooterProps) {

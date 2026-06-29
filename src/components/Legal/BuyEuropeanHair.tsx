@@ -77,7 +77,7 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
     const prevTitle = document.title;
     const metaDesc = document.getElementById('meta-description') as HTMLMetaElement | null;
     const prevDesc = metaDesc?.content ?? '';
-    document.title = 'Acheter des cheveux naturels européens | Natural Hair Market';
+    document.title = 'Achats cheveux naturels européens | Natural Hair Market';
     if (metaDesc) {
       metaDesc.content = 'Achetez des cheveux naturels humains européens directement auprès de vendeurs vérifiés. Cheveux vierges, colorés, lisses ou bouclés. Paiement sécurisé, livraison Colissimo ou Mondial Relay.';
     }
