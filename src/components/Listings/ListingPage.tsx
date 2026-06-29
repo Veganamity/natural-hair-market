@@ -66,6 +66,7 @@ export function ListingPage({ listingId, onBack, onLoginClick, onBuyClick }: Lis
 
     setListing(data);
     setSeller((data as any).profiles);
+    supabase.rpc('increment_listing_views', { listing_id: listingId });
 
     const cm = parseInt(data.hair_length);
     const inches = Math.round(cm / 2.54);

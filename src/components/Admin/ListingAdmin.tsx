@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import { Package, Trash2, AlertCircle, Eye, Search, ExternalLink, Hash } from 'lucide-react';
+import { Package, Trash2, AlertCircle, Eye, Search, ExternalLink, Hash, RefreshCw } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
@@ -147,8 +147,19 @@ export default function ListingAdmin({ onViewListing }: ListingAdminProps) {
             <Package className="w-8 h-8 text-emerald-600 mr-3" />
             <h1 className="text-2xl font-bold text-gray-900">Gestion des annonces</h1>
           </div>
-          <div className="text-sm text-gray-600">
-            Total: <span className="font-bold">{filteredListings.length}</span> annonce(s)
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-gray-600">
+              Total: <span className="font-bold">{filteredListings.length}</span> annonce(s)
+            </div>
+            <button
+              onClick={loadListings}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+              title="Actualiser"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </button>
           </div>
         </div>
 
