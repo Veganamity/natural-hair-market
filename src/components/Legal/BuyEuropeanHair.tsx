@@ -292,8 +292,8 @@ export function BuyEuropeanHair({ onGoToMarketplace, onSignUp }: BuyEuropeanHair
                 color: 'bg-blue-600',
                 icon: <Heart className="w-5 h-5 text-blue-600" />,
                 bg: 'bg-blue-50 border-blue-100',
-                title: 'Contactez le vendeur',
-                body: "Posez vos questions directement via la messagerie intégrée. Demandez des photos supplémentaires si besoin. Le vendeur répond avant que vous ne passiez commande.",
+                title: 'Contactez le service client',
+                body: "Posez vos questions directement par e-mail. Posez vos questions si besoin. Le service client peut vous répondre avant que vous ne passiez commande.",
               },
               {
                 num: 3,
