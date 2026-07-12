@@ -1,8 +1,8 @@
-import { X, HelpCircle, ChevronDown, Scissors, ShoppingBag, Shield } from 'lucide-react';
+import { HelpCircle, ChevronDown, Scissors, ShoppingBag, Shield } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface FAQProps {
-  onClose: () => void;
+  onClose?: () => void;
   onNavigate?: (view: string) => void;
 }
 
@@ -57,12 +57,14 @@ const BUY_FAQS: FAQItem[] = [
   },
 ];
 
+const ALL_FAQS = [...SELL_FAQS, ...BUY_FAQS];
+
 function FAQAccordion({ items, color }: { items: FAQItem[]; color: 'amber' | 'emerald' }) {
   const [open, setOpen] = useState<number | null>(null);
 
   const accent = color === 'amber'
-    ? { border: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' }
-    : { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' };
+    ? { border: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-700' }
+    : { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-700' };
 
   return (
     <div className="space-y-3">
@@ -70,13 +72,16 @@ function FAQAccordion({ items, color }: { items: FAQItem[]; color: 'amber' | 'em
         <div
           key={i}
           className={`border rounded-xl overflow-hidden shadow-sm transition-shadow hover:shadow-md ${open === i ? accent.border : 'border-gray-200'}`}
+          itemScope
+          itemProp="mainEntity"
+          itemType="https://schema.org/Question"
         >
           <button
             onClick={() => setOpen(open === i ? null : i)}
             className="w-full flex items-center justify-between px-6 py-4 text-left bg-white hover:bg-gray-50 transition-colors"
             aria-expanded={open === i}
           >
-            <span className="font-semibold text-gray-800 pr-4 text-sm md:text-base leading-snug">
+            <span className="font-semibold text-gray-800 pr-4 text-sm md:text-base leading-snug" itemProp="name">
               {item.question}
             </span>
             <ChevronDown
@@ -85,8 +90,11 @@ function FAQAccordion({ items, color }: { items: FAQItem[]; color: 'amber' | 'em
           </button>
           <div
             className={`overflow-hidden transition-all duration-300 ease-in-out ${open === i ? 'max-h-96' : 'max-h-0'}`}
+            itemScope
+            itemProp="acceptedAnswer"
+            itemType="https://schema.org/Answer"
           >
-            <div className={`px-6 pb-5 pt-2 text-gray-600 leading-relaxed text-sm border-t border-gray-100 ${accent.bg}`}>
+            <div className={`px-6 pb-5 pt-2 text-gray-600 leading-relaxed text-sm border-t border-gray-100 ${accent.bg}`} itemProp="text">
               {item.answer}
             </div>
           </div>
@@ -96,189 +104,187 @@ function FAQAccordion({ items, color }: { items: FAQItem[]; color: 'amber' | 'em
   );
 }
 
-export function FAQ({ onClose, onNavigate }: FAQProps) {
+export function FAQ({ onNavigate }: FAQProps) {
   useEffect(() => {
-    const prevTitle = document.title;
-    const metaDesc = document.getElementById('meta-description') as HTMLMetaElement | null;
-    const prevDesc = metaDesc?.content ?? '';
+    document.title = 'FAQ – Vendre et acheter des cheveux naturels | Natural Hair Market';
 
-    document.title = 'FAQ - Vendre et acheter des cheveux naturels | Natural Hair Market';
-    if (metaDesc) {
-      metaDesc.content = 'Toutes les réponses à vos questions sur la vente et l\'achat de cheveux naturels sur Natural Hair Market.';
-    }
+    const metaDesc = document.getElementById('meta-description') as HTMLMetaElement | null;
+    if (metaDesc) metaDesc.content = 'Toutes les réponses à vos questions sur la vente et l\'achat de cheveux naturels sur Natural Hair Market. Légalité, prix, garanties, livraison.';
+
+    const ogTitle = document.getElementById('og-title') as HTMLMetaElement | null;
+    if (ogTitle) ogTitle.content = 'FAQ – Vendre et acheter des cheveux naturels | Natural Hair Market';
+
+    const ogDesc = document.getElementById('og-description') as HTMLMetaElement | null;
+    if (ogDesc) ogDesc.content = 'Toutes les réponses à vos questions sur la vente et l\'achat de cheveux naturels sur Natural Hair Market.';
+
+    const ogUrl = document.getElementById('og-url') as HTMLMetaElement | null;
+    if (ogUrl) ogUrl.content = 'https://www.naturalhairmarket.com/faq';
+
+    const script = document.createElement('script');
+    script.id = 'faq-jsonld';
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      'name': 'FAQ – Vente et achat de cheveux naturels | Natural Hair Market',
+      'url': 'https://www.naturalhairmarket.com/faq',
+      'description': 'Questions fréquentes sur la vente et l\'achat de cheveux naturels humains sur Natural Hair Market, la première marketplace européenne de cheveux naturels.',
+      'publisher': {
+        '@type': 'Organization',
+        'name': 'Natural Hair Market',
+        'url': 'https://www.naturalhairmarket.com',
+        'logo': 'https://www.naturalhairmarket.com/file_0000000094ac71f49db79e27f27b239c.png',
+        'contactPoint': {
+          '@type': 'ContactPoint',
+          'email': 'naturalhairmarket@gmail.com',
+          'telephone': '+33784898647',
+          'contactType': 'customer service',
+          'availableLanguage': 'French',
+        },
+      },
+      'mainEntity': ALL_FAQS.map(({ question, answer }) => ({
+        '@type': 'Question',
+        'name': question,
+        'acceptedAnswer': { '@type': 'Answer', 'text': answer },
+      })),
+    });
+    document.head.appendChild(script);
 
     return () => {
-      document.title = prevTitle;
-      if (metaDesc) metaDesc.content = prevDesc;
+      document.getElementById('faq-jsonld')?.remove();
     };
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full my-8">
-
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 rounded-t-xl flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <HelpCircle className="w-8 h-8 flex-shrink-0" />
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold leading-tight">
-                Questions fréquentes sur la vente et l'achat de cheveux naturels
-              </h1>
-              <p className="text-emerald-100 text-sm mt-0.5 hidden md:block">
-                Natural Hair Market — toutes vos réponses en un seul endroit
-              </p>
-            </div>
+    <article
+      className="max-w-4xl mx-auto"
+      itemScope
+      itemType="https://schema.org/FAQPage"
+    >
+      {/* En-tête */}
+      <header className="mb-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <HelpCircle className="w-6 h-6 text-emerald-700" />
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0 ml-4"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Intro + quick-links */}
-        <div className="px-8 pt-8 pb-2">
-          <p className="text-gray-600 text-sm md:text-base leading-relaxed max-w-3xl">
-            Vous souhaitez <strong>vendre ses cheveux</strong> pour la première fois ou réaliser un{' '}
-            <strong>achat cheveux naturels</strong> de qualité ? Retrouvez ci-dessous les réponses aux
-            questions les plus fréquentes, organisées par profil. Pour aller plus loin, consultez
-            notre guide complet pour{' '}
-            <button
-              onClick={() => onNavigate?.('sell-my-hair')}
-              className="text-emerald-600 font-semibold hover:underline"
-            >
-              vendre mes cheveux
-            </button>
-            {' '}ou{' '}
-            <button
-              onClick={() => onNavigate?.('buy-european-hair')}
-              className="text-emerald-600 font-semibold hover:underline"
-            >
-              l'achat cheveux naturels européens
-            </button>
-            .
-          </p>
-
-          {/* Stat badges */}
-          <div className="flex flex-wrap gap-3 mt-5 mb-6">
-            {[
-              { icon: Scissors, label: '5 questions vendeurs', color: 'amber' },
-              { icon: ShoppingBag, label: '3 questions acheteurs', color: 'emerald' },
-              { icon: Shield, label: 'Transactions 100% sécurisées', color: 'teal' },
-            ].map(({ icon: Icon, label, color }) => (
-              <span
-                key={label}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-${color}-50 text-${color}-700 border border-${color}-200`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
-              </span>
-            ))}
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 leading-tight">
+              Questions fréquentes — vente &amp; achat de cheveux naturels
+            </h1>
+            <p className="text-gray-500 text-sm mt-0.5">Natural Hair Market · Réponses mises à jour en 2025</p>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="px-8 pb-6 space-y-10 max-h-[calc(100vh-320px)] overflow-y-auto">
-
-          {/* Catégorie 1 — Vendeurs */}
-          <section>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Scissors className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  Questions sur la vente de cheveux
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Publication gratuite · Aucune commission vendeur · Paiement sécurisé
-                </p>
-              </div>
-            </div>
-            <FAQAccordion items={SELL_FAQS} color="amber" />
-            <div className="mt-4 flex items-center gap-2">
-              <button
-                onClick={() => onNavigate?.('sell-my-hair')}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:text-amber-800 hover:underline transition-colors"
-              >
-                <Scissors className="w-4 h-4" />
-                Voir notre guide complet pour vendre mes cheveux naturels →
-              </button>
-            </div>
-          </section>
-
-          {/* Catégorie 2 — Acheteurs */}
-          <section>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <ShoppingBag className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  Questions sur l'achat de cheveux naturels
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Achat cheveux naturels européens · Qualité vérifiée · 10% de commission acheteur
-                </p>
-              </div>
-            </div>
-            <FAQAccordion items={BUY_FAQS} color="emerald" />
-            <div className="mt-4">
-              <button
-                onClick={() => onNavigate?.('buy-european-hair')}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-800 hover:underline transition-colors"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                En savoir plus sur l'achat cheveux naturels européens →
-              </button>
-            </div>
-          </section>
-
-          {/* Contact */}
-          <section className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-            <h2 className="text-base font-bold text-gray-800 mb-3">
-              Vous n'avez pas trouvé votre réponse ?
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Notre équipe répond à toutes vos questions sur la vente et l'achat de cheveux naturels
-              sous 24h.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a
-                href="mailto:naturalhairmarket@gmail.com"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                naturalhairmarket@gmail.com
-              </a>
-              <a
-                href="tel:+33784898647"
-                className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                +33 7 84 89 86 47
-              </a>
-            </div>
-          </section>
-
-        </div>
-
-        {/* Footer sticky */}
-        <div className="sticky bottom-0 bg-gray-50 px-8 py-4 rounded-b-xl border-t border-gray-200">
+        <p className="text-gray-600 leading-relaxed max-w-3xl text-sm md:text-base">
+          Vous souhaitez <strong>vendre ses cheveux</strong> pour la première fois ou réaliser un{' '}
+          <strong>achat cheveux naturels</strong> de qualité ? Retrouvez ci-dessous les réponses aux
+          questions les plus fréquentes. Pour aller plus loin, consultez notre guide{' '}
           <button
-            onClick={onClose}
-            className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all"
+            onClick={() => onNavigate?.('sell-my-hair')}
+            className="text-emerald-600 font-semibold hover:underline"
           >
-            Fermer
+            vendre mes cheveux
+          </button>
+          {' '}ou{' '}
+          <button
+            onClick={() => onNavigate?.('buy-european-hair')}
+            className="text-emerald-600 font-semibold hover:underline"
+          >
+            acheter des cheveux naturels européens
+          </button>
+          .
+        </p>
+
+        <div className="flex flex-wrap gap-3 mt-5">
+          {[
+            { icon: Scissors, label: '5 questions vendeurs', color: 'amber' },
+            { icon: ShoppingBag, label: '3 questions acheteurs', color: 'emerald' },
+            { icon: Shield, label: 'Transactions 100 % sécurisées', color: 'teal' },
+          ].map(({ icon: Icon, label, color }) => (
+            <span
+              key={label}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-${color}-50 text-${color}-700 border border-${color}-200`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </span>
+          ))}
+        </div>
+      </header>
+
+      {/* Section vendeurs */}
+      <section aria-labelledby="faq-vendeurs" className="mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Scissors className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <h2 id="faq-vendeurs" className="text-xl font-bold text-gray-900">Questions sur la vente de cheveux</h2>
+            <p className="text-sm text-gray-500">Publication gratuite · Aucune commission vendeur · Paiement sécurisé</p>
+          </div>
+        </div>
+        <FAQAccordion items={SELL_FAQS} color="amber" />
+        <div className="mt-4">
+          <button
+            onClick={() => onNavigate?.('sell-my-hair')}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:text-amber-800 hover:underline transition-colors"
+          >
+            <Scissors className="w-4 h-4" />
+            Voir notre guide complet pour vendre mes cheveux naturels →
           </button>
         </div>
-      </div>
-    </div>
+      </section>
+
+      {/* Section acheteurs */}
+      <section aria-labelledby="faq-acheteurs" className="mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <ShoppingBag className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div>
+            <h2 id="faq-acheteurs" className="text-xl font-bold text-gray-900">Questions sur l'achat de cheveux naturels</h2>
+            <p className="text-sm text-gray-500">Cheveux naturels européens · Qualité vérifiée · 10 % de commission acheteur</p>
+          </div>
+        </div>
+        <FAQAccordion items={BUY_FAQS} color="emerald" />
+        <div className="mt-4">
+          <button
+            onClick={() => onNavigate?.('buy-european-hair')}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-800 hover:underline transition-colors"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            En savoir plus sur l'achat cheveux naturels européens →
+          </button>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+        <h2 className="text-base font-bold text-gray-800 mb-2">Vous n'avez pas trouvé votre réponse ?</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Notre équipe répond à toutes vos questions sur la vente et l'achat de cheveux naturels sous 24h.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <a
+            href="mailto:naturalhairmarket@gmail.com"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            naturalhairmarket@gmail.com
+          </a>
+          <a
+            href="tel:+33784898647"
+            className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+            +33 7 84 89 86 47
+          </a>
+        </div>
+      </section>
+    </article>
   );
 }

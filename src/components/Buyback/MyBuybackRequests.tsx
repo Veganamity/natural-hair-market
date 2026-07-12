@@ -67,6 +67,7 @@ export default function MyBuybackRequests({ onBack }: Props) {
     const { data } = await (supabase as any)
       .from('hair_buyback_requests')
       .select('id, created_at, first_name, last_name, hair_condition, hair_color, hair_length, calculated_price, status, final_price, paid_at, shipping_label_url, shipping_tracking_number, strands_json, exact_price, cancellation_reason, cancelled_at, label_sent_at')
+      .eq('user_id', user!.id)
       .order('created_at', { ascending: false });
     setRequests((data ?? []) as BuybackRequest[]);
     setLoading(false);
