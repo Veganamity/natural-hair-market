@@ -58,7 +58,7 @@ export function ListingCard({
   return (
     <a
       href={buildListingPath(listing)}
-      onClick={(e) => { e.preventDefault(); onClick?.(); }}
+      onClick={(e) => { if (onClick) { e.preventDefault(); onClick(); } }}
       className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer block"
     >
       <div className="relative">

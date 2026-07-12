@@ -4,12 +4,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { ListingCard } from '../Listings/ListingCard';
 import { ListingListItem } from '../Listings/ListingListItem';
-import { ListingDetails } from '../Listings/ListingDetails';
 import { Database } from '../../lib/database.types';
 import { Search, SlidersHorizontal, Grid2x2 as Grid, List, X, ChevronDown } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
-type Profile = Database['public']['Tables']['profiles']['Row'];
 
 interface MarketplaceViewProps {
   onListingClick?: () => void;
@@ -17,14 +15,14 @@ interface MarketplaceViewProps {
   initialListingId?: string | null;
   onSellerClick?: (sellerId: string) => void;
   externalSearch?: string;
+  onListingNavigate?: (listing: Listing) => void;
 }
 
-export function MarketplaceView({ onListingClick, isGuest = false, initialListingId, onSellerClick, externalSearch }: MarketplaceViewProps) {
+export function MarketplaceView({ onListingClick, isGuest = false, initialListingId, onSellerClick, externalSearch, onListingNavigate }: MarketplaceViewProps) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [listings, setListings] = useState<Listing[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(externalSearch ?? '');
   const [filterType, setFilterType] = useState('all');
@@ -86,7 +84,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
       setListings(data);
       if (initialListingId) {
         const target = data.find((l) => l.id === initialListingId);
-        if (target) setSelectedListing(target);
+        if (target) onListingNavigate?.(target);
       }
     }
     setLoading(false);
@@ -389,13 +387,13 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
               onFavoriteToggle={handleFavoriteToggle}
               isFavorited={favorites.has(listing.id)}
               onSellerClick={!isGuest ? onSellerClick : undefined}
-              onClick={() => {
-                if (isGuest && onListingClick) {
-                  onListingClick();
-                } else {
-                  setSelectedListing(listing);
-                }
-              }}
+              onClick={
+                isGuest && onListingClick
+                  ? onListingClick
+                  : onListingNavigate
+                  ? () => onListingNavigate(listing)
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -409,13 +407,13 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
               onFavoriteToggle={handleFavoriteToggle}
               isFavorited={favorites.has(listing.id)}
               onSellerClick={!isGuest ? onSellerClick : undefined}
-              onClick={() => {
-                if (isGuest && onListingClick) {
-                  onListingClick();
-                } else {
-                  setSelectedListing(listing);
-                }
-              }}
+              onClick={
+                isGuest && onListingClick
+                  ? onListingClick
+                  : onListingNavigate
+                  ? () => onListingNavigate(listing)
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -427,16 +425,6 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
           <p className="font-medium text-gray-600">Aucune annonce trouvée</p>
           <p className="text-sm mt-1">Essayez d'autres termes ou réinitialisez les filtres</p>
         </div>
-      )}
-
-      {selectedListing && !isGuest && (
-        <ListingDetails
-          listing={selectedListing}
-          onClose={() => setSelectedListing(null)}
-          onFavoriteToggle={handleFavoriteToggle}
-          isFavorited={favorites.has(selectedListing.id)}
-          onSellerClick={onSellerClick}
-        />
       )}
     </div>
   );

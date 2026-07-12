@@ -879,6 +879,7 @@ function AppContent() {
             initialListingId={preselectedListingId}
             key={preselectedListingId || 'marketplace'}
             onSellerClick={navigateToSellerStore}
+            onListingNavigate={navigateToListingPage}
             externalSearch={headerSearch}
           />
         )}
