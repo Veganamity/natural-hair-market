@@ -68,7 +68,7 @@ export function CartView() {
           <div className="divide-y divide-gray-100">
             {group.items.map(item => {
               const images = Array.isArray(item.listing.images) ? item.listing.images : [];
-              const mainImage = images[0] || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg';
+              const mainImage = (images as string[])[0] || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg';
 
               return (
                 <div key={item.listing.id} className="flex items-center gap-3 px-4 py-3">

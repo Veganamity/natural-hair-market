@@ -112,13 +112,13 @@ export function OffersView() {
     if (!user || receivedOffers.length === 0) return;
 
     const unreadOfferIds = receivedOffers
-      .filter(offer => !offer.seller_read && offer.status === 'pending')
+      .filter(offer => !(offer as any).seller_read && offer.status === 'pending')
       .map(offer => offer.id);
 
     if (unreadOfferIds.length > 0) {
       await supabase
         .from('offers')
-        .update({ seller_read: true })
+        .update({ seller_read: true } as any)
         .in('id', unreadOfferIds);
     }
   };
@@ -417,7 +417,6 @@ export function OffersView() {
         <ListingDetails
           listing={selectedListing}
           onClose={() => setSelectedListing(null)}
-          onMessage={() => {}}
           onFavoriteToggle={handleFavoriteToggle}
           isFavorited={favorites.includes(selectedListing.id)}
         />

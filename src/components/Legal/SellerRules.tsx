@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { UserCheck, CheckCircle, XCircle, AlertTriangle, Shield, Package, Clock, CreditCard, Scale, FileText, Ban, DollarSign, Mail, Phone, ChevronDown, ChevronUp, Star, Ruler, Palette, Layers, Camera } from 'lucide-react';
+import { UserCheck, CheckCircle, XCircle, AlertTriangle, Shield, Package, Scale, FileText, DollarSign, Mail, Phone, ChevronDown, ChevronUp, Star, Ruler, Palette, Layers, Camera } from 'lucide-react';
 
 const faqs = [
   {

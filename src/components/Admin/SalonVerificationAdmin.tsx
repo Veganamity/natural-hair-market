@@ -19,7 +19,7 @@ interface SalonVerification {
 }
 
 export default function SalonVerificationAdmin() {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const [verifications, setVerifications] = useState<SalonVerification[]>([]);
   const [filteredVerifications, setFilteredVerifications] = useState<SalonVerification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ export default function SalonVerificationAdmin() {
 
       // Use RPC function to bypass schema cache
       const filterValue = filter === 'all' ? null : filter;
-      const { data, error } = await supabase.rpc('get_salon_verifications_rpc', {
+      const { data, error } = await (supabase.rpc as any)('get_salon_verifications_rpc', {
         status_filter: filterValue
       });
 
@@ -85,10 +85,10 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir approuver ce salon ?')) return;
 
     try {
-      const { data, error } = await supabase.rpc('approve_salon_verification_rpc', {
+      const { data, error } = await (supabase.rpc as any)('approve_salon_verification_rpc', {
         verification_id: verificationId,
         user_id: userId
-      });
+      }) as { data: { success: boolean; error?: string } | null; error: any };
 
       if (error) throw error;
       if (data && !data.success) throw new Error(data.error || 'Erreur inconnue');
@@ -105,10 +105,10 @@ export default function SalonVerificationAdmin() {
     if (!confirm('Êtes-vous sûr de vouloir refuser cette demande ?')) return;
 
     try {
-      const { data, error } = await supabase.rpc('reject_salon_verification_rpc', {
+      const { data, error } = await (supabase.rpc as any)('reject_salon_verification_rpc', {
         verification_id: verificationId,
         user_id: userId
-      });
+      }) as { data: { success: boolean; error?: string } | null; error: any };
 
       if (error) throw error;
       if (data && !data.success) throw new Error(data.error || 'Erreur inconnue');

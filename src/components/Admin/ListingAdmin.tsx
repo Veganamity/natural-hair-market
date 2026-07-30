@@ -24,7 +24,7 @@ const getListingNumber = (id: string): string => {
 };
 
 export default function ListingAdmin({ onViewListing }: ListingAdminProps) {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const [listings, setListings] = useState<ListingWithSeller[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,7 +66,7 @@ export default function ListingAdmin({ onViewListing }: ListingAdminProps) {
       if (error) throw error;
 
       console.log('Loaded listings:', data);
-      setListings(data || []);
+      setListings((data || []) as unknown as ListingWithSeller[]);
     } catch (error: any) {
       console.error('Error loading listings:', error);
       setMessage({
@@ -284,7 +284,7 @@ export default function ListingAdmin({ onViewListing }: ListingAdminProps) {
                             disabled={!onViewListing}
                           >
                             <img
-                              src={mainImage}
+                              src={mainImage as string}
                               alt={listing.title}
                               className={`w-16 h-16 object-cover rounded-lg transition-opacity ${onViewListing ? 'group-hover:opacity-75 cursor-pointer' : ''}`}
                             />

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { FileText, Scale, ShoppingCart, CreditCard, AlertCircle, Shield, Ban, Truck, Gavel } from 'lucide-react';
+import { FileText, ShoppingCart, CreditCard, AlertCircle, Shield, Ban, Gavel } from 'lucide-react';
 
 export function SalesTerms() {
   useEffect(() => {

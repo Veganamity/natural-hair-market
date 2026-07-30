@@ -147,6 +147,7 @@ export interface Database {
           status: string
           created_at: string
           updated_at: string
+          buyer_read_status: boolean
         }
         Insert: {
           id?: string
@@ -157,6 +158,7 @@ export interface Database {
           status?: string
           created_at?: string
           updated_at?: string
+          buyer_read_status?: boolean
         }
         Update: {
           id?: string
@@ -167,6 +169,7 @@ export interface Database {
           status?: string
           created_at?: string
           updated_at?: string
+          buyer_read_status?: boolean
         }
         Relationships: [
           {
@@ -211,6 +214,7 @@ export interface Database {
           business_name: string | null
           address_complement: string | null
           siret: string | null
+          is_certified_salon: boolean | null
         }
         Insert: {
           id: string
@@ -237,6 +241,7 @@ export interface Database {
           business_name?: string | null
           address_complement?: string | null
           siret?: string | null
+          is_certified_salon?: boolean | null
         }
         Update: {
           id?: string
@@ -245,8 +250,25 @@ export interface Database {
           first_name?: string | null
           last_name?: string | null
           phone?: string | null
+          avatar_url?: string | null
+          location?: string | null
+          bio?: string | null
+          created_at?: string
+          updated_at?: string
+          address_line1?: string | null
+          address_line2?: string | null
+          postal_code?: string | null
+          city?: string | null
+          country?: string
+          stripe_account_id?: string | null
+          stripe_account_status?: string
+          stripe_onboarding_completed?: boolean
+          default_shipping_fee?: number
+          accepts_marketplace_terms?: boolean
+          business_name?: string | null
           address_complement?: string | null
           siret?: string | null
+          is_certified_salon?: boolean | null
         }
         Relationships: [
           {
@@ -459,6 +481,8 @@ export interface Database {
           shipping_price: number | null
           shipping_carrier: string | null
           shipping_status: string | null
+          sendcloud_parcel_id: string | null
+          sendcloud_method_id: number | null
         }
         Insert: {
           id?: string
@@ -504,6 +528,8 @@ export interface Database {
           mondial_relay_point_address?: string | null
           cancellation_reason?: string | null
           cancelled_by?: string | null
+          sendcloud_parcel_id?: string | null
+          sendcloud_method_id?: number | null
         }
         Update: {
           id?: string
@@ -549,6 +575,8 @@ export interface Database {
           mondial_relay_point_address?: string | null
           cancellation_reason?: string | null
           cancelled_by?: string | null
+          sendcloud_parcel_id?: string | null
+          sendcloud_method_id?: number | null
         }
         Relationships: [
           {

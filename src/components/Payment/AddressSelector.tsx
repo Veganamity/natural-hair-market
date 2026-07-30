@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { MapPin, Check, AlertCircle } from 'lucide-react';
-import { COUNTRIES, EU_COUNTRIES, WORLD_COUNTRIES } from '../../lib/countries';
+import { EU_COUNTRIES, WORLD_COUNTRIES } from '../../lib/countries';
 
 export interface ShippingAddress {
   full_name: string;
@@ -19,7 +19,7 @@ interface AddressSelectorProps {
   selectedAddress?: ShippingAddress | null;
 }
 
-export function AddressSelector({ onSelectAddress, selectedAddress }: AddressSelectorProps) {
+export function AddressSelector({ onSelectAddress }: AddressSelectorProps) {
   const { user } = useAuth();
   const [profileAddress, setProfileAddress] = useState<ShippingAddress | null>(null);
   const [loading, setLoading] = useState(true);

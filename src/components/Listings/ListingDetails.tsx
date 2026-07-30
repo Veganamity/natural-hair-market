@@ -38,7 +38,7 @@ export function ListingDetails({
   const [showImageModal, setShowImageModal] = useState(false);
   const [offerAmount, setOfferAmount] = useState('');
   const [isSubmittingOffer, setIsSubmittingOffer] = useState(false);
-  const images = Array.isArray(listing.images) ? listing.images : [];
+  const images = Array.isArray(listing.images) ? listing.images as string[] : [];
   const mainImage = images[0] || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg';
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export function ListingDetails({
   }, [listing.seller_id]);
 
   useEffect(() => {
-    supabase.rpc('increment_listing_views', { listing_id: listing.id });
+    (supabase.rpc as any)('increment_listing_views', { listing_id: listing.id }).then(() => {});
   }, [listing.id]);
 
   useEffect(() => {

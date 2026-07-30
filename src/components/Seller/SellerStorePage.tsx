@@ -50,7 +50,6 @@ export function SellerStorePage({ sellerId, onBack }: SellerStorePageProps) {
     fetchData();
   }, [sellerId]);
 
-  const activeListings = listings.filter((l) => l.status === 'active' && l.instant_buy_enabled);
   const allActiveListings = listings.filter((l) => l.status === 'active');
   const soldListings = listings.filter((l) => l.status === 'sold');
 
@@ -70,7 +69,7 @@ export function SellerStorePage({ sellerId, onBack }: SellerStorePageProps) {
   };
 
   const getMainImage = (listing: Listing) => {
-    const imgs = Array.isArray(listing.images) ? listing.images : [];
+    const imgs = Array.isArray(listing.images) ? listing.images as string[] : [];
     return imgs[0] || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg';
   };
 

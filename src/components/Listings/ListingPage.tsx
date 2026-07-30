@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 import { Database } from '../../lib/database.types';
-import { ArrowLeft, Globe, Calendar, BadgeCheck, ChevronLeft, ChevronRight, ShoppingBag, Tag, Shield, Package } from 'lucide-react';
+import { PaymentModal } from '../Payment/PaymentModal';
+import { Globe, Calendar, BadgeCheck, ChevronLeft, ChevronRight, ShoppingCart, Tag, Shield, Package, Plus, Check, X, Loader2, AlertCircle } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
 
@@ -23,16 +25,23 @@ interface ListingPageProps {
   listingId: string;
   onBack: () => void;
   onLoginClick: () => void;
-  onBuyClick: (listingId: string) => void;
 }
 
-export function ListingPage({ listingId, onBack, onLoginClick, onBuyClick }: ListingPageProps) {
+export function ListingPage({ listingId, onBack, onLoginClick }: ListingPageProps) {
   const { user } = useAuth();
+  const { addToCart, isInCart } = useCart();
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [selectedImg, setSelectedImg] = useState(0);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [offerAmount, setOfferAmount] = useState('');
+  const [isSubmittingOffer, setIsSubmittingOffer] = useState(false);
+  const [offerError, setOfferError] = useState<string | null>(null);
+
+  const isOwner = user?.id === listing?.seller_id;
 
   useEffect(() => {
     fetchListing();
@@ -50,7 +59,6 @@ export function ListingPage({ listingId, onBack, onLoginClick, onBuyClick }: Lis
           avatar_url,
           location,
           bio,
-          business_name,
           is_certified_salon,
           is_verified_salon
         )
@@ -66,7 +74,7 @@ export function ListingPage({ listingId, onBack, onLoginClick, onBuyClick }: Lis
 
     setListing(data);
     setSeller((data as any).profiles);
-    supabase.rpc('increment_listing_views', { listing_id: listingId });
+    (supabase.rpc as any)('increment_listing_views', { listing_id: listingId }).then(() => {});
 
     const cm = parseInt(data.hair_length);
     const inches = Math.round(cm / 2.54);
@@ -309,14 +317,14 @@ export function ListingPage({ listingId, onBack, onLoginClick, onBuyClick }: Lis
                     <img src={seller.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-emerald-700 font-bold text-lg">
-                      {(seller.full_name || seller.business_name || 'V')[0].toUpperCase()}
+                      {(seller.full_name || 'V')[0].toUpperCase()}
                     </span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-semibold text-gray-800 text-sm">
-                      {seller.business_name || seller.full_name || 'Vendeur'}
+                      {seller.full_name || 'Vendeur'}
                     </span>
                     {seller.is_certified_salon && (
                       <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
@@ -333,23 +341,69 @@ export function ListingPage({ listingId, onBack, onLoginClick, onBuyClick }: Lis
             )}
 
             {/* CTA */}
-            {!isSold && (
+            {!isSold && !isOwner && (
               <div className="space-y-3">
                 {user ? (
-                  <button
-                    onClick={() => onBuyClick(listing.id)}
-                    className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-base hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-md"
-                  >
-                    <ShoppingBag className="w-5 h-5" />
-                    Voir les options d'achat
-                  </button>
+                  <>
+                    <div className="flex gap-2">
+                      {listing.instant_buy_enabled && (
+                        <button
+                          onClick={() => setShowPaymentModal(true)}
+                          className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-md"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Acheter maintenant
+                        </button>
+                      )}
+                      {listing.accept_offers && (
+                        <button
+                          onClick={() => setShowOfferModal(true)}
+                          className="flex-1 py-3 bg-teal-600 text-white rounded-xl font-bold text-sm hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 shadow-md"
+                        >
+                          <Tag className="w-4 h-4" />
+                          Proposer une offre
+                        </button>
+                      )}
+                    </div>
+                    {listing.instant_buy_enabled && (
+                      <button
+                        onClick={() => {
+                          if (!isInCart(listing.id)) {
+                            addToCart(listing, listing.seller_id, seller?.full_name || 'Vendeur');
+                          }
+                        }}
+                        className={`w-full py-2.5 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
+                          isInCart(listing.id)
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 cursor-default'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
+                        }`}
+                      >
+                        {isInCart(listing.id) ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Dans le panier
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4" />
+                            Ajouter au panier
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {!listing.instant_buy_enabled && !listing.accept_offers && (
+                      <p className="text-center text-xs text-gray-500 py-2">
+                        Cette annonce n'accepte ni achat direct ni offres pour le moment.
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <>
                     <button
                       onClick={onLoginClick}
                       className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-base hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 shadow-md"
                     >
-                      <ShoppingBag className="w-5 h-5" />
+                      <ShoppingCart className="w-5 h-5" />
                       Se connecter pour acheter
                     </button>
                     <p className="text-center text-xs text-gray-500">
@@ -357,6 +411,16 @@ export function ListingPage({ listingId, onBack, onLoginClick, onBuyClick }: Lis
                     </p>
                   </>
                 )}
+              </div>
+            )}
+            {isSold && (
+              <div className="w-full py-3.5 bg-gray-100 text-gray-500 rounded-xl font-bold text-base text-center">
+                Cette annonce a été vendue
+              </div>
+            )}
+            {isOwner && !isSold && (
+              <div className="w-full py-3.5 bg-blue-50 text-blue-700 rounded-xl font-semibold text-sm text-center border border-blue-200">
+                C'est votre annonce — Les acheteurs verront les options d'achat ici
               </div>
             )}
 
@@ -378,6 +442,118 @@ export function ListingPage({ listingId, onBack, onLoginClick, onBuyClick }: Lis
           </div>
         </div>
       </div>
+
+      {/* Offer modal */}
+      {showOfferModal && listing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-bold text-gray-800">Proposer une offre</h3>
+              <button
+                onClick={() => { setShowOfferModal(false); setOfferError(null); }}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-3">
+              <p className="text-sm text-gray-600">
+                Prix demandé : <span className="font-semibold text-emerald-600">{listing.price}€</span>
+              </p>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!offerAmount || !user) return;
+                setIsSubmittingOffer(true);
+                setOfferError(null);
+                try {
+                  const { error } = await supabase.from('offers').insert({
+                    listing_id: listing.id,
+                    buyer_id: user.id,
+                    amount: parseFloat(offerAmount),
+                  });
+                  if (error) throw error;
+                  setShowOfferModal(false);
+                  setOfferAmount('');
+                  alert('Votre offre a été envoyée au vendeur !');
+                } catch (err: any) {
+                  setOfferError(err.message || 'Erreur lors de l\'envoi de l\'offre');
+                } finally {
+                  setIsSubmittingOffer(false);
+                }
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Votre offre (€) *
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="1"
+                  max={listing.price}
+                  value={offerAmount}
+                  onChange={(e) => setOfferAmount(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  placeholder="Entrez votre offre"
+                  required
+                />
+              </div>
+
+              {offerError && (
+                <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-800">{offerError}</p>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowOfferModal(false); setOfferError(null); }}
+                  disabled={isSubmittingOffer}
+                  className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors text-sm disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingOffer || !offerAmount}
+                  className="flex-1 px-3 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                >
+                  {isSubmittingOffer ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Envoi...
+                    </>
+                  ) : (
+                    'Envoyer'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payment modal */}
+      {showPaymentModal && listing && (
+        <PaymentModal
+          listingId={listing.id}
+          listingTitle={listing.title}
+          amount={listing.price}
+          weightGrams={listing.weight_grams || 100}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => {
+            setShowPaymentModal(false);
+            onBack();
+          }}
+        />
+      )}
     </div>
   );
 }

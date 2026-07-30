@@ -99,7 +99,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             email: user.email,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          });
+          } as any);
 
         if (insertError) {
           console.error('Error creating profile:', insertError);
@@ -285,7 +285,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         throw new Error('Session expirée');
       }
 
-      const { error: deleteError } = await supabase.rpc('delete_user_account');
+      const { error: deleteError } = await (supabase.rpc as any)('delete_user_account');
 
       if (deleteError) {
         throw deleteError;
@@ -866,7 +866,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         ) : (
           <div className="space-y-4">
             {listings.map((listing) => {
-              const images = Array.isArray(listing.images) ? listing.images : [];
+              const images = Array.isArray(listing.images) ? listing.images as string[] : [];
               const mainImage = images[0] || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg';
 
               return (

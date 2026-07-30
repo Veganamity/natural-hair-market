@@ -40,14 +40,12 @@ import { NotFound } from './components/NotFound';
 import { CartView } from './components/Cart/CartView';
 import { CartProvider, useCart } from './contexts/CartContext';
 import { SellerStorePage } from './components/Seller/SellerStorePage';
-import { Database } from './lib/database.types';
 import { supabase } from './lib/supabaseClient';
 import { extractListingIdFromPath, buildListingPath } from './lib/listingSlug';
 import { useUnreadOffersCount } from './hooks/useUnreadOffers';
-import { Plus, Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, ArrowLeft, ChevronDown, ShoppingCart, Search, Scissors } from 'lucide-react';
+import { Home, User, LogOut, Menu, X, Heart, Tag, Receipt, Package, ArrowLeft, ChevronDown, ShoppingCart, Search, Scissors } from 'lucide-react';
 
-type Listing = Database['public']['Tables']['listings']['Row'];
-type Profile = Database['public']['Tables']['profiles']['Row'];
+
 
 // Mapping complet path → view (toutes les vues ont une vraie URL propre)
 const PATH_TO_VIEW: Record<string, string> = {
@@ -194,12 +192,7 @@ function AppContent() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!loading && user && currentView === 'landing') {
-      setCurrentView('marketplace');
-      window.history.replaceState({ view: 'marketplace' }, '', '/marketplace');
-    }
-  }, [user, loading]);
+  // Logged-in users can stay on the landing page — no auto-redirect
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
@@ -422,7 +415,7 @@ function AppContent() {
             onLoginClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
             onBuyClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
           />
-          <AppFooter onNavigate={navigateToView} />
+          <AppFooter onNavigate={(view) => navigateToView(view as ViewName)} />
         </div>
       );
     }
@@ -473,7 +466,7 @@ function AppContent() {
               />
             )}
           </main>
-          <AppFooter onNavigate={navigateToView} />
+          <AppFooter onNavigate={(view) => navigateToView(view as ViewName)} />
         </div>
       );
     }
@@ -571,8 +564,8 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
-      {/* Profil incomplet — modal bloquant */}
-      {user && profile && !(profile.full_name?.trim() && profile.phone?.trim() && profile.address_line1?.trim() && profile.postal_code?.trim() && profile.city?.trim()) && (
+      {/* Profil incomplet — prompt non-bloquant, seulement sur les pages d'action */}
+      {user && profile && currentView !== 'landing' && currentView !== 'marketplace' && currentView !== 'listing-page' && currentView !== 'favorites' && !(profile.full_name?.trim() && profile.phone?.trim() && profile.address_line1?.trim() && profile.postal_code?.trim() && profile.city?.trim()) && (
         <ProfileCompletionModal />
       )}
       <nav className="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-100">
@@ -894,10 +887,6 @@ function AppContent() {
             listingId={listingPageId}
             onBack={() => navigateToView('marketplace')}
             onLoginClick={() => navigateToView('profile')}
-            onBuyClick={(id) => {
-              setPreselectedListingId(id);
-              navigateToView('marketplace');
-            }}
           />
         )}
         {currentView === 'cart' && <CartView />}
@@ -953,7 +942,7 @@ function AppContent() {
         />
       )}
 
-      <AppFooter onNavigate={navigateToView} />
+      <AppFooter onNavigate={(view) => navigateToView(view as ViewName)} />
     </div>
   );
 }

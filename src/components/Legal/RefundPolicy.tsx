@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { FileText, Scale, AlertCircle, Shield, CheckCircle, XCircle, Clock, Mail, Phone } from 'lucide-react';
+import { FileText, Scale, Shield, CheckCircle, XCircle, Clock, Mail, Phone } from 'lucide-react';
 
 export function RefundPolicy() {
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { Search, Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield, ChevronDown, Scissors, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Euro, ShoppingBag, TrendingUp, CheckCircle, Sparkles, Users, Shield, ChevronDown, Scissors, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Database } from '../../lib/database.types';
@@ -286,7 +286,7 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
               </button>
               {' '}européens de qualité.{' '}
               <button
-                onClick={() => onNavigate?.('about')}
+                onClick={() => onNavigate?.('about' as never)}
                 className="text-emerald-700 font-semibold hover:underline"
               >
                 En savoir plus sur Natural Hair Market
@@ -626,7 +626,7 @@ export function LandingPage({ onGetStarted, onSell, onLogin, onNavigate }: Landi
       </section>
 
       {/* ─── FOOTER ─── */}
-      <AppFooter onNavigate={(view) => onNavigate?.(view)} />
+      <AppFooter onNavigate={(view) => onNavigate?.(view as any)} />
     </div>
   );
 }

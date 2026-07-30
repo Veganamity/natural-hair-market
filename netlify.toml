@@ -15,7 +15,24 @@ to = "https://www.naturalhairmarket.com/:splat"
 status = 301
 force = true
 
-# SPA fallback
+# Pre-rendered listing pages for SEO bots only
+# Real users get the normal SPA via the fallback below
+[[redirects]]
+from = "/annonce/*"
+to = "https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat"
+status = 200
+force = true
+[redirects.conditions]
+User-Agent = ["*googlebot*", "*bingbot*", "*slurp*", "*duckduckbot*", "*baiduspider*", "*yandexbot*", "*facebookexternalhit*", "*twitterbot*", "*linkedinbot*", "*whatsapp*", "*telegrambot*", "*applebot*", "*semrushbot*", "*ahrefsbot*", "*mj12bot*", "*dotbot*", "*rogerbot*", "*screaming*frog*", "*lighthouse*", "*developers.google*", "*petalbot*", "*bytespider*"]
+
+# Dynamic sitemap from Supabase Edge Function
+[[redirects]]
+from = "/sitemap.xml"
+to = "https://tergjlwermtignqmsnys.supabase.co/functions/v1/sitemap"
+status = 200
+force = true
+
+# SPA fallback — must be last
 [[redirects]]
 from = "/*"
 to = "/index.html"

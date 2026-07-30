@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { X, Upload, Image } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
@@ -46,7 +46,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
   });
 
   useEffect(() => {
-    const images = Array.isArray(listing.images) ? listing.images : [];
+    const images = Array.isArray(listing.images) ? listing.images as unknown as string[] : [];
     setUploadedImages(images);
   }, [listing]);
 
@@ -88,7 +88,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
         const fileExt = file.name.split('.').pop();
         const fileName = `${user!.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('hair-images')
           .upload(fileName, file, {
             cacheControl: '3600',

@@ -42,8 +42,7 @@ export function ReportModal({ listingId, onClose }: ReportModalProps) {
     setLoading(true);
 
     try {
-      const { error: insertError } = await supabase
-        .from('listing_reports')
+      const { error: insertError } = await (supabase.from as any)('listing_reports')
         .insert({
           listing_id: listingId,
           reporter_id: user.id,

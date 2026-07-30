@@ -1,4 +1,4 @@
-import { Heart, MapPin, Calendar, Globe, BadgeCheck } from 'lucide-react';
+import { Heart, Calendar, Globe, BadgeCheck } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { buildListingPath } from '../../lib/listingSlug';
@@ -20,7 +20,6 @@ interface ListingCardProps {
 export function ListingCard({
   listing,
   seller,
-  onMessage,
   onFavoriteChange,
   isFavorite,
   onFavoriteToggle,
@@ -31,7 +30,7 @@ export function ListingCard({
   const { t } = useLanguage();
   const isOldApi = onFavoriteToggle !== undefined;
   const isFav = isOldApi ? isFavorited : isFavorite;
-  const images = Array.isArray(listing.images) ? listing.images : [];
+  const images = Array.isArray(listing.images) ? listing.images as string[] : [];
   const mainImage = images[0] || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg';
 
   const getHairTypeLabel = (type: string) => {

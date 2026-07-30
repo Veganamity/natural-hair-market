@@ -116,7 +116,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
         const fileExt = file.name.split('.').pop();
         const fileName = `${user!.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
 
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('hair-images')
           .upload(fileName, file, {
             cacheControl: '3600',

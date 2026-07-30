@@ -35,7 +35,6 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const cmToInches = (cm: number) => Math.round(cm / 2.54);
   const inchesToCm = (inches: number) => Math.round(inches * 2.54);
 
   const activeFilterCount = [

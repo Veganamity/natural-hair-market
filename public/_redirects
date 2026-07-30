@@ -1,5 +1,29 @@
-# Redirect non-www → www (301 permanent)
-https://naturalhairmarket.com/* https://www.naturalhairmarket.com/:splat 301!
+# Pre-rendered listing pages for SEO bots only (Netlify checks User-Agent)
+# Real users fall through to the SPA fallback below
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*googlebot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*bingbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*slurp*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*duckduckbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*baiduspider*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*yandexbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*facebookexternalhit*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*twitterbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*linkedinbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*whatsapp*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*telegrambot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*applebot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*semrushbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*ahrefsbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*mj12bot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*dotbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*rogerbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*screaming*frog*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*lighthouse*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*petalbot*"
+/annonce/* https://tergjlwermtignqmsnys.supabase.co/functions/v1/listing-page/:splat 200! User-Agent="*bytespider*"
+
+# Dynamic sitemap from Supabase Edge Function
+/sitemap.xml https://tergjlwermtignqmsnys.supabase.co/functions/v1/sitemap 200!
 
 # SPA fallback — must be last
 /* /index.html 200

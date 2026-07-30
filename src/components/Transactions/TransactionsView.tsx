@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart, Wallet, BarChart2, ChevronDown, ChevronUp, Download, Printer, Loader2, AlertCircle } from 'lucide-react';
+import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart, Wallet, BarChart2, ChevronDown, ChevronUp, Download, Loader2, AlertCircle } from 'lucide-react';
 import { StripeConnectEmbedded } from '../Stripe/StripeConnectEmbedded';
 import { downloadInvoicePDF } from '../../lib/invoiceGenerator';
 

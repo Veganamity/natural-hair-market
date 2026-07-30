@@ -9,7 +9,7 @@ import {
 } from '@stripe/react-connect-js';
 import { loadConnectAndInitialize } from '@stripe/connect-js';
 import { supabase } from '../../lib/supabaseClient';
-import { Loader2, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { Loader2, AlertCircle, X } from 'lucide-react';
 
 type ComponentType = 'onboarding' | 'account_management' | 'payments' | 'payouts' | 'balances';
 
@@ -169,7 +169,7 @@ interface StripeOnboardingModalProps {
   onClose: () => void;
 }
 
-export function StripeOnboardingModal({ onComplete, onClose }: StripeOnboardingModalProps) {
+export function StripeOnboardingModal({ onClose }: StripeOnboardingModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
