@@ -13,6 +13,7 @@ type Transaction = Database['public']['Tables']['transactions']['Row'] & {
   seller: Database['public']['Tables']['profiles']['Row'] | null;
   shipping_deadline_at?: string | null;
   delivery_deadline_at?: string | null;
+  authorization_expires_at?: string | null;
 };
 
 function DeadlineBanner({ transaction, isSellerView }: { transaction: Transaction; isSellerView: boolean }) {
@@ -66,6 +67,34 @@ function DeadlineBanner({ transaction, isSellerView }: { transaction: Transactio
           <Clock className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-blue-800">
             Confirmez la réception avant le <strong>{deadline.toLocaleDateString('fr-FR')}</strong> ({daysLeft} jour{daysLeft > 1 ? 's' : ''} restant{daysLeft > 1 ? 's' : ''}). Après ce délai, le paiement sera libéré automatiquement au vendeur.
+          </p>
+        </div>
+      );
+    }
+  }
+
+  // Authorization expiry warning for the buyer (funds will be auto-captured if deadline passes)
+  if (!isSellerView && transaction.authorization_expires_at && ['pending', 'processing'].includes(transaction.status)) {
+    const authDeadline = new Date(transaction.authorization_expires_at);
+    const hoursLeft = Math.round((authDeadline.getTime() - now.getTime()) / 3600000);
+
+    if (hoursLeft > 0 && hoursLeft <= 48) {
+      return (
+        <div className="bg-orange-50 border border-orange-300 rounded-lg p-3 mb-3 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-orange-800 font-medium">
+            Vous avez jusqu'au <strong>{authDeadline.toLocaleDateString('fr-FR')}</strong> à {authDeadline.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} pour confirmer la réception. Passé ce délai, le paiement sera automatiquement finalisé.
+          </p>
+        </div>
+      );
+    }
+
+    if (hoursLeft > 48) {
+      return (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 flex items-start gap-2">
+          <Clock className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-blue-800">
+            Vous avez jusqu'au <strong>{authDeadline.toLocaleDateString('fr-FR')}</strong> pour confirmer la réception. Passé ce délai, le paiement sera automatiquement finalisé.
           </p>
         </div>
       );

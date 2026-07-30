@@ -483,6 +483,7 @@ export interface Database {
           shipping_status: string | null
           sendcloud_parcel_id: string | null
           sendcloud_method_id: number | null
+          authorization_expires_at: string | null
         }
         Insert: {
           id?: string
@@ -530,6 +531,7 @@ export interface Database {
           cancelled_by?: string | null
           sendcloud_parcel_id?: string | null
           sendcloud_method_id?: number | null
+          authorization_expires_at?: string | null
         }
         Update: {
           id?: string
@@ -577,6 +579,7 @@ export interface Database {
           cancelled_by?: string | null
           sendcloud_parcel_id?: string | null
           sendcloud_method_id?: number | null
+          authorization_expires_at?: string | null
         }
         Relationships: [
           {

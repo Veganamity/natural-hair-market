@@ -128,6 +128,15 @@ Deno.serve(async (req: Request) => {
     });
 
     const now = new Date();
+
+    // Determine whether the card issuer granted the extended authorization (up to 30 days).
+    // If granted, the authorization lasts ~30 days; otherwise it lasts ~7 days.
+    // We apply a 1-day safety margin in both cases (29 / 6 days).
+    const extendedAuthGranted =
+      (paymentIntent.payment_method_options?.card as any)?.request_extended_authorization === "enabled";
+    const authExpiryDays = extendedAuthGranted ? 29 : 6;
+    const authorizationExpiresAt = new Date(now.getTime() + authExpiryDays * 24 * 60 * 60 * 1000);
+
     const shippingDeadline = addBusinessDays(now, SHIPPING_DEADLINE_DAYS);
 
     const transactionData: Record<string, unknown> = {
@@ -145,6 +154,7 @@ Deno.serve(async (req: Request) => {
       capture_method: "manual",
       delivery_status: "pending",
       shipping_deadline_at: shippingDeadline.toISOString(),
+      authorization_expires_at: authorizationExpiresAt.toISOString(),
     };
 
     if (sellerProfile && (sellerProfile.address_line1 || sellerProfile.city)) {
