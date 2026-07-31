@@ -40,7 +40,6 @@ Deno.serve(async (req: Request) => {
   const stripe = new Stripe(stripeSecretKey, { apiVersion: "2024-12-18.acacia" });
 
   const now = new Date();
-  const within24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
   const results: { captured: string[]; cancelled: string[]; errors: string[] } = {
     captured: [],
@@ -49,21 +48,20 @@ Deno.serve(async (req: Request) => {
   };
 
   try {
-    // Find transactions whose authorization expires within 24h
+    // Find transactions whose auto_capture_at has passed
     const { data: expiring, error } = await supabase
       .from("transactions")
       .select(`
         id, listing_id, buyer_id, seller_id, stripe_payment_intent_id,
-        status, delivery_status, capture_method, authorization_expires_at,
+        status, delivery_status, capture_method, auto_capture_at, authorization_expires_at,
         listing:listings(title),
         buyer:profiles!transactions_buyer_id_fkey(email, full_name),
         seller:profiles!transactions_seller_id_fkey(email, full_name)
       `)
       .eq("capture_method", "manual")
       .in("status", ["pending", "processing"])
-      .not("authorization_expires_at", "is", null)
-      .lte("authorization_expires_at", within24h.toISOString())
-      .gt("authorization_expires_at", now.toISOString());
+      .not("auto_capture_at", "is", null)
+      .lte("auto_capture_at", now.toISOString());
 
     if (error) throw error;
     if (!expiring || expiring.length === 0) {

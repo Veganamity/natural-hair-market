@@ -11,6 +11,10 @@ const corsHeaders = {
 const MARKETPLACE_COMMISSION_RATE = 0.10;
 // Délai max pour expédier (jours ouvrables approximatifs)
 const SHIPPING_DEADLINE_DAYS = 5;
+// Délai de capture automatique : J+15 (conformité légale)
+const AUTO_CAPTURE_DAYS = 15;
+// Marge de sécurité avant l'expiration physique de l'autorisation Stripe
+const AUTH_SAFETY_MARGIN_DAYS = 1;
 
 function addBusinessDays(date: Date, days: number): Date {
   const result = new Date(date);
@@ -137,6 +141,12 @@ Deno.serve(async (req: Request) => {
     const authExpiryDays = extendedAuthGranted ? 29 : 6;
     const authorizationExpiresAt = new Date(now.getTime() + authExpiryDays * 24 * 60 * 60 * 1000);
 
+    // auto_capture_at = J+15, but never later than the Stripe auth expiry minus a 1-day safety margin.
+    // If the card doesn't support extended auth (~7-day window), we capture at J+6 to avoid losing the funds.
+    const idealCaptureDate = new Date(now.getTime() + AUTO_CAPTURE_DAYS * 24 * 60 * 60 * 1000);
+    const authCeiling = new Date(authorizationExpiresAt.getTime() - AUTH_SAFETY_MARGIN_DAYS * 24 * 60 * 60 * 1000);
+    const autoCaptureAt = idealCaptureDate < authCeiling ? idealCaptureDate : authCeiling;
+
     const shippingDeadline = addBusinessDays(now, SHIPPING_DEADLINE_DAYS);
 
     const transactionData: Record<string, unknown> = {
@@ -155,6 +165,7 @@ Deno.serve(async (req: Request) => {
       delivery_status: "pending",
       shipping_deadline_at: shippingDeadline.toISOString(),
       authorization_expires_at: authorizationExpiresAt.toISOString(),
+      auto_capture_at: autoCaptureAt.toISOString(),
     };
 
     if (sellerProfile && (sellerProfile.address_line1 || sellerProfile.city)) {
