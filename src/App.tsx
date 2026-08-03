@@ -158,6 +158,23 @@ function AppContent() {
   const [paymentSuccessMessage, setPaymentSuccessMessage] = useState<string | null>(null);
   const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
   const [headerSearch, setHeaderSearch] = useState('');
+  const [showProfileRequired, setShowProfileRequired] = useState(false);
+
+  const isProfileComplete = !!(
+    profile?.full_name?.trim() &&
+    profile?.phone?.trim() &&
+    profile?.address_line1?.trim() &&
+    profile?.postal_code?.trim() &&
+    profile?.city?.trim()
+  );
+
+  const handleCreateListingClick = () => {
+    if (!isProfileComplete) {
+      setShowProfileRequired(true);
+      return;
+    }
+    setShowCreateListing(true);
+  };
 
   useEffect(() => {
     const hashPart = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
@@ -713,7 +730,7 @@ function AppContent() {
 
               {/* Seller CTA — amber to stand out */}
               <button
-                onClick={() => setShowCreateListing(true)}
+                onClick={handleCreateListingClick}
                 className="ml-2 px-3 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm shadow-sm whitespace-nowrap flex-shrink-0"
               >
                 <Scissors className="w-4 h-4 flex-shrink-0" />
@@ -837,7 +854,7 @@ function AppContent() {
                 {t('nav.profile')}
               </button>
               <button
-                onClick={() => { setShowCreateListing(true); setMobileMenuOpen(false); }}
+                onClick={() => { handleCreateListingClick(); setMobileMenuOpen(false); }}
                 className="w-full px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors flex items-center gap-2"
               >
                 <Scissors className="w-5 h-5" />
@@ -914,7 +931,7 @@ function AppContent() {
         {currentView === 'refund' && <RefundPolicy />}
         {currentView === 'safety' && <SafetyQuality />}
         {currentView === 'seller-rules' && <SellerRules />}
-        {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={() => setShowCreateListing(true)} onNavigate={(view) => navigateToView(view as ViewName)} />}
+        {currentView === 'sell-my-hair' && <SellMyHair onStartSelling={handleCreateListingClick} onNavigate={(view) => navigateToView(view as ViewName)} />}
         {currentView === 'buyer-rules' && <BuyerRules />}
         {currentView === 'faq' && <FAQ onNavigate={(view) => navigateToView(view as ViewName)} />}
         {currentView === 'about' && <AboutUs onNavigate={(view) => navigateToView(view as ViewName)} />}
@@ -940,6 +957,10 @@ function AppContent() {
             setCurrentView('marketplace');
           }}
         />
+      )}
+
+      {showProfileRequired && (
+        <ProfileCompletionModal onClose={() => setShowProfileRequired(false)} />
       )}
 
       <AppFooter onNavigate={(view) => navigateToView(view as ViewName)} />

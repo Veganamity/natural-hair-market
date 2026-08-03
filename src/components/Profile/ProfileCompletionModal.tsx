@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { COUNTRIES } from '../../lib/countries';
-import { User, MapPin, Phone, Building2, ChevronRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { User, MapPin, Phone, Building2, ChevronRight, CheckCircle, AlertCircle, X } from 'lucide-react';
 
-export function ProfileCompletionModal() {
+export function ProfileCompletionModal({ onClose }: { onClose?: () => void }) {
   const { user, refreshProfile } = useAuth();
   const [step, setStep] = useState<1 | 2>(1);
   const [saving, setSaving] = useState(false);
@@ -63,6 +63,7 @@ export function ProfileCompletionModal() {
 
     await refreshProfile();
     setSaving(false);
+    onClose?.();
   };
 
   return (
@@ -76,7 +77,14 @@ export function ProfileCompletionModal() {
               <User className="w-7 h-7 text-white" />
             </div>
           </div>
-          <h2 className="text-xl font-bold text-center">Complétez votre profil</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-center flex-1">Complétez votre profil</h2>
+            {onClose && (
+              <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
           <p className="text-emerald-100 text-sm text-center mt-1">
             Ces informations sont nécessaires pour acheter et vendre sur la plateforme.
           </p>
