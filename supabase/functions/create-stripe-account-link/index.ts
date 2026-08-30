@@ -31,7 +31,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("stripe_account_id")
+      .select("stripe_account_id, first_name, last_name, phone, address_line1, address_line2, postal_code, city, country, siret")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -48,10 +48,26 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!accountId) {
+      const profileCountry = (profile.country as string) || "FR";
       const account = await stripe.accounts.create({
         type: "express",
-        country: "FR",
+        country: profileCountry,
         email: user.email,
+        business_type: "individual",
+        individual: {
+          first_name: profile.first_name || undefined,
+          last_name: profile.last_name || undefined,
+          email: user.email || undefined,
+          phone: profile.phone || undefined,
+          address: {
+            line1: profile.address_line1 || undefined,
+            line2: profile.address_line2 || undefined,
+            postal_code: profile.postal_code || undefined,
+            city: profile.city || undefined,
+            country: profileCountry,
+          },
+        },
+        business_profile: profile.siret ? { url: "https://naturalhairmarket.com" } : undefined,
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },

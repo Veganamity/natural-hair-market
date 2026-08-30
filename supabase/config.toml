@@ -1,0 +1,92 @@
+[functions.approve-salon-verification]
+verify_jwt = true
+
+[functions.auto-expire-transactions]
+verify_jwt = true
+
+[functions.cancel-payment]
+verify_jwt = true
+
+[functions.cancel-transaction]
+verify_jwt = true
+
+[functions.capture-expiring-payments]
+verify_jwt = true
+
+[functions.capture-payment]
+verify_jwt = true
+
+[functions.check-stripe-account-status]
+verify_jwt = true
+
+[functions.confirm-payment]
+verify_jwt = true
+
+[functions.create-account-session]
+verify_jwt = true
+
+[functions.create-cart-payment-intent]
+verify_jwt = true
+
+[functions.create-checkout-session]
+verify_jwt = true
+
+[functions.create-payment-intent]
+verify_jwt = true
+
+[functions.create-shipping-label]
+verify_jwt = true
+
+[functions.create-stripe-account-link]
+verify_jwt = true
+
+[functions.create-stripe-connect-account]
+verify_jwt = true
+
+[functions.create-stripe-login-link]
+verify_jwt = true
+
+[functions.download-shipping-label]
+verify_jwt = true
+
+[functions.get-my-salon-verification]
+verify_jwt = true
+
+[functions.get-salon-verifications]
+verify_jwt = true
+
+[functions.get-shipping-methods]
+verify_jwt = true
+
+[functions.listing-page]
+verify_jwt = false
+
+[functions.manage-saved-addresses]
+verify_jwt = true
+
+[functions.open-dispute]
+verify_jwt = true
+
+[functions.reject-salon-verification]
+verify_jwt = true
+
+[functions.resolve-dispute]
+verify_jwt = true
+
+[functions.revoke-salon-verification]
+verify_jwt = true
+
+[functions.search-mondial-relay-points]
+verify_jwt = true
+
+[functions.send-buyback-email]
+verify_jwt = true
+
+[functions.sitemap]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.submit-salon-verification]
+verify_jwt = true
