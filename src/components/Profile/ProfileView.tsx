@@ -787,8 +787,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         </div>
       )}
 
-      {(profile.stripe_account_id || listings.length > 0) && (
-        <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="bg-white rounded-xl shadow-md p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <CreditCard className="w-6 h-6 text-emerald-600" />
@@ -850,7 +849,6 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             </div>
           )}
         </div>
-      )}
 
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center gap-2 mb-6">
