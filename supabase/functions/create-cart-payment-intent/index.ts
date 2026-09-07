@@ -74,7 +74,23 @@ Deno.serve(async (req: Request) => {
       throw new Error("SELLER_NO_STRIPE: Le vendeur n'a pas configuré son compte de paiement Stripe.");
     }
 
-    if (sellerProfile.stripe_account_status !== "active") {
+    let sellerAccountActive = sellerProfile.stripe_account_status === "active";
+    if (!sellerAccountActive && sellerProfile.stripe_account_id) {
+      try {
+        const sellerAccount = await stripe.accounts.retrieve(sellerProfile.stripe_account_id);
+        sellerAccountActive = sellerAccount.charges_enabled === true;
+        if (sellerAccountActive && sellerProfile.stripe_account_status !== "active") {
+          await supabase
+            .from("profiles")
+            .update({ stripe_account_status: "active", stripe_onboarding_completed: true })
+            .eq("id", sellerId);
+        }
+      } catch (_err) {
+        // If we can't check, trust the cached status
+      }
+    }
+
+    if (!sellerAccountActive) {
       throw new Error(`SELLER_ACCOUNT_NOT_ACTIVE: Le compte Stripe du vendeur n'est pas actif (statut: ${sellerProfile.stripe_account_status || "inconnu"}).`);
     }
 

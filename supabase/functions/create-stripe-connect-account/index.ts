@@ -53,7 +53,16 @@ Deno.serve(async (req: Request) => {
 
     if (accountId) {
       try {
-        await stripe.accounts.retrieve(accountId);
+        const existingAccount = await stripe.accounts.retrieve(accountId);
+        if (existingAccount.business_profile?.url !== "https://naturalhairmarket.com") {
+          await stripe.accounts.update(accountId, {
+            business_profile: {
+              url: "https://naturalhairmarket.com",
+              mcc: "5969",
+              product_description: "Vente de cheveux naturels sur NaturalHairMarket",
+            },
+          });
+        }
       } catch (_err) {
         accountId = null;
       }
@@ -79,7 +88,11 @@ Deno.serve(async (req: Request) => {
             country: profileCountry,
           },
         },
-        business_profile: profile.siret ? { url: "https://naturalhairmarket.com" } : undefined,
+        business_profile: {
+          url: "https://naturalhairmarket.com",
+          mcc: "5969",
+          product_description: "Vente de cheveux naturels sur NaturalHairMarket",
+        },
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
