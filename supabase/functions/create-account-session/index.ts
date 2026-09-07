@@ -122,7 +122,10 @@ Deno.serve(async (req: Request) => {
     if (component === "account_onboarding") {
       componentsConfig.account_onboarding = {
         enabled: true,
-        features: { external_account_collection: true },
+        features: {
+          external_account_collection: true,
+          disable_stripe_user_authentication: true,
+        },
         collection_options: {
           fields: "eventually_due",
           requirements: {
@@ -133,7 +136,10 @@ Deno.serve(async (req: Request) => {
     } else if (component === "account_management") {
       componentsConfig.account_management = {
         enabled: true,
-        features: { external_account_collection: true },
+        features: {
+          external_account_collection: true,
+          disable_stripe_user_authentication: true,
+        },
       };
     } else if (component === "balances") {
       componentsConfig.balances = {
@@ -165,7 +171,10 @@ Deno.serve(async (req: Request) => {
     } else {
       componentsConfig.account_onboarding = {
         enabled: true,
-        features: { external_account_collection: true },
+        features: {
+          external_account_collection: true,
+          disable_stripe_user_authentication: true,
+        },
         collection_options: {
           fields: "eventually_due",
           requirements: {
