@@ -40,6 +40,13 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [fixingStripe, setFixingStripe] = useState(false);
   const [fixStripeResult, setFixStripeResult] = useState<string | null>(null);
+  const [fixStripeDetails, setFixStripeDetails] = useState<Array<{
+    accountId: string;
+    status: string;
+    requirements: string[];
+    disabledReason?: string | null;
+    error?: string;
+  }> | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -274,6 +281,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const handleFixStripeAccounts = async () => {
     setFixingStripe(true);
     setFixStripeResult(null);
+    setFixStripeDetails(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Session expirée');
@@ -287,7 +295,8 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-      setFixStripeResult(`${data.processed} comptes traités avec succès.`);
+      setFixStripeResult(`${data.processed} comptes traités.`);
+      setFixStripeDetails(data.results || []);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       setFixStripeResult(`Erreur: ${message}`);
@@ -822,7 +831,49 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 Corriger les comptes Stripe
               </button>
               {fixStripeResult && (
-                <p className="text-sm text-gray-700 mt-1">{fixStripeResult}</p>
+                <div className="mt-3 space-y-2">
+                  <p className="text-sm text-gray-700">{fixStripeResult}</p>
+                  {fixStripeDetails && fixStripeDetails.length > 0 && (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {fixStripeDetails.map((r, i) => (
+                        <div key={i} className={`text-xs p-2 rounded-lg ${
+                          r.status === 'active' ? 'bg-green-50 border border-green-200'
+                          : r.status === 'error' ? 'bg-red-50 border border-red-200'
+                          : 'bg-amber-50 border border-amber-200'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-gray-600">{r.accountId}</span>
+                            <span className={`font-semibold ${
+                              r.status === 'active' ? 'text-green-700'
+                              : r.status === 'error' ? 'text-red-700'
+                              : 'text-amber-700'
+                            }`}>
+                              {r.status === 'active' ? 'Actif'
+                              : r.status === 'error' ? 'Erreur'
+                              : r.status === 'incomplete' ? 'Incomplet'
+                              : 'En attente'}
+                            </span>
+                          </div>
+                          {r.requirements.length > 0 && (
+                            <div className="mt-1 text-gray-600">
+                              <span className="font-semibold">Informations manquantes : </span>
+                              {r.requirements.join(', ')}
+                            </div>
+                          )}
+                          {r.disabledReason && (
+                            <div className="mt-1 text-red-600">
+                              <span className="font-semibold">Raison du blocage : </span>
+                              {r.disabledReason}
+                            </div>
+                          )}
+                          {r.error && (
+                            <div className="mt-1 text-red-600">{r.error}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

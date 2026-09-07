@@ -63,7 +63,14 @@ Deno.serve(async (req: Request) => {
 
     if (error) throw new Error(`DB error: ${error.message}`);
 
-    const results: Array<{ accountId: string; status: string; updated: boolean; error?: string }> = [];
+    const results: Array<{
+      accountId: string;
+      status: string;
+      updated: boolean;
+      requirements: string[];
+      disabledReason?: string | null;
+      error?: string;
+    }> = [];
 
     for (const seller of sellers ?? []) {
       try {
@@ -97,11 +104,15 @@ Deno.serve(async (req: Request) => {
         const chargesEnabled = account.charges_enabled ?? false;
         const payoutsEnabled = account.payouts_enabled ?? false;
         const requirements = account.requirements?.currently_due ?? [];
+        const pastDue = account.requirements?.past_due ?? [];
+        const eventuallyDue = account.requirements?.eventually_due ?? [];
+        const allRequirements = [...requirements, ...pastDue, ...eventuallyDue];
+        const disabledReason = account.requirements?.disabled_reason ?? null;
 
         let newStatus: string;
         if (chargesEnabled && payoutsEnabled) {
           newStatus = "active";
-        } else if (requirements.length > 0) {
+        } else if (allRequirements.length > 0) {
           newStatus = "incomplete";
         } else {
           newStatus = "pending";
@@ -115,10 +126,23 @@ Deno.serve(async (req: Request) => {
           })
           .eq("id", seller.id);
 
-        results.push({ accountId: seller.stripe_account_id, status: newStatus, updated: true });
+        results.push({
+          accountId: seller.stripe_account_id,
+          status: newStatus,
+          updated: true,
+          requirements: allRequirements,
+          disabledReason,
+        });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Unknown error";
-        results.push({ accountId: seller.stripe_account_id, status: "error", updated: false, error: msg });
+        results.push({
+          accountId: seller.stripe_account_id,
+          status: "error",
+          updated: false,
+          requirements: [],
+          disabledReason: null,
+          error: msg,
+        });
       }
     }
 
