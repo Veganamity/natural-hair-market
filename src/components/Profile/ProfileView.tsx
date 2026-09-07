@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
 import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors, AlertOctagon, X } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
-import { StripeOnboardingModal, StripeConnectEmbedded } from '../Stripe/StripeConnectEmbedded';
+import { Loader2 } from 'lucide-react';
 import { COUNTRIES } from '../../lib/countries';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
@@ -36,8 +36,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     siret: '',
   });
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
-  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
-  const [showStripeManagement, setShowStripeManagement] = useState(false);
+  const [stripeLoading, setStripeLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   useEffect(() => {
     fetchProfile();
@@ -239,13 +238,70 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     }
   };
 
-  const handleOnboardingComplete = async () => {
-    await fetchProfile();
-    setShowOnboardingModal(false);
+  const handleStartOnboarding = async () => {
+    if (!user) return;
+    setStripeLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Session expirée');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-account-link`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erreur lors de la création du lien');
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (err: any) {
+      console.error('Onboarding error:', err);
+      setError(err.message || 'Erreur lors de la connexion à Stripe');
+      setStripeLoading(false);
+    }
   };
 
-  const handleOpenStripeManagement = () => {
-    setShowStripeManagement(true);
+  const handleOpenStripeDashboard = async () => {
+    if (!user) return;
+    setStripeLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Session expirée');
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-login-link`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Erreur lors de la création du lien');
+      }
+
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (err: any) {
+      console.error('Dashboard link error:', err);
+      setError(err.message || 'Erreur lors de la connexion à Stripe');
+      setStripeLoading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -334,33 +390,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           }}
         />
       )}
-      {showOnboardingModal && (
-        <StripeOnboardingModal
-          onComplete={handleOnboardingComplete}
-          onClose={() => setShowOnboardingModal(false)}
-        />
-      )}
-      {showStripeManagement && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
-              <h3 className="text-lg font-bold text-gray-900">Gestion du compte bancaire</h3>
-              <button
-                onClick={() => { setShowStripeManagement(false); fetchProfile(); }}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6">
-              <StripeConnectEmbedded
-                component="account_management"
-                onClose={() => { setShowStripeManagement(false); fetchProfile(); }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+
       <div className="space-y-6">
       {saveSuccess && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
@@ -812,12 +842,12 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 Votre compte bancaire est configuré. Vous pouvez recevoir des paiements pour vos ventes.
               </p>
               <button
-                onClick={handleOpenStripeManagement}
-                disabled={loading}
+                onClick={handleOpenStripeDashboard}
+                disabled={stripeLoading}
                 className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                {stripeLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <CreditCard className="w-5 h-5" />
                 )}
@@ -840,10 +870,15 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 </ul>
               </div>
               <button
-                onClick={() => setShowOnboardingModal(true)}
-                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                onClick={handleStartOnboarding}
+                disabled={stripeLoading}
+                className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
-                <CreditCard className="w-5 h-5" />
+                {stripeLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <CreditCard className="w-5 h-5" />
+                )}
                 Configurer mon compte bancaire
               </button>
             </div>

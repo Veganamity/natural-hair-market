@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
 import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart, Wallet, BarChart2, ChevronDown, ChevronUp, Download, Loader2, AlertCircle } from 'lucide-react';
-import { StripeConnectEmbedded } from '../Stripe/StripeConnectEmbedded';
+
 import { downloadInvoicePDF } from '../../lib/invoiceGenerator';
 
 type Transaction = Database['public']['Tables']['transactions']['Row'];
@@ -300,7 +300,18 @@ export function TransactionsView() {
               </button>
               {showBalances && (
                 <div className="border-t border-gray-100 p-4">
-                  <StripeConnectEmbedded component="balances" />
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 mb-4">Consultez votre solde et vos virements directement sur votre tableau de bord Stripe.</p>
+                    <a
+                      href="https://dashboard.stripe.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                    >
+                      <Wallet className="w-5 h-5" />
+                      Ouvrir mon tableau de bord Stripe
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
@@ -323,7 +334,18 @@ export function TransactionsView() {
               </button>
               {showPayments && (
                 <div className="border-t border-gray-100 p-4">
-                  <StripeConnectEmbedded component="payments" />
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 mb-4">Consultez le detail de vos paiements directement sur votre tableau de bord Stripe.</p>
+                    <a
+                      href="https://dashboard.stripe.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                    >
+                      <BarChart2 className="w-5 h-5" />
+                      Ouvrir mon tableau de bord Stripe
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
