@@ -67,6 +67,7 @@ Deno.serve(async (req: Request) => {
       accountId: string;
       status: string;
       updated: boolean;
+      replaced: boolean;
       requirements: string[];
       disabledReason?: string | null;
       error?: string;
@@ -74,35 +75,81 @@ Deno.serve(async (req: Request) => {
 
     for (const seller of sellers ?? []) {
       try {
-        await stripe.accounts.retrieve(seller.stripe_account_id);
+        const account = await stripe.accounts.retrieve(seller.stripe_account_id);
 
-        const updatePayload: Stripe.AccountUpdateParams = {
-          business_type: "individual",
-          business_profile: {
-            url: "https://naturalhairmarket.com",
-            mcc: "5969",
-            product_description: "Vente de cheveux naturels sur NaturalHairMarket",
-          },
-        };
+        let accountId = seller.stripe_account_id;
+        let replaced = false;
 
-        if (seller.first_name || seller.last_name) {
-          updatePayload.individual = {
-            first_name: seller.first_name || undefined,
-            last_name: seller.last_name || undefined,
-            phone: seller.phone || undefined,
-            address: {
-              line1: seller.address_line1 || undefined,
-              line2: seller.address_line2 || undefined,
-              postal_code: seller.postal_code || undefined,
-              city: seller.city || undefined,
-              country: seller.country || "FR",
+        if (account.business_type !== "individual") {
+          const profileCountry = (seller.country as string) || "FR";
+          const newAccount = await stripe.accounts.create({
+            type: "express",
+            country: profileCountry,
+            email: seller.email || undefined,
+            business_type: "individual",
+            individual: {
+              first_name: seller.first_name || undefined,
+              last_name: seller.last_name || undefined,
+              email: seller.email || undefined,
+              phone: seller.phone || undefined,
+              address: {
+                line1: seller.address_line1 || undefined,
+                line2: seller.address_line2 || undefined,
+                postal_code: seller.postal_code || undefined,
+                city: seller.city || undefined,
+                country: profileCountry,
+              },
+            },
+            business_profile: {
+              url: "https://naturalhairmarket.com",
+              mcc: "5969",
+              product_description: "Vente de cheveux naturels sur NaturalHairMarket",
+            },
+            capabilities: {
+              card_payments: { requested: true },
+              transfers: { requested: true },
+            },
+          });
+
+          accountId = newAccount.id;
+          replaced = true;
+
+          await supabase
+            .from("profiles")
+            .update({
+              stripe_account_id: accountId,
+              stripe_account_status: "pending",
+              stripe_onboarding_completed: false,
+            })
+            .eq("id", seller.id);
+        } else {
+          const updatePayload: Stripe.AccountUpdateParams = {
+            business_profile: {
+              url: "https://naturalhairmarket.com",
+              mcc: "5969",
+              product_description: "Vente de cheveux naturels sur NaturalHairMarket",
             },
           };
+
+          if (seller.first_name || seller.last_name) {
+            updatePayload.individual = {
+              first_name: seller.first_name || undefined,
+              last_name: seller.last_name || undefined,
+              phone: seller.phone || undefined,
+              address: {
+                line1: seller.address_line1 || undefined,
+                line2: seller.address_line2 || undefined,
+                postal_code: seller.postal_code || undefined,
+                city: seller.city || undefined,
+                country: seller.country || "FR",
+              },
+            };
+          }
+
+          await stripe.accounts.update(accountId, updatePayload);
         }
 
-        await stripe.accounts.update(seller.stripe_account_id, updatePayload);
-
-        const updatedAccount = await stripe.accounts.retrieve(seller.stripe_account_id);
+        const updatedAccount = await stripe.accounts.retrieve(accountId);
         const chargesEnabled = updatedAccount.charges_enabled ?? false;
         const payoutsEnabled = updatedAccount.payouts_enabled ?? false;
         const requirements = updatedAccount.requirements?.currently_due ?? [];
@@ -129,9 +176,10 @@ Deno.serve(async (req: Request) => {
           .eq("id", seller.id);
 
         results.push({
-          accountId: seller.stripe_account_id,
+          accountId,
           status: newStatus,
           updated: true,
+          replaced,
           requirements: allRequirements,
           disabledReason,
         });
@@ -141,6 +189,7 @@ Deno.serve(async (req: Request) => {
           accountId: seller.stripe_account_id,
           status: "error",
           updated: false,
+          replaced: false,
           requirements: [],
           disabledReason: null,
           error: msg,

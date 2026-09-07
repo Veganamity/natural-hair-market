@@ -54,7 +54,6 @@ Deno.serve(async (req: Request) => {
     if (accountId) {
       try {
         await stripe.accounts.update(accountId, {
-          business_type: "individual",
           business_profile: {
             url: "https://naturalhairmarket.com",
             mcc: "5969",
