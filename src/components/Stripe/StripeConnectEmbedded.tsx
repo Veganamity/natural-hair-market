@@ -141,6 +141,12 @@ export function StripeConnectEmbedded({
       <ConnectComponentsProvider connectInstance={stripeConnectInstance}>
         {component === 'onboarding' && (
           <ConnectAccountOnboarding
+            collectionOptions={{
+              fields: 'eventually_due',
+              requirements: {
+                exclude: ['business_type', 'summary_business_type'],
+              },
+            }}
             onExit={() => {
               onOnboardingComplete?.();
               onClose?.();

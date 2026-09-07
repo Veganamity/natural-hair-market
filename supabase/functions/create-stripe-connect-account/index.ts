@@ -116,6 +116,12 @@ Deno.serve(async (req: Request) => {
           features: {
             external_account_collection: true,
           },
+          collection_options: {
+            fields: "eventually_due",
+            requirements: {
+              exclude: ["business_type", "summary_business_type"],
+            },
+          },
         },
       },
     });
