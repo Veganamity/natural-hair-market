@@ -58,13 +58,14 @@ Deno.serve(async (req: Request) => {
 
     const { data: sellers, error } = await supabase
       .from("profiles")
-      .select("id, stripe_account_id, stripe_account_status, first_name, last_name, phone, address_line1, address_line2, postal_code, city, country, email")
+      .select("id, stripe_account_id, stripe_account_status, email")
       .not("stripe_account_id", "is", null);
 
     if (error) throw new Error(`DB error: ${error.message}`);
 
     const results: Array<{
       accountId: string;
+      email: string | null;
       status: string;
       updated: boolean;
       requirements: string[];
@@ -74,24 +75,15 @@ Deno.serve(async (req: Request) => {
 
     for (const seller of sellers ?? []) {
       try {
-        const updatePayload: Stripe.AccountUpdateParams = {
-          business_profile: {
-            url: "https://naturalhairmarket.com",
-            mcc: "5969",
-            product_description: "Vente de cheveux naturels sur NaturalHairMarket",
-          },
-        };
+        const account = await stripe.accounts.retrieve(seller.stripe_account_id);
 
-        await stripe.accounts.update(seller.stripe_account_id, updatePayload);
-
-        const updatedAccount = await stripe.accounts.retrieve(seller.stripe_account_id);
-        const chargesEnabled = updatedAccount.charges_enabled ?? false;
-        const payoutsEnabled = updatedAccount.payouts_enabled ?? false;
-        const requirements = updatedAccount.requirements?.currently_due ?? [];
-        const pastDue = updatedAccount.requirements?.past_due ?? [];
-        const eventuallyDue = updatedAccount.requirements?.eventually_due ?? [];
+        const chargesEnabled = account.charges_enabled ?? false;
+        const payoutsEnabled = account.payouts_enabled ?? false;
+        const requirements = account.requirements?.currently_due ?? [];
+        const pastDue = account.requirements?.past_due ?? [];
+        const eventuallyDue = account.requirements?.eventually_due ?? [];
         const allRequirements = [...requirements, ...pastDue, ...eventuallyDue];
-        const disabledReason = updatedAccount.requirements?.disabled_reason ?? null;
+        const disabledReason = account.requirements?.disabled_reason ?? null;
 
         let newStatus: string;
         if (chargesEnabled && payoutsEnabled) {
@@ -112,6 +104,7 @@ Deno.serve(async (req: Request) => {
 
         results.push({
           accountId: seller.stripe_account_id,
+          email: seller.email,
           status: newStatus,
           updated: true,
           requirements: allRequirements,
@@ -119,8 +112,21 @@ Deno.serve(async (req: Request) => {
         });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Unknown error";
+
+        if (msg.includes("resource_missing") || msg.includes("No such account") || msg.includes("invalid")) {
+          await supabase
+            .from("profiles")
+            .update({
+              stripe_account_id: null,
+              stripe_account_status: "not_configured",
+              stripe_onboarding_completed: false,
+            })
+            .eq("id", seller.id);
+        }
+
         results.push({
           accountId: seller.stripe_account_id,
+          email: seller.email,
           status: "error",
           updated: false,
           requirements: [],

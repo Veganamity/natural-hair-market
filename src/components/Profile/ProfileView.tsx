@@ -42,6 +42,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const [fixStripeResult, setFixStripeResult] = useState<string | null>(null);
   const [fixStripeDetails, setFixStripeDetails] = useState<Array<{
     accountId: string;
+    email: string | null;
     status: string;
     requirements: string[];
     disabledReason?: string | null;
@@ -828,7 +829,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 ) : (
                   <CreditCard className="w-5 h-5" />
                 )}
-                Corriger les comptes Stripe
+                Synchroniser les statuts Stripe
               </button>
               {fixStripeResult && (
                 <div className="mt-3 space-y-2">
@@ -842,7 +843,10 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                           : 'bg-amber-50 border border-amber-200'
                         }`}>
                           <div className="flex items-center justify-between">
-                            <span className="font-mono text-gray-600">{r.accountId}</span>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-700">{r.email || 'N/A'}</span>
+                              <span className="font-mono text-gray-400 text-[10px]">{r.accountId}</span>
+                            </div>
                             <span className={`font-semibold ${
                               r.status === 'active' ? 'text-green-700'
                               : r.status === 'error' ? 'text-red-700'
