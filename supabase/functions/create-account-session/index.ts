@@ -61,7 +61,7 @@ Deno.serve(async (req: Request) => {
         const existingAccount = await stripe.accounts.retrieve(accountId);
         if (
           existingAccount.business_type !== "individual" ||
-          existingAccount.controller?.requirement_collection !== "application"
+          existingAccount.controller?.requirement_collection === "application"
         ) {
           accountId = null;
           await supabaseClient
@@ -84,18 +84,6 @@ Deno.serve(async (req: Request) => {
         country: "FR",
         email: user.email,
         business_type: "individual",
-        controller: {
-          stripe_dashboard: {
-            type: "none",
-          },
-          fees: {
-            payer: "application",
-          },
-          losses: {
-            payments: "application",
-          },
-          requirement_collection: "application",
-        },
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },

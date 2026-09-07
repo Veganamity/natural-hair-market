@@ -54,7 +54,7 @@ Deno.serve(async (req: Request) => {
     if (accountId) {
       try {
         const existingAccount = await stripe.accounts.retrieve(accountId);
-        if (existingAccount.business_type !== "individual") {
+        if (existingAccount.business_type !== "individual" || existingAccount.controller?.requirement_collection === "application") {
           accountId = null;
           await supabase
             .from("profiles")
