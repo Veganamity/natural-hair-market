@@ -38,6 +38,8 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [fixingStripe, setFixingStripe] = useState(false);
+  const [fixStripeResult, setFixStripeResult] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -266,6 +268,31 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       setError(`Impossible d'ouvrir la gestion Stripe: ${message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFixStripeAccounts = async () => {
+    setFixingStripe(true);
+    setFixStripeResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Session expirée');
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fix-stripe-accounts`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      setFixStripeResult(`${data.processed} comptes traités avec succès.`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      setFixStripeResult(`Erreur: ${message}`);
+    } finally {
+      setFixingStripe(false);
     }
   };
 
@@ -782,6 +809,21 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 <AlertOctagon className="w-5 h-5" />
                 Gestion des Litiges
               </button>
+              <button
+                onClick={handleFixStripeAccounts}
+                disabled={fixingStripe}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {fixingStripe ? (
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <CreditCard className="w-5 h-5" />
+                )}
+                Corriger les comptes Stripe
+              </button>
+              {fixStripeResult && (
+                <p className="text-sm text-gray-700 mt-1">{fixStripeResult}</p>
+              )}
             </div>
           </div>
         </div>
