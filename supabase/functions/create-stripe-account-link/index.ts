@@ -59,6 +59,7 @@ Deno.serve(async (req: Request) => {
         type: "express",
         country: profileCountry,
         email: user.email,
+        business_type: "individual",
         business_profile: {
           url: "https://naturalhairmarket.com",
           mcc: "5969",
