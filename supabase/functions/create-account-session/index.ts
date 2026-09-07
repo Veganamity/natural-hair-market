@@ -72,10 +72,6 @@ Deno.serve(async (req: Request) => {
               stripe_onboarding_completed: false,
             })
             .eq("id", user.id);
-        } else {
-          await stripe.accounts.update(accountId, {
-            business_type: "individual",
-          });
         }
       } catch (_err) {
         accountId = null;

@@ -54,7 +54,6 @@ Deno.serve(async (req: Request) => {
             .eq("id", user.id);
         } else {
           await stripe.accounts.update(accountId, {
-            business_type: "individual",
             business_profile: {
               url: "https://naturalhairmarket.com",
               mcc: "5969",
@@ -107,14 +106,7 @@ Deno.serve(async (req: Request) => {
       type: "account_onboarding",
     });
 
-    await stripe.accounts.update(accountId, {
-      business_type: "individual",
-      business_profile: {
-        url: "https://naturalhairmarket.com",
-        mcc: "5969",
-        product_description: "Vente de cheveux naturels sur NaturalHairMarket",
-      },
-    });
+
 
     return new Response(
       JSON.stringify({ url: accountLink.url, accountId }),
