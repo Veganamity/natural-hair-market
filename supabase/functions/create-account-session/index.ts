@@ -59,7 +59,10 @@ Deno.serve(async (req: Request) => {
     if (accountId) {
       try {
         const existingAccount = await stripe.accounts.retrieve(accountId);
-        if (existingAccount.controller?.requirement_collection !== "application") {
+        if (
+          existingAccount.business_type !== "individual" ||
+          existingAccount.controller?.requirement_collection !== "application"
+        ) {
           accountId = null;
           await supabaseClient
             .from("profiles")
@@ -77,8 +80,10 @@ Deno.serve(async (req: Request) => {
 
     if (!accountId) {
       const account = await stripe.accounts.create({
+        type: "express",
         country: "FR",
         email: user.email,
+        business_type: "individual",
         controller: {
           stripe_dashboard: {
             type: "none",
