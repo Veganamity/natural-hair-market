@@ -42,7 +42,7 @@ Deno.serve(async (req: Request) => {
     if (accountId) {
       try {
         const existingAccount = await stripe.accounts.retrieve(accountId);
-        if (existingAccount.business_type !== "individual") {
+        if (existingAccount.business_type !== "individual" || existingAccount.controller?.requirement_collection === "application") {
           accountId = null;
           await supabase
             .from("profiles")
@@ -54,12 +54,13 @@ Deno.serve(async (req: Request) => {
             .eq("id", user.id);
         } else {
           await stripe.accounts.update(accountId, {
-          business_profile: {
-            url: "https://naturalhairmarket.com",
-            mcc: "5969",
-            product_description: "Vente de cheveux naturels sur NaturalHairMarket",
-          },
-        });
+            business_type: "individual",
+            business_profile: {
+              url: "https://naturalhairmarket.com",
+              mcc: "5969",
+              product_description: "Vente de cheveux naturels sur NaturalHairMarket",
+            },
+          });
         }
       } catch (_err) {
         accountId = null;
@@ -104,6 +105,21 @@ Deno.serve(async (req: Request) => {
       refresh_url: refreshUrl || `${Deno.env.get("FRONTEND_URL") || "https://naturalhairmarket.com"}/profile?stripe_refresh=true`,
       return_url: returnUrl || `${Deno.env.get("FRONTEND_URL") || "https://naturalhairmarket.com"}/profile?stripe_onboarding=success`,
       type: "account_onboarding",
+      collection_options: {
+        fields: 'eventually_due',
+        features: {
+          external_account_collection: true,
+        },
+      },
+    });
+
+    await stripe.accounts.update(accountId, {
+      business_type: "individual",
+      business_profile: {
+        url: "https://naturalhairmarket.com",
+        mcc: "5969",
+        product_description: "Vente de cheveux naturels sur NaturalHairMarket",
+      },
     });
 
     return new Response(

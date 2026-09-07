@@ -37,6 +37,23 @@ Deno.serve(async (req: Request) => {
 
     if (!profile?.stripe_account_id) throw new Error("Aucun compte Stripe associé");
 
+    const account = await stripe.accounts.retrieve(profile.stripe_account_id);
+    if (account.business_type !== "individual" || account.controller?.requirement_collection === "application") {
+      await supabase
+        .from("profiles")
+        .update({
+          stripe_account_id: null,
+          stripe_account_status: "pending",
+          stripe_onboarding_completed: false,
+        })
+        .eq("id", user.id);
+      throw new Error("Votre compte Stripe doit être reconfiguré. Veuillez cliquer sur Configurer mon compte bancaire.");
+    }
+
+    await stripe.accounts.update(profile.stripe_account_id, {
+      business_type: "individual",
+    });
+
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://naturalhairmarket.netlify.app";
     const returnUrl = `${frontendUrl}/profile?stripe_onboarding=success`;
     const refreshUrl = `${frontendUrl}/profile?stripe_refresh=true`;
@@ -46,6 +63,12 @@ Deno.serve(async (req: Request) => {
       refresh_url: refreshUrl,
       return_url: returnUrl,
       type: "account_onboarding",
+      collection_options: {
+        fields: 'eventually_due',
+        features: {
+          external_account_collection: true,
+        },
+      },
     });
 
     return new Response(
