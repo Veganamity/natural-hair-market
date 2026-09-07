@@ -169,49 +169,11 @@ interface StripeOnboardingModalProps {
   onClose: () => void;
 }
 
-export function StripeOnboardingModal({ onClose }: StripeOnboardingModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleStartOnboarding = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Non authentifié');
-
-      const returnUrl = `${window.location.origin}${window.location.pathname}?stripe_onboarding=success`;
-      const refreshUrl = `${window.location.origin}${window.location.pathname}?stripe_refresh=true`;
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-account-link`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ returnUrl, refreshUrl }),
-        }
-      );
-
-      const data = await response.json();
-      if (!response.ok || !data.url) {
-        throw new Error(data.error || 'Impossible de générer le lien de configuration');
-      }
-
-      window.location.href = data.url;
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erreur inconnue';
-      setError(message);
-      setLoading(false);
-    }
-  };
-
+export function StripeOnboardingModal({ onComplete, onClose }: StripeOnboardingModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Configuration du compte vendeur</h3>
             <p className="text-xs text-gray-500 mt-0.5">Renseignez vos informations pour recevoir vos paiements</p>
@@ -224,8 +186,8 @@ export function StripeOnboardingModal({ onClose }: StripeOnboardingModalProps) {
           </button>
         </div>
 
-        <div className="p-6 space-y-4">
-          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
+        <div className="p-6">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2 mb-4">
             <p className="text-sm font-semibold text-emerald-800">Documents requis par Stripe :</p>
             <ul className="text-sm text-emerald-700 space-y-1 list-disc list-inside">
               <li>Pièce d'identité (CNI ou passeport)</li>
@@ -233,37 +195,11 @@ export function StripeOnboardingModal({ onClose }: StripeOnboardingModalProps) {
               <li>Informations personnelles</li>
             </ul>
           </div>
-
-          <p className="text-sm text-gray-600">
-            Vous allez être redirigé vers Stripe pour configurer votre compte vendeur en toute sécurité.
-            Une fois terminé, vous serez renvoyé automatiquement sur cette page.
-          </p>
-
-          {error && (
-            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handleStartOnboarding}
-              disabled={loading}
-              className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : null}
-              {loading ? 'Redirection...' : 'Configurer avec Stripe'}
-            </button>
-          </div>
+          <StripeConnectEmbedded
+            component="onboarding"
+            onOnboardingComplete={onComplete}
+            onClose={onClose}
+          />
         </div>
       </div>
     </div>
