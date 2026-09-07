@@ -44,7 +44,7 @@ Deno.serve(async (req: Request) => {
             .select("email")
             .eq("id", user.id)
             .maybeSingle();
-          const adminEmails = ["naturalhairmarket@gmail.com"];
+          const adminEmails = ["naturalhairmarket@gmail.com", "stephaniebuisson1115@gmail.com"];
           if (callerProfile && adminEmails.includes(callerProfile.email?.toLowerCase() ?? "")) {
             isAuthorized = true;
           }
