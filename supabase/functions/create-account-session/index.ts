@@ -126,12 +126,6 @@ Deno.serve(async (req: Request) => {
           external_account_collection: true,
           disable_stripe_user_authentication: true,
         },
-        collection_options: {
-          fields: "eventually_due",
-          requirements: {
-            exclude: ["business_type", "summary_business_type"],
-          },
-        },
       };
     } else if (component === "account_management") {
       componentsConfig.account_management = {
@@ -174,12 +168,6 @@ Deno.serve(async (req: Request) => {
         features: {
           external_account_collection: true,
           disable_stripe_user_authentication: true,
-        },
-        collection_options: {
-          fields: "eventually_due",
-          requirements: {
-            exclude: ["business_type", "summary_business_type"],
-          },
         },
       };
     }
