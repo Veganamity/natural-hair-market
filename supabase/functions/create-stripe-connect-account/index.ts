@@ -71,19 +71,6 @@ Deno.serve(async (req: Request) => {
         type: "express",
         country: profileCountry,
         email: user.email,
-        individual: {
-          first_name: profile.first_name || undefined,
-          last_name: profile.last_name || undefined,
-          email: user.email || undefined,
-          phone: profile.phone || undefined,
-          address: {
-            line1: profile.address_line1 || undefined,
-            line2: profile.address_line2 || undefined,
-            postal_code: profile.postal_code || undefined,
-            city: profile.city || undefined,
-            country: profileCountry,
-          },
-        },
         business_profile: {
           url: "https://naturalhairmarket.com",
           mcc: "5969",

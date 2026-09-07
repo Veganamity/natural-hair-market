@@ -82,21 +82,6 @@ Deno.serve(async (req: Request) => {
           },
         };
 
-        if (seller.first_name || seller.last_name) {
-          updatePayload.individual = {
-            first_name: seller.first_name || undefined,
-            last_name: seller.last_name || undefined,
-            phone: seller.phone || undefined,
-            address: {
-              line1: seller.address_line1 || undefined,
-              line2: seller.address_line2 || undefined,
-              postal_code: seller.postal_code || undefined,
-              city: seller.city || undefined,
-              country: seller.country || "FR",
-            },
-          };
-        }
-
         await stripe.accounts.update(seller.stripe_account_id, updatePayload);
 
         const updatedAccount = await stripe.accounts.retrieve(seller.stripe_account_id);
