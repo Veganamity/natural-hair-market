@@ -63,12 +63,6 @@ Deno.serve(async (req: Request) => {
       refresh_url: refreshUrl,
       return_url: returnUrl,
       type: "account_onboarding",
-      collection_options: {
-        fields: 'eventually_due',
-        features: {
-          external_account_collection: true,
-        },
-      },
     });
 
     return new Response(
