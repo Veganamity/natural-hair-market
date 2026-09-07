@@ -71,7 +71,6 @@ Deno.serve(async (req: Request) => {
         type: "express",
         country: profileCountry,
         email: user.email,
-        business_type: "individual",
         individual: {
           first_name: profile.first_name || undefined,
           last_name: profile.last_name || undefined,

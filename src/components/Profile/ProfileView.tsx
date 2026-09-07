@@ -43,7 +43,6 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const [fixStripeDetails, setFixStripeDetails] = useState<Array<{
     accountId: string;
     status: string;
-    replaced: boolean;
     requirements: string[];
     disabledReason?: string | null;
     error?: string;
@@ -844,23 +843,16 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                         }`}>
                           <div className="flex items-center justify-between">
                             <span className="font-mono text-gray-600">{r.accountId}</span>
-                            <div className="flex items-center gap-2">
-                              {r.replaced && (
-                                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
-                                  Nouveau compte
-                                </span>
-                              )}
-                              <span className={`font-semibold ${
-                                r.status === 'active' ? 'text-green-700'
-                                : r.status === 'error' ? 'text-red-700'
-                                : 'text-amber-700'
-                              }`}>
-                                {r.status === 'active' ? 'Actif'
-                                : r.status === 'error' ? 'Erreur'
-                                : r.status === 'incomplete' ? 'Incomplet'
-                                : 'En attente'}
-                              </span>
-                            </div>
+                            <span className={`font-semibold ${
+                              r.status === 'active' ? 'text-green-700'
+                              : r.status === 'error' ? 'text-red-700'
+                              : 'text-amber-700'
+                            }`}>
+                              {r.status === 'active' ? 'Actif'
+                              : r.status === 'error' ? 'Erreur'
+                              : r.status === 'incomplete' ? 'Incomplet'
+                              : 'En attente'}
+                            </span>
                           </div>
                           {r.requirements.length > 0 && (
                             <div className="mt-1 text-gray-600">
