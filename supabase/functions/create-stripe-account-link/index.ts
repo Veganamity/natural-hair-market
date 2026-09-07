@@ -44,6 +44,7 @@ Deno.serve(async (req: Request) => {
         const existingAccount = await stripe.accounts.retrieve(accountId);
         if (existingAccount.business_profile?.url !== "https://naturalhairmarket.com") {
           await stripe.accounts.update(accountId, {
+            business_type: "individual",
             business_profile: {
               url: "https://naturalhairmarket.com",
               mcc: "5969",

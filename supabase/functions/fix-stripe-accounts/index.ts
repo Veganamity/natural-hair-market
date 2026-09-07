@@ -74,9 +74,10 @@ Deno.serve(async (req: Request) => {
 
     for (const seller of sellers ?? []) {
       try {
-        const account = await stripe.accounts.retrieve(seller.stripe_account_id);
+        await stripe.accounts.retrieve(seller.stripe_account_id);
 
         const updatePayload: Stripe.AccountUpdateParams = {
+          business_type: "individual",
           business_profile: {
             url: "https://naturalhairmarket.com",
             mcc: "5969",
@@ -101,13 +102,14 @@ Deno.serve(async (req: Request) => {
 
         await stripe.accounts.update(seller.stripe_account_id, updatePayload);
 
-        const chargesEnabled = account.charges_enabled ?? false;
-        const payoutsEnabled = account.payouts_enabled ?? false;
-        const requirements = account.requirements?.currently_due ?? [];
-        const pastDue = account.requirements?.past_due ?? [];
-        const eventuallyDue = account.requirements?.eventually_due ?? [];
+        const updatedAccount = await stripe.accounts.retrieve(seller.stripe_account_id);
+        const chargesEnabled = updatedAccount.charges_enabled ?? false;
+        const payoutsEnabled = updatedAccount.payouts_enabled ?? false;
+        const requirements = updatedAccount.requirements?.currently_due ?? [];
+        const pastDue = updatedAccount.requirements?.past_due ?? [];
+        const eventuallyDue = updatedAccount.requirements?.eventually_due ?? [];
         const allRequirements = [...requirements, ...pastDue, ...eventuallyDue];
-        const disabledReason = account.requirements?.disabled_reason ?? null;
+        const disabledReason = updatedAccount.requirements?.disabled_reason ?? null;
 
         let newStatus: string;
         if (chargesEnabled && payoutsEnabled) {
