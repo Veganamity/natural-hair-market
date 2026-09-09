@@ -56,7 +56,6 @@ Deno.serve(async (req: Request) => {
           await stripe.accounts.update(accountId, {
             business_profile: {
               url: "https://naturalhairmarket.com",
-              mcc: "5969",
               product_description: "Vente de cheveux naturels sur NaturalHairMarket",
             },
           });
@@ -75,7 +74,6 @@ Deno.serve(async (req: Request) => {
         business_type: "individual",
         business_profile: {
           url: "https://naturalhairmarket.com",
-          mcc: "5969",
           product_description: "Vente de cheveux naturels sur NaturalHairMarket",
         },
         capabilities: {
