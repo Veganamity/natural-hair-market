@@ -1,4 +1,4 @@
-import { X, Heart, CheckCircle, XCircle, ShoppingCart, Tag, Flag, BadgeCheck, Hash, Plus, Check } from 'lucide-react';
+import { X, Heart, CheckCircle, XCircle, ShoppingCart, Tag, Flag, BadgeCheck, Hash, Plus, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState, useEffect } from 'react';
@@ -36,10 +36,12 @@ export function ListingDetails({
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
   const [offerAmount, setOfferAmount] = useState('');
   const [isSubmittingOffer, setIsSubmittingOffer] = useState(false);
   const images = Array.isArray(listing.images) ? listing.images as string[] : [];
   const mainImage = images[0] || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg';
+  const lightboxImage = images[lightboxIdx] || mainImage;
 
   useEffect(() => {
     const fetchSeller = async () => {
@@ -148,8 +150,8 @@ export function ListingDetails({
             <img
               src={mainImage}
               alt={listing.title}
-              onClick={() => setShowImageModal(true)}
-              className="w-full h-32 md:h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => { setLightboxIdx(0); setShowImageModal(true); }}
+              className="w-full h-32 md:h-48 object-cover rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity"
             />
           </div>
 
@@ -425,20 +427,50 @@ export function ListingDetails({
       )}
 
       {showImageModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[60] p-4" onClick={() => setShowImageModal(false)}>
-          <div className="relative max-w-6xl w-full">
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[60] p-4" onClick={() => setShowImageModal(false)}>
+          <div className="relative max-w-5xl w-full">
             <button
               onClick={() => setShowImageModal(false)}
-              className="absolute top-2 right-2 bg-white rounded-full p-2 text-gray-800 hover:bg-gray-100 transition-colors z-10"
+              className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 rounded-full p-2 text-white transition-colors z-10"
             >
               <X className="w-6 h-6" />
             </button>
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i - 1 + images.length) % images.length); }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 rounded-full p-2.5 text-white transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i + 1) % images.length); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 rounded-full p-2.5 text-white transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
+            )}
             <img
-              src={mainImage}
+              src={lightboxImage}
               alt={listing.title}
-              className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
               onClick={(e) => e.stopPropagation()}
+              className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
             />
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={(e) => { e.stopPropagation(); setLightboxIdx(i); }}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      i === lightboxIdx ? 'bg-white scale-110' : 'bg-white/40 hover:bg-white/60'
+                    }`
+                    }
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

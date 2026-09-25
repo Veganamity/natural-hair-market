@@ -37,6 +37,7 @@ export function ListingPage({ listingId, onBack, onLoginClick }: ListingPageProp
   const [selectedImg, setSelectedImg] = useState(0);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showOfferModal, setShowOfferModal] = useState(false);
+  const [showLightbox, setShowLightbox] = useState(false);
   const [offerAmount, setOfferAmount] = useState('');
   const [isSubmittingOffer, setIsSubmittingOffer] = useState(false);
   const [offerError, setOfferError] = useState<string | null>(null);
@@ -168,12 +169,18 @@ export function ListingPage({ listingId, onBack, onLoginClick }: ListingPageProp
 
           {/* Image gallery */}
           <div className="space-y-3">
-            <div className="relative rounded-2xl overflow-hidden bg-white shadow-md aspect-square">
+            <div className="relative rounded-2xl overflow-hidden bg-white shadow-md aspect-square group">
               <img
                 src={mainImage}
                 alt={listing.title}
-                className="w-full h-full object-cover"
+                onClick={() => setShowLightbox(true)}
+                className="w-full h-full object-cover cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.02]"
               />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none flex items-center justify-center">
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 text-gray-700 text-xs font-medium px-3 py-1.5 rounded-full shadow">
+                  Cliquez pour agrandir
+                </span>
+              </div>
               {isSold && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <span className="bg-red-600 text-white text-xl font-bold px-6 py-2 rounded-full rotate-[-8deg] shadow-lg">
@@ -205,7 +212,7 @@ export function ListingPage({ listingId, onBack, onLoginClick }: ListingPageProp
                     key={i}
                     onClick={() => setSelectedImg(i)}
                     className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                      i === selectedImg ? 'border-emerald-500 shadow-md' : 'border-transparent opacity-70'
+                      i === selectedImg ? 'border-emerald-500 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
@@ -214,6 +221,56 @@ export function ListingPage({ listingId, onBack, onLoginClick }: ListingPageProp
               </div>
             )}
           </div>
+
+          {/* Lightbox */}
+          {showLightbox && (
+            <div
+              className="fixed inset-0 bg-black/95 flex items-center justify-center z-[80] p-4"
+              onClick={() => setShowLightbox(false)}
+            >
+              <button
+                onClick={() => setShowLightbox(false)}
+                className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 rounded-full p-2.5 text-white transition-colors z-10"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSelectedImg((i) => (i - 1 + images.length) % images.length); }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 rounded-full p-3 text-white transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSelectedImg((i) => (i + 1) % images.length); }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 rounded-full p-3 text-white transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </>
+              )}
+              <img
+                src={mainImage}
+                alt={listing.title}
+                onClick={(e) => e.stopPropagation()}
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              />
+              {images.length > 1 && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                  {images.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => { e.stopPropagation(); setSelectedImg(i); }}
+                      className={`w-2.5 h-2.5 rounded-full transition-all ${
+                        i === selectedImg ? 'bg-white scale-110' : 'bg-white/40 hover:bg-white/60'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Details */}
           <div className="space-y-5">
