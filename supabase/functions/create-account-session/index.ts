@@ -87,7 +87,7 @@ Deno.serve(async (req: Request) => {
               },
             },
             business_profile: {
-              product_description: "Vente de cheveux naturels entre particuliers sur NaturalHairMarket",
+              product_description: "Vente occasionnelle de cheveux personnels",
             },
           });
         }
@@ -116,7 +116,7 @@ Deno.serve(async (req: Request) => {
           },
         },
         business_profile: {
-          product_description: "Vente de cheveux naturels entre particuliers sur NaturalHairMarket",
+          product_description: "Vente occasionnelle de cheveux personnels",
         },
         capabilities: {
           card_payments: { requested: true },
