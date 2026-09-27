@@ -59,7 +59,13 @@ Deno.serve(async (req: Request) => {
       refresh_url: refreshUrl,
       return_url: returnUrl,
       type: "account_onboarding",
-    });
+      collection_options: {
+        fields: "currently_due",
+        requirements: {
+          exclude: ["business_type", "summary_business_type", "company.tax_id", "company.name", "company.address"],
+        },
+      },
+    } as Stripe.AccountLinkCreateParams);
 
     return new Response(
       JSON.stringify({ url: accountLink.url }),

@@ -124,7 +124,13 @@ Deno.serve(async (req: Request) => {
       refresh_url: refreshUrl || `${Deno.env.get("FRONTEND_URL") || "https://naturalhairmarket.com"}/profile?stripe_refresh=true`,
       return_url: returnUrl || `${Deno.env.get("FRONTEND_URL") || "https://naturalhairmarket.com"}/profile?stripe_onboarding=success`,
       type: "account_onboarding",
-    });
+      collection_options: {
+        fields: "currently_due",
+        requirements: {
+          exclude: ["business_type", "summary_business_type", "company.tax_id", "company.name", "company.address"],
+        },
+      },
+    } as Stripe.AccountLinkCreateParams);
 
 
 
