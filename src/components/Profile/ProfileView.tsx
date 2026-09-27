@@ -859,6 +859,14 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               <p className="text-gray-600">
                 Pour recevoir des paiements de vos ventes, configurez votre compte bancaire directement ici.
               </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm font-semibold text-blue-900">
+                  Configuration pour particuliers
+                </p>
+                <p className="text-sm text-blue-800 mt-1">
+                  Stripe utilise le mot « entreprise » pour tous les vendeurs, y compris les particuliers. Votre compte est configuré en « Entrepreneur individuel / Micro-entrepreneur / Auto-entrepreneur ». Aucun compte de société n’est créé.
+                </p>
+              </div>
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                 <p className="text-sm text-emerald-800">
                   <strong>Informations requises :</strong>
