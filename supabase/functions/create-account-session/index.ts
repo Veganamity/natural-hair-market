@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile } = await supabaseClient
       .from("profiles")
-      .select("stripe_account_id, stripe_account_status, stripe_onboarding_completed")
+      .select("stripe_account_id, stripe_account_status, stripe_onboarding_completed, first_name, last_name, phone, address_line1, address_line2, postal_code, city, country")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -72,6 +72,24 @@ Deno.serve(async (req: Request) => {
               stripe_onboarding_completed: false,
             })
             .eq("id", user.id);
+        } else {
+          await stripe.accounts.update(accountId, {
+            individual: {
+              first_name: profile.first_name || undefined,
+              last_name: profile.last_name || undefined,
+              phone: profile.phone || undefined,
+              address: {
+                line1: profile.address_line1 || undefined,
+                line2: profile.address_line2 || undefined,
+                postal_code: profile.postal_code || undefined,
+                city: profile.city || undefined,
+                country: (profile.country as string) || "FR",
+              },
+            },
+            business_profile: {
+              product_description: "Vente de cheveux naturels entre particuliers sur NaturalHairMarket",
+            },
+          });
         }
       } catch (_err) {
         accountId = null;
@@ -79,11 +97,27 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!accountId) {
+      const profileCountry = (profile.country as string) || "FR";
       const account = await stripe.accounts.create({
         type: "express",
-        country: "FR",
+        country: profileCountry,
         email: user.email,
         business_type: "individual",
+        individual: {
+          first_name: profile.first_name || undefined,
+          last_name: profile.last_name || undefined,
+          phone: profile.phone || undefined,
+          address: {
+            line1: profile.address_line1 || undefined,
+            line2: profile.address_line2 || undefined,
+            postal_code: profile.postal_code || undefined,
+            city: profile.city || undefined,
+            country: profileCountry,
+          },
+        },
+        business_profile: {
+          product_description: "Vente de cheveux naturels entre particuliers sur NaturalHairMarket",
+        },
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },

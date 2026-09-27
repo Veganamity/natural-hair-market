@@ -142,9 +142,9 @@ export function StripeConnectEmbedded({
         {component === 'onboarding' && (
           <ConnectAccountOnboarding
             collectionOptions={{
-              fields: 'eventually_due',
+              fields: 'currently_due',
               requirements: {
-                exclude: ['business_type', 'summary_business_type'],
+                exclude: ['business_type', 'summary_business_type', 'company.tax_id', 'company.name', 'company.address'],
               },
             }}
             onExit={() => {
