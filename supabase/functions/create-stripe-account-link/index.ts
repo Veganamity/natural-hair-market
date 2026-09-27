@@ -54,9 +54,20 @@ Deno.serve(async (req: Request) => {
             .eq("id", user.id);
         } else {
           await stripe.accounts.update(accountId, {
+            individual: {
+              first_name: profile.first_name || undefined,
+              last_name: profile.last_name || undefined,
+              phone: profile.phone || undefined,
+              address: {
+                line1: profile.address_line1 || undefined,
+                line2: profile.address_line2 || undefined,
+                postal_code: profile.postal_code || undefined,
+                city: profile.city || undefined,
+                country: (profile.country as string) || "FR",
+              },
+            },
             business_profile: {
-              url: "https://naturalhairmarket.com",
-              product_description: "Vente de cheveux naturels sur NaturalHairMarket",
+              product_description: "Vente de cheveux naturels entre particuliers sur NaturalHairMarket",
             },
           });
         }
@@ -72,9 +83,20 @@ Deno.serve(async (req: Request) => {
         country: profileCountry,
         email: user.email,
         business_type: "individual",
+        individual: {
+          first_name: profile.first_name || undefined,
+          last_name: profile.last_name || undefined,
+          phone: profile.phone || undefined,
+          address: {
+            line1: profile.address_line1 || undefined,
+            line2: profile.address_line2 || undefined,
+            postal_code: profile.postal_code || undefined,
+            city: profile.city || undefined,
+            country: profileCountry,
+          },
+        },
         business_profile: {
-          url: "https://naturalhairmarket.com",
-          product_description: "Vente de cheveux naturels sur NaturalHairMarket",
+          product_description: "Vente de cheveux naturels entre particuliers sur NaturalHairMarket",
         },
         capabilities: {
           card_payments: { requested: true },
