@@ -430,7 +430,6 @@ function AppContent() {
             listingId={listingPageId}
             onBack={() => navigateToView('marketplace')}
             onLoginClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
-            onBuyClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
           />
           <AppFooter onNavigate={(view) => navigateToView(view as ViewName)} />
         </div>

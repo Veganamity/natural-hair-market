@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Info } from 'lucide-react';
 import { GoogleButton } from './GoogleButton';
 
 interface SignUpFormProps {
@@ -37,6 +37,23 @@ export function SignUpForm({ onToggleMode }: SignUpFormProps) {
       </div>
       <h2 className="text-3xl font-bold text-center mb-2 text-gray-800">{t('auth.signUp')}</h2>
       <p className="text-center text-gray-600 mb-6">{t('auth.createAccount')}</p>
+
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="text-sm text-amber-900 font-semibold">Informations importantes pour les vendeurs</p>
+            <p className="text-sm text-amber-800">
+              Sans informations bancaires configurées, vous ne pourrez pas recevoir d'offres sur vos annonces.
+              Pensez à configurer votre compte bancaire après inscription.
+            </p>
+            <p className="text-sm text-amber-800">
+              Votre numéro de téléphone doit être renseigné avec l'indicatif de votre pays
+              (ex : <span className="font-mono font-semibold">+33</span> pour la France, <span className="font-mono font-semibold">+32</span> pour la Belgique, <span className="font-mono font-semibold">+44</span> pour le Royaume-Uni).
+            </p>
+          </div>
+        </div>
+      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">

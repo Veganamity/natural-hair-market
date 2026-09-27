@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { Database } from '../../lib/database.types';
-import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors, AlertOctagon, X } from 'lucide-react';
+import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors, AlertOctagon } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
 import { Loader2 } from 'lucide-react';
 import { COUNTRIES } from '../../lib/countries';
@@ -458,8 +458,12 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="Ex : +33 6 12 34 56 78"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Indiquez l'indicatif de votre pays (ex : +33 pour la France, +32 pour la Belgique, +44 pour le Royaume-Uni).
+              </p>
             </div>
 
             <div>
@@ -856,6 +860,15 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             </div>
           ) : (
             <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-800">
+                    <strong>Attention :</strong> sans informations bancaires configurées, vous ne pouvez pas recevoir d'offres sur vos annonces.
+                    Les acheteurs ne pourront pas vous proposer de paiement tant que votre compte bancaire ne sera pas activé.
+                  </p>
+                </div>
+              </div>
               <p className="text-gray-600">
                 Pour recevoir des paiements de vos ventes, configurez votre compte bancaire directement ici.
               </p>

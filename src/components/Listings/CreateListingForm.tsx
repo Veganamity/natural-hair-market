@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
-import { X, Upload, Image, ShieldCheck, FileText } from 'lucide-react';
+import { X, Upload, Image, ShieldCheck, FileText, AlertCircle } from 'lucide-react';
 
 interface CreateListingFormProps {
   onClose: () => void;
@@ -226,6 +226,17 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
             <p className="text-sm text-emerald-800 font-medium">
               Aperçu du titre: <span className="font-bold">{generateTitle()}</span>
             </p>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                <strong>Rappel :</strong> pour recevoir des offres et des paiements sur cette annonce,
+                vous devez avoir configuré vos informations bancaires dans votre profil.
+                Sans compte bancaire, les acheteurs ne pourront pas vous faire d'offre.
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
