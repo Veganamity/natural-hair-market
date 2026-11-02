@@ -874,10 +874,10 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm font-semibold text-blue-900">
-                  Configuration pour particuliers
+                  Vendeurs particuliers et professionnels
                 </p>
                 <p className="text-sm text-blue-800 mt-1">
-                  Stripe utilise le mot « entreprise » pour tous les vendeurs, y compris les particuliers. Votre compte est configuré en « Entrepreneur individuel / Micro-entrepreneur / Auto-entrepreneur ». Aucun compte de société n’est créé.
+                  Votre compte est configuré en tant que personne physique. Vous fournirez votre pièce d'identité et votre IBAN à Stripe pour recevoir vos paiements. Aucune déclaration professionnelle n'est exigée par Stripe pour des ventes occasionnelles de biens personnels.
                 </p>
               </div>
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">

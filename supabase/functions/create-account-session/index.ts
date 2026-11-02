@@ -47,13 +47,17 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile } = await supabaseClient
       .from("profiles")
-      .select("stripe_account_id, stripe_account_status, stripe_onboarding_completed, first_name, last_name, phone, address_line1, address_line2, postal_code, city, country")
+      .select("stripe_account_id, stripe_account_status, stripe_onboarding_completed, first_name, last_name, phone, address_line1, address_line2, postal_code, city, country, is_certified_salon")
       .eq("id", user.id)
       .maybeSingle();
 
     if (!profile) {
       throw new Error("Profil introuvable");
     }
+
+    const productDescription = profile.is_certified_salon
+      ? "Vente de cheveux naturels par un salon professionnel certifié"
+      : "Vente occasionnelle de cheveux personnels";
 
     let accountId = profile.stripe_account_id;
 
@@ -88,7 +92,7 @@ Deno.serve(async (req: Request) => {
               },
             },
             business_profile: {
-              product_description: "Vente occasionnelle de cheveux personnels",
+              product_description: productDescription,
             },
           });
         }
@@ -117,7 +121,7 @@ Deno.serve(async (req: Request) => {
           },
         },
         business_profile: {
-          product_description: "Vente occasionnelle de cheveux personnels",
+          product_description: productDescription,
         },
         capabilities: {
           card_payments: { requested: true },

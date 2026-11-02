@@ -1,0 +1,129 @@
+{
+  "projectId": "60159059",
+  "functions": {
+    "approve-salon-verification": {
+      "hasChanged": false,
+      "hash": "97abcc3d5e116fc792b3627b82ed716c51585b6bbe8588419839a8b727217aec"
+    },
+    "auto-expire-transactions": {
+      "hasChanged": false,
+      "hash": "93a056de441e2006a162e79dba9522d073a2ce578b2ddb12c8de709a5c3eadf0"
+    },
+    "cancel-payment": {
+      "hasChanged": false,
+      "hash": "5b5ba2df8cff5bc84c4d9bdd3560f358726710fd12a0b5b90bc0eb89958c4bd2"
+    },
+    "cancel-transaction": {
+      "hasChanged": false,
+      "hash": "ba92eb583b5512e72b9aaa6e6697d43b39ad8faee3d0a747d6743feedd8ab76d"
+    },
+    "capture-expiring-payments": {
+      "hasChanged": false,
+      "hash": "449c221601005af4a4b5a0ae76b4f2868ad7b1a1ce1e1d15c3c0d6b653387947"
+    },
+    "capture-payment": {
+      "hasChanged": false,
+      "hash": "13e0932a0d6baf1c17f131fb2bbb402481784e4af7225cbd53512b23a320e6cd"
+    },
+    "check-stripe-account-status": {
+      "hasChanged": false,
+      "hash": "4a8bb3b4577cef367fa2926d1111923efba63f1df833ab1cd46d49717f05f591"
+    },
+    "confirm-payment": {
+      "hasChanged": false,
+      "hash": "cae418339936c9ff41d8173a98f3db2e9d7d8d36dc44eb9cf94f7d45b0fc5030"
+    },
+    "create-account-session": {
+      "hasChanged": false,
+      "hash": "f656ba6259f88a57d926cd95b7dcd1ae839008a71eb4a3f3515e37846fdea0ae"
+    },
+    "create-cart-payment-intent": {
+      "hasChanged": false,
+      "hash": "d2690b7804cea91f0a83d0dccb842ac5173e48c093d2d26a8b65c1b9ad25dab2"
+    },
+    "create-checkout-session": {
+      "hasChanged": false,
+      "hash": "160538c1a70958fa5952d64622b112765708dbc27c8d7ebdfd512ef55b9a68f9"
+    },
+    "create-payment-intent": {
+      "hasChanged": false,
+      "hash": "98d855edfa3dec42309f7108e078669066e99b470e3b9221b98c87ed20893f25"
+    },
+    "create-shipping-label": {
+      "hasChanged": false,
+      "hash": "b59612e9b14077cebd9de6511cee73a1af86df56201a84e5b51c207fd925ce42"
+    },
+    "create-stripe-account-link": {
+      "hasChanged": false,
+      "hash": "6b5045cd57c128f6f70dde3126d876a6e303c6ce96c779d4fbab6dfb59a7461e"
+    },
+    "create-stripe-connect-account": {
+      "hasChanged": false,
+      "hash": "f7420796e1c3305adbcec7136c3ac3c565120f490cc45dc6512f237a0fb67dd1"
+    },
+    "create-stripe-login-link": {
+      "hasChanged": false,
+      "hash": "424257746ffe9896e782f2586f8cc3a93725d9f1becc5bca34225468520914ad"
+    },
+    "download-shipping-label": {
+      "hasChanged": false,
+      "hash": "32560971c87937e532e862f00a524914253eadbe7b881cf556f32bbaae1b8082"
+    },
+    "get-my-salon-verification": {
+      "hasChanged": false,
+      "hash": "4cb42b9f63cbf1a7a9f4c7934d6bc3abd4c98b50e1ddc63164bcc573d2bd1db4"
+    },
+    "get-salon-verifications": {
+      "hasChanged": false,
+      "hash": "8eccad264d5272f8f677d68ddd1e83a9d59eea2096145ebe7bcf1ceaadd42947"
+    },
+    "get-shipping-methods": {
+      "hasChanged": false,
+      "hash": "e9f88840caaf0cef06915494bf8bbac7bf76bd61a696915d72ddb1891c7d2238"
+    },
+    "listing-page": {
+      "hasChanged": false,
+      "hash": "73ac1f12536476bb79f664e611bb99288f34d5dc6ac912d8199412db7bc16f75"
+    },
+    "manage-saved-addresses": {
+      "hasChanged": false,
+      "hash": "15151cdfa26c5dfc71fcf5007e8f89fe59da3b735ec038a254dec5096d3616db"
+    },
+    "open-dispute": {
+      "hasChanged": false,
+      "hash": "dc98387d8a24d525ee81b203c8f638875b73b994e38675bc76967d9115887830"
+    },
+    "reject-salon-verification": {
+      "hasChanged": false,
+      "hash": "43838ddc6f21edf63726e32e08680f956efcc9ee209ea88f50e218eeaa5cfd08"
+    },
+    "resolve-dispute": {
+      "hasChanged": false,
+      "hash": "f0691db1a33e4a13c43edf05e53c7e9ef5304c84ce202171e568ccd2920a015f"
+    },
+    "revoke-salon-verification": {
+      "hasChanged": false,
+      "hash": "59a66df02db7601f202a4a464b6c5c6deedc2d2c65201a52b736e3a45b5dd52f"
+    },
+    "search-mondial-relay-points": {
+      "hasChanged": false,
+      "hash": "027c80df5f4ac59e3eb8d6b01197fa52b3c882022fffb7a75f7af48e494472f7"
+    },
+    "send-buyback-email": {
+      "hasChanged": false,
+      "hash": "c8aa3999a41ab9727d37d449475e4803a6dc9d282f1e62f8b7d71004a688bdad"
+    },
+    "sitemap": {
+      "hasChanged": false,
+      "hash": "ad82d464e04ba91cd0afcdd706b709780cb6b30ba240279ae6ee3b341e27aed5"
+    },
+    "stripe-webhook": {
+      "hasChanged": false,
+      "hash": "dce9a5fa6a3810f0538883f15d2026149c92fe548d1dc45816cf76f6673dcfe0"
+    },
+    "submit-salon-verification": {
+      "hasChanged": false,
+      "hash": "69711bd70eded1d0307ee31e24eb66fb463ac4e319bfff7cda90b57562694922"
+    }
+  }
+}
