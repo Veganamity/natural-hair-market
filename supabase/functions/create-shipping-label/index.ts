@@ -371,6 +371,21 @@ Deno.serve(async (req: Request) => {
 
     if (updateError) throw new Error(`Failed to update transaction: ${updateError.message}`);
 
+    // Send shipping notification email to buyer
+    try {
+      await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/notify-buyer-shipped`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ transactionId }),
+      });
+      console.log("Buyer shipping notification sent for transaction:", transactionId);
+    } catch (emailErr) {
+      console.error("Failed to send buyer notification (non-blocking):", emailErr);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

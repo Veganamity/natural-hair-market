@@ -82,8 +82,14 @@ verify_jwt = true
 [functions.send-buyback-email]
 verify_jwt = true
 
+[functions.notify-buyer-shipped]
+verify_jwt = true
+
 [functions.notify-seller-offer]
 verify_jwt = true
+
+[functions.sendcloud-webhook]
+verify_jwt = false
 
 [functions.sitemap]
 verify_jwt = false

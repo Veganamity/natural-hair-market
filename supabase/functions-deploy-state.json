@@ -51,7 +51,7 @@
     },
     "create-shipping-label": {
       "hasChanged": false,
-      "hash": "b59612e9b14077cebd9de6511cee73a1af86df56201a84e5b51c207fd925ce42"
+      "hash": "1f50370c68285065929a41441b049989c1970c3499c42c9b1486bb6f90c7e134"
     },
     "create-stripe-account-link": {
       "hasChanged": false,
@@ -89,6 +89,10 @@
       "hasChanged": false,
       "hash": "15151cdfa26c5dfc71fcf5007e8f89fe59da3b735ec038a254dec5096d3616db"
     },
+    "notify-seller-offer": {
+      "hasChanged": false,
+      "hash": "8c4990df3f1e34b2e003c0c81204ddfaa9248f68c0efd88d0cd14119457d7dbd"
+    },
     "open-dispute": {
       "hasChanged": false,
       "hash": "dc98387d8a24d525ee81b203c8f638875b73b994e38675bc76967d9115887830"
@@ -125,9 +129,13 @@
       "hasChanged": false,
       "hash": "69711bd70eded1d0307ee31e24eb66fb463ac4e319bfff7cda90b57562694922"
     },
-    "notify-seller-offer": {
+    "notify-buyer-shipped": {
       "hasChanged": false,
-      "hash": "8c4990df3f1e34b2e003c0c81204ddfaa9248f68c0efd88d0cd14119457d7dbd"
+      "hash": "ccc7e13df66752dc721cc91a61ee442e6dfb850dd5d7fab98a7d867e053dfa4c"
+    },
+    "sendcloud-webhook": {
+      "hasChanged": false,
+      "hash": "fb23f1ad1bde401b9a25c001f1eb200b7565e5e31a7bef8dcd6c7128ea936535"
     }
   }
 }
