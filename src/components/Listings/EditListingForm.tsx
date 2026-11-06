@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { compressImage } from '../../lib/imageUtils';
 import { X, Upload } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 
@@ -85,13 +86,13 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
 
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user!.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const compressed = await compressImage(file);
+        const fileName = `${user!.id}/${Math.random().toString(36).substring(2)}.jpg`;
 
         const { error: uploadError } = await supabase.storage
           .from('hair-images')
-          .upload(fileName, file, {
-            cacheControl: '3600',
+          .upload(fileName, compressed, {
+            cacheControl: '31536000',
             upsert: false,
           });
 

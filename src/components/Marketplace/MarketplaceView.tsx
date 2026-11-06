@@ -79,7 +79,6 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
     }
 
     if (data) {
-      console.log('Fetched listings with profiles:', data);
       setListings(data);
       if (initialListingId) {
         const target = data.find((l) => l.id === initialListingId);

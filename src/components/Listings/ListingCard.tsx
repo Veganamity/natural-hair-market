@@ -64,6 +64,7 @@ export function ListingCard({
         <img
           src={mainImage}
           alt={listing.title}
+          loading="lazy"
           className={`w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300 ${listing.status === 'sold' ? 'brightness-75' : ''}`}
         />
         {listing.status === 'sold' && (

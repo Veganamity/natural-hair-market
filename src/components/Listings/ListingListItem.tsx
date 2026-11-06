@@ -59,6 +59,7 @@ export function ListingListItem({
           <img
             src={mainImage}
             alt={listing.title}
+            loading="lazy"
             className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
           />
           <button
