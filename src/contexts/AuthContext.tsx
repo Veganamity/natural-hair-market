@@ -39,28 +39,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const initAuth = async () => {
       try {
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Auth timeout')), 10000)
-        );
+        const { data: { session } } = await supabase.auth.getSession();
 
-        const sessionPromise = supabase.auth.getSession();
-
-        const { data: { session } } = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]) as any;
-
+        if (!mounted) return;
         setUser(session?.user ?? null);
         if (session?.user) {
           fetchProfile(session.user.id);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        if (!mounted) return;
         setUser(null);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -98,7 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
