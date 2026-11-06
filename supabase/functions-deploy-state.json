@@ -124,6 +124,10 @@
     "submit-salon-verification": {
       "hasChanged": false,
       "hash": "69711bd70eded1d0307ee31e24eb66fb463ac4e319bfff7cda90b57562694922"
+    },
+    "notify-seller-offer": {
+      "hasChanged": false,
+      "hash": "8c4990df3f1e34b2e003c0c81204ddfaa9248f68c0efd88d0cd14119457d7dbd"
     }
   }
 }

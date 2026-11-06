@@ -82,6 +82,9 @@ verify_jwt = true
 [functions.send-buyback-email]
 verify_jwt = true
 
+[functions.notify-seller-offer]
+verify_jwt = true
+
 [functions.sitemap]
 verify_jwt = false
 

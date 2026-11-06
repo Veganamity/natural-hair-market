@@ -121,6 +121,12 @@ export function ListingDetails({
 
       if (error) throw error;
 
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-seller-offer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
+        body: JSON.stringify({ listing_id: listing.id, offer_amount: parseFloat(offerAmount) }),
+      }).catch(() => {});
+
       alert('Votre offre a été envoyée au vendeur!');
       setShowOfferModal(false);
       setOfferAmount('');

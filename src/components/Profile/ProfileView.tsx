@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUnreadOffersCount } from '../../hooks/useUnreadOffers';
 import { Database } from '../../lib/database.types';
-import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors, AlertOctagon } from 'lucide-react';
+import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors, AlertOctagon, Bell } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
 import { Loader2 } from 'lucide-react';
 import { COUNTRIES } from '../../lib/countries';
@@ -16,6 +17,7 @@ interface ProfileViewProps {
 
 export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const { user } = useAuth();
+  const { unreadCount } = useUnreadOffersCount();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [editing, setEditing] = useState(false);
@@ -392,6 +394,24 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       )}
 
       <div className="space-y-6">
+      {unreadCount > 0 && (
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => onNavigate?.('offers')}>
+          <div className="relative">
+            <Bell className="w-6 h-6 text-red-600" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-[8px] text-white font-bold leading-none">{unreadCount > 9 ? '9+' : unreadCount}</span>
+            </span>
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-red-800">
+              {unreadCount} nouvelle{unreadCount > 1 ? 's' : ''} offre{unreadCount > 1 ? 's' : ''} reçue{unreadCount > 1 ? 's' : ''}
+            </p>
+            <p className="text-sm text-red-600">Cliquez ici pour consulter et répondre à vos offres</p>
+          </div>
+          <span className="text-red-600 text-sm font-medium">Voir →</span>
+        </div>
+      )}
       {saveSuccess && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
           <CheckCircle className="w-6 h-6 text-green-600" />
