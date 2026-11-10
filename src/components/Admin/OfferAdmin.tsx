@@ -5,21 +5,26 @@ import { Tag, AlertCircle, Search, RefreshCw, Phone, Mail, MessageSquare } from 
 import { Database } from '../../lib/database.types';
 
 type OfferRow = Database['public']['Tables']['offers']['Row'];
-type ListingRow = Database['public']['Tables']['listings']['Row'];
+
+interface BuyerProfile {
+  id: string;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+}
 
 interface OfferAdminItem extends OfferRow {
-  listing: (ListingRow & {
-    profiles?: {
+  listing: {
+    id: string;
+    title: string | null;
+    price: string | null;
+    profiles: {
       full_name: string | null;
       email: string;
       phone: string | null;
-    };
-  }) | null;
-  buyer: {
-    full_name: string | null;
-    email: string;
-    phone: string | null;
+    } | null;
   } | null;
+  buyer: BuyerProfile | null;
 }
 
 export default function OfferAdmin() {
@@ -38,18 +43,36 @@ export default function OfferAdmin() {
   const loadOffers = async () => {
     try {
       setLoading(true);
+
       let query = supabase
         .from('offers')
-        .select('*, listing:listings(*, profiles:seller_id(full_name, email, phone)), buyer:profiles!offers_buyer_id_fkey(full_name, email, phone)')
+        .select('*, listing:listings(title, price, profiles:seller_id(full_name, email, phone))')
         .order('created_at', { ascending: false });
 
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      setOffers((data || []) as unknown as OfferAdminItem[]);
+      const { data: offerData, error: offerError } = await query;
+      if (offerError) throw offerError;
+
+      const buyerIds = [...new Set((offerData || []).map((o: any) => o.buyer_id).filter(Boolean))];
+      const { data: buyerData, error: buyerError } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, phone')
+        .in('id', buyerIds);
+
+      if (buyerError) throw buyerError;
+
+      const buyerMap = new Map<string, BuyerProfile>();
+      (buyerData || []).forEach((b: any) => buyerMap.set(b.id, b as BuyerProfile));
+
+      const enriched: OfferAdminItem[] = (offerData || []).map((o: any) => ({
+        ...o,
+        buyer: buyerMap.get(o.buyer_id) || null,
+      }));
+
+      setOffers(enriched);
     } catch (error: any) {
       console.error('Error loading offers:', error);
     } finally {
@@ -181,7 +204,7 @@ export default function OfferAdmin() {
                       <p className="text-sm font-medium text-gray-900">{offer.buyer?.full_name || 'N/A'}</p>
                       <div className="flex items-center gap-1 text-xs text-gray-600 mt-0.5">
                         <Mail className="w-3 h-3" />
-                        {offer.buyer?.email}
+                        {offer.buyer?.email || '—'}
                       </div>
                       {offer.buyer?.phone && (
                         <a href={`tel:${offer.buyer.phone}`} className="flex items-center gap-1 text-xs text-emerald-700 font-medium mt-0.5 hover:underline">
@@ -194,7 +217,7 @@ export default function OfferAdmin() {
                       <p className="text-sm font-medium text-gray-900">{offer.listing?.profiles?.full_name || 'N/A'}</p>
                       <div className="flex items-center gap-1 text-xs text-gray-600 mt-0.5">
                         <Mail className="w-3 h-3" />
-                        {offer.listing?.profiles?.email}
+                        {offer.listing?.profiles?.email || '—'}
                       </div>
                       {offer.listing?.profiles?.phone && (
                         <a href={`tel:${offer.listing.profiles.phone}`} className="flex items-center gap-1 text-xs text-emerald-700 font-medium mt-0.5 hover:underline">
