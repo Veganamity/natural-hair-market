@@ -82,6 +82,9 @@ verify_jwt = true
 [functions.send-buyback-email]
 verify_jwt = true
 
+[functions.notify-buyer-offer]
+verify_jwt = true
+
 [functions.notify-buyer-shipped]
 verify_jwt = true
 

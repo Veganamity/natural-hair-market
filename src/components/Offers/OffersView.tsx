@@ -138,6 +138,26 @@ export function OffersView() {
     }
   };
 
+  const sendBuyerOfferNotification = async (offerId: string, status: 'accepted' | 'rejected') => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-buyer-offer`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ offer_id: offerId, status }),
+        }
+      );
+    } catch (_err) {
+      // Notification failure should not block the offer flow
+    }
+  };
+
   const handleAcceptOffer = async (offerId: string) => {
     const { error } = await supabase
       .from('offers')
@@ -149,7 +169,8 @@ export function OffersView() {
       .eq('id', offerId);
 
     if (!error) {
-      alert('Offre acceptée!');
+      sendBuyerOfferNotification(offerId, 'accepted');
+      alert('Offre acceptée ! Un email a été envoyé à l\'acheteur.');
       fetchOffers();
     }
   };
@@ -165,7 +186,8 @@ export function OffersView() {
       .eq('id', offerId);
 
     if (!error) {
-      alert('Offre refusée');
+      sendBuyerOfferNotification(offerId, 'rejected');
+      alert('Offre refusée. Un email a été envoyé à l\'acheteur.');
       fetchOffers();
     }
   };
