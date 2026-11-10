@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUnreadOffersCount } from '../../hooks/useUnreadOffers';
 import { Database } from '../../lib/database.types';
-import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors, AlertOctagon, Bell } from 'lucide-react';
+import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors, AlertOctagon, Bell, Tag } from 'lucide-react';
 import { EditListingForm } from '../Listings/EditListingForm';
 import { Loader2 } from 'lucide-react';
 import { COUNTRIES } from '../../lib/countries';
@@ -835,6 +835,13 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               >
                 <AlertOctagon className="w-5 h-5" />
                 Gestion des Litiges
+              </button>
+              <button
+                onClick={() => onNavigate?.('admin-offers')}
+                className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2"
+              >
+                <Tag className="w-5 h-5" />
+                Gestion des Offres
               </button>
             </div>
           </div>

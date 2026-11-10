@@ -31,6 +31,7 @@ import SalonVerificationAdmin from './components/Admin/SalonVerificationAdmin';
 import ListingAdmin from './components/Admin/ListingAdmin';
 import BuybackAdmin from './components/Admin/BuybackAdmin';
 import DisputeAdmin from './components/Admin/DisputeAdmin';
+import OfferAdmin from './components/Admin/OfferAdmin';
 import MyBuybackRequests from './components/Buyback/MyBuybackRequests';
 import SalonCertificationForm from './components/Salon/SalonCertificationForm';
 import { LandingPage } from './components/Landing/LandingPage';
@@ -75,6 +76,7 @@ const PATH_TO_VIEW: Record<string, string> = {
   '/admin-listings': 'admin-listings',
   '/admin-buybacks': 'admin-buybacks',
   '/admin-disputes': 'admin-disputes',
+  '/admin-offers': 'admin-offers',
   '/admin': 'admin-buybacks',
   '/salon-certifie': 'salon-certifie',
   '/seller-store': 'seller-store',
@@ -107,6 +109,7 @@ const VIEW_TO_PATH: Record<string, string> = {
   'admin-listings': '/admin-listings',
   'admin-buybacks': '/admin-buybacks',
   'admin-disputes': '/admin-disputes',
+  'admin-offers': '/admin-offers',
   'salon-certifie': '/salon-certifie',
   'my-buybacks': '/my-buybacks',
   'seller-store': '/seller-store',
@@ -119,7 +122,7 @@ type ViewName =
   | 'transactions' | 'orders' | 'cart' | 'privacy' | 'terms' | 'sales'
   | 'refund' | 'safety' | 'seller-rules' | 'sell-my-hair' | 'buyer-rules' | 'faq' | 'about'
   | 'guide-coupe'
-  | 'admin-salons' | 'admin-listings' | 'admin-buybacks' | 'admin-disputes' | 'salon-certifie' | 'seller-store'
+  | 'admin-salons' | 'admin-listings' | 'admin-buybacks' | 'admin-disputes' | 'admin-offers' | 'salon-certifie' | 'seller-store'
   | 'my-buybacks' | 'partners' | 'buy-european-hair' | 'listing-page' | 'not-found';
 
 function normalizePath(pathname: string): string {
@@ -914,6 +917,7 @@ function AppContent() {
         {currentView === 'admin-salons' && <SalonVerificationAdmin />}
         {currentView === 'admin-buybacks' && <BuybackAdmin />}
         {currentView === 'admin-disputes' && <DisputeAdmin />}
+        {currentView === 'admin-offers' && <OfferAdmin />}
         {currentView === 'my-buybacks' && <MyBuybackRequests onBack={() => navigateToView('profile')} />}
         {currentView === 'admin-listings' && (
           <ListingAdmin
