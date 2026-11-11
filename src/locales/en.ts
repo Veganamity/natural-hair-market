@@ -59,7 +59,11 @@ export const en = {
     "history": "History",
     "sellMyHair": "Sell my hair",
     "buyHair": "Buy natural hair",
-    "depositListing": "Post a listing"
+    "depositListing": "Post a listing",
+    "sell": "Sell",
+    "searchPlaceholderHair": "Search hair...",
+    "loginTitle": "Login",
+    "logoutTitle": "Logout"
   },
   "auth": {
     "email": "Email",
@@ -208,7 +212,31 @@ export const en = {
     "europe": "Europe",
     "asia": "Asia",
     "latam": "Latin America",
-    "other": "Other"
+    "other": "Other",
+    "France": "France",
+    "Belgique": "Belgium",
+    "Suisse": "Switzerland",
+    "Luxembourg": "Luxembourg",
+    "Allemagne": "Germany",
+    "Italie": "Italy",
+    "Espagne": "Spain",
+    "Portugal": "Portugal",
+    "Pays-Bas": "Netherlands",
+    "Royaume-Uni": "United Kingdom",
+    "Irlande": "Ireland",
+    "Autriche": "Austria",
+    "Pologne": "Poland",
+    "Suède": "Sweden",
+    "Norvège": "Norway",
+    "Danemark": "Denmark",
+    "Finlande": "Finland",
+    "Grèce": "Greece",
+    "Russie": "Russia",
+    "Ukraine": "Ukraine",
+    "Inde": "India",
+    "Chine": "China",
+    "Brésil": "Brazil",
+    "Autre": "Other"
   },
   "profile": {
     "title": "My Profile",
@@ -289,7 +317,13 @@ export const en = {
     "deleteAccountConfirmBtn": "Permanently delete",
     "sessionExpired": "Session expired",
     "stripeLinkError": "Error creating link",
-    "stripeConnectionError": "Error connecting to Stripe"
+    "stripeConnectionError": "Error connecting to Stripe",
+    "certifyDescLine": "Strengthen buyer trust by certifying your salon with your SIRET. The badge will appear on your profile and your listings.",
+    "errorLoadProfile": "Error loading profile: {error}",
+    "errorCreateProfile": "Unable to create your profile. Please log in again.",
+    "errorUnexpected": "Unexpected error: {error}",
+    "errorUpdateProfile": "Error updating profile: {error}",
+    "errorDeleteAccount": "Error deleting account: {error}"
   },
   "footer": {
     "aboutUs": "About Us",
@@ -540,7 +574,8 @@ export const en = {
     "cancelReason": "Cancellation by user",
     "cancelSuccessRefunded": "Order cancelled. The refund will be credited to your payment method within 5 to 10 business days.",
     "cancelSuccess": "Order cancelled successfully.",
-    "cancelSuccessNoPayment": "Transaction cancelled successfully."
+    "cancelSuccessNoPayment": "Transaction cancelled successfully.",
+    "at": "at"
   },
   "transactions": {
     "title": "My Transactions",
@@ -585,7 +620,8 @@ export const en = {
     "notAuthenticated": "Not authenticated",
     "networkError": "Network error during download.",
     "timeoutError": "Timeout. The label is not yet available...",
-    "unknownError": "Unknown error"
+    "unknownError": "Unknown error",
+    "errorStatus": "Error {status}"
   },
   "cart": {
     "title": "My Cart",
@@ -692,5 +728,87 @@ export const en = {
   },
   "safety": {
     "title": "Safety & Quality"
+  },
+  "sellerStore": {
+    "loading": "Loading store...",
+    "sellerNotFound": "Seller not found.",
+    "back": "Back",
+    "backToMarketplace": "Back to marketplace",
+    "seller": "Seller",
+    "certifiedSalon": "Certified Salon",
+    "available": "Available",
+    "sold": "Sold",
+    "total": "Total",
+    "itemsInCart": "{count} item(s) from this seller in your cart",
+    "singleShipping": "Single shipping",
+    "availableListings": "Available listings",
+    "inCart": "In cart",
+    "addToCart": "Add to cart",
+    "viewListing": "View listing",
+    "soldListings": "Sold listings",
+    "soldBadge": "Sold",
+    "noListings": "This seller doesn't have any listings yet."
+  },
+  "pageMeta": {
+    "landing": {
+      "title": "Buy & Sell Natural Hair | Natural Hair Market",
+      "description": "The leading marketplace to buy and sell natural human hair in Europe. Find high-quality extensions at the best price."
+    },
+    "marketplace": {
+      "title": "Natural Hair Marketplace | Natural Hair Market",
+      "description": "Browse hundreds of natural human hair listings for sale in Europe: blond, brown, chestnut. Secure purchase."
+    },
+    "sell-my-hair": {
+      "title": "Sell My Natural Hair | Natural Hair Market",
+      "description": "Sell your natural hair securely. Estimate your hair's value and publish your listing for free. Minimum length 15 cm."
+    },
+    "faq": {
+      "title": "FAQ - Frequently Asked Questions | Natural Hair Market",
+      "description": "All the answers to your questions about buying and selling natural hair on Natural Hair Market."
+    },
+    "about": {
+      "title": "About Us | Natural Hair Market",
+      "description": "Discover Natural Hair Market, the first French marketplace dedicated to buying and selling natural human hair in Europe."
+    },
+    "guide-coupe": {
+      "title": "Hair Cutting & Preservation Guide | Natural Hair Market",
+      "description": "How to cut and preserve your hair to sell at the best price. Practical tips for natural hair sellers."
+    },
+    "privacy": {
+      "title": "Privacy Policy | Natural Hair Market",
+      "description": "Privacy policy and personal data protection for Natural Hair Market."
+    },
+    "terms": {
+      "title": "Terms of Service | Natural Hair Market",
+      "description": "General terms of use for the Natural Hair Market marketplace."
+    },
+    "sales": {
+      "title": "Sales Terms | Natural Hair Market",
+      "description": "General sales terms applicable to transactions on Natural Hair Market."
+    },
+    "refund": {
+      "title": "Refund Policy | Natural Hair Market",
+      "description": "Our refund and buyer protection policy on Natural Hair Market."
+    },
+    "safety": {
+      "title": "Quality & Safety | Natural Hair Market",
+      "description": "How Natural Hair Market guarantees quality and safety for natural hair transactions."
+    },
+    "seller-rules": {
+      "title": "Seller Rules | Natural Hair Market",
+      "description": "Rules and tips for selling natural hair on Natural Hair Market."
+    },
+    "buyer-rules": {
+      "title": "Buyer Rules | Natural Hair Market",
+      "description": "Rules and tips for buying natural hair on Natural Hair Market."
+    },
+    "partners": {
+      "title": "Our Partners | Natural Hair Market",
+      "description": "Discover Natural Hair Market's partners: certified salons and service providers."
+    },
+    "buy-european-hair": {
+      "title": "European Natural Hair - Premium Quality | Natural Hair Market",
+      "description": "Buy quality European natural hair on Natural Hair Market. Available stock, guaranteed traceability and secure delivery in France."
+    }
   }
 };

@@ -88,7 +88,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
       if (fetchError) {
         console.error('Error fetching profile:', fetchError);
-        setError(`Erreur lors du chargement du profil: ${fetchError.message}`);
+        setError(t('profile.errorLoadProfile').replace('{error}', fetchError.message));
         setLoading(false);
         return;
       }
@@ -106,7 +106,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
         if (insertError) {
           console.error('Error creating profile:', insertError);
-          setError('Impossible de créer votre profil. Veuillez vous reconnecter.');
+          setError(t('profile.errorCreateProfile'));
           setLoading(false);
           return;
         }
@@ -135,7 +135,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       setLoading(false);
     } catch (err: any) {
       console.error('Unexpected error:', err);
-      setError(`Erreur inattendue: ${err.message}`);
+      setError(t('profile.errorUnexpected').replace('{error}', err.message));
       setLoading(false);
     }
   };
@@ -189,7 +189,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
       if (error) {
         console.error('Error updating profile:', error);
-        setError(`Erreur lors de la mise à jour du profil: ${error.message}`);
+        setError(t('profile.errorUpdateProfile').replace('{error}', error.message));
         setLoading(false);
         return;
       }
@@ -203,7 +203,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err: any) {
       console.error('Unexpected error:', err);
-      setError(`Erreur inattendue: ${err.message}`);
+      setError(t('profile.errorUnexpected').replace('{error}', err.message));
       setLoading(false);
     }
   };
@@ -247,7 +247,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     setStripeLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Session expirée');
+      if (!session) throw new Error(t('profile.sessionExpired'));
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-account-link`,
@@ -263,14 +263,14 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Erreur lors de la création du lien');
+        throw new Error(data.error || t('profile.stripeLinkError'));
       }
 
       const { url } = await response.json();
       window.location.href = url;
     } catch (err: any) {
       console.error('Onboarding error:', err);
-      setError(err.message || 'Erreur lors de la connexion à Stripe');
+      setError(err.message || t('profile.stripeConnectionError'));
       setStripeLoading(false);
     }
   };
@@ -280,7 +280,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     setStripeLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Session expirée');
+      if (!session) throw new Error(t('profile.sessionExpired'));
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-login-link`,
@@ -296,14 +296,14 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Erreur lors de la création du lien');
+        throw new Error(data.error || t('profile.stripeLinkError'));
       }
 
       const { url } = await response.json();
       window.location.href = url;
     } catch (err: any) {
       console.error('Dashboard link error:', err);
-      setError(err.message || 'Erreur lors de la connexion à Stripe');
+      setError(err.message || t('profile.stripeConnectionError'));
       setStripeLoading(false);
     }
   };
@@ -321,7 +321,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error('Session expirée');
+        throw new Error(t('profile.sessionExpired'));
       }
 
       const { error: deleteError } = await (supabase.rpc as any)('delete_user_account');
@@ -334,7 +334,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       window.location.href = '/';
     } catch (error: any) {
       console.error('Error deleting account:', error);
-      setError(`Erreur lors de la suppression du compte: ${error.message}`);
+      setError(t('profile.errorDeleteAccount').replace('{error}', error.message));
       setLoading(false);
       setShowDeleteModal(false);
     }
@@ -774,7 +774,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             </button>
           </div>
           <div className="mt-4 text-sm text-gray-600">
-            <p>Renforcez la confiance des acheteurs en certifiant votre salon avec votre SIRET. Le badge apparaîtra sur votre profil et vos annonces.</p>
+            <p>{t('profile.certifyDescLine')}</p>
           </div>
         </div>
       )}

@@ -276,66 +276,21 @@ function AppContent() {
   const BASE_URL = 'https://www.naturalhairmarket.com';
 
   const PAGE_META: Record<string, { title: string; description: string }> = {
-    landing: {
-      title: 'Achat & Vente de Cheveux Naturels | Natural Hair Market',
-      description: 'La 1ère marketplace pour acheter et vendre des cheveux naturels humains en Europe. Trouvez des extensions de haute qualité au meilleur prix.',
-    },
-    marketplace: {
-      title: 'Marketplace Cheveux Naturels | Natural Hair Market',
-      description: 'Parcourez des centaines d\'annonces de cheveux naturels humains à vendre en Europe : blonds, bruns, châtains. Achat sécurisé.',
-    },
-    'sell-my-hair': {
-      title: 'Vendre mes Cheveux Naturels | Natural Hair Market',
-      description: 'Vendez vos cheveux naturels en toute sécurité. Estimez le prix de vos cheveux et publiez votre annonce gratuitement. Longueur minimale 15 cm.',
-    },
-    faq: {
-      title: 'FAQ – Questions fréquentes | Natural Hair Market',
-      description: 'Toutes les réponses à vos questions sur l\'achat et la vente de cheveux naturels sur Natural Hair Market.',
-    },
-    about: {
-      title: 'À propos | Natural Hair Market',
-      description: 'Découvrez Natural Hair Market, la première marketplace française dédiée à l\'achat et la vente de cheveux naturels humains en Europe.',
-    },
-    'guide-coupe': {
-      title: 'Guide Coupe & Conservation des Cheveux | Natural Hair Market',
-      description: 'Comment couper et conserver vos cheveux pour les vendre au meilleur prix. Conseils pratiques pour les vendeurs de cheveux naturels.',
-    },
-    privacy: {
-      title: 'Politique de confidentialité | Natural Hair Market',
-      description: 'Politique de confidentialité et protection des données personnelles de Natural Hair Market.',
-    },
-    terms: {
-      title: 'Conditions d\'utilisation | Natural Hair Market',
-      description: 'Conditions générales d\'utilisation de la marketplace Natural Hair Market.',
-    },
-    sales: {
-      title: 'Conditions générales de vente | Natural Hair Market',
-      description: 'Conditions générales de vente applicables aux transactions sur Natural Hair Market.',
-    },
-    refund: {
-      title: 'Politique de remboursement | Natural Hair Market',
-      description: 'Notre politique de remboursement et de protection des acheteurs sur Natural Hair Market.',
-    },
-    safety: {
-      title: 'Qualité & Sécurité | Natural Hair Market',
-      description: 'Comment Natural Hair Market garantit la qualité et la sécurité des transactions de cheveux naturels.',
-    },
-    'seller-rules': {
-      title: 'Règles vendeurs | Natural Hair Market',
-      description: 'Règles et conseils pour vendre des cheveux naturels sur Natural Hair Market.',
-    },
-    'buyer-rules': {
-      title: 'Règles acheteurs | Natural Hair Market',
-      description: 'Règles et conseils pour acheter des cheveux naturels sur Natural Hair Market.',
-    },
-    partners: {
-      title: 'Nos Partenaires | Natural Hair Market',
-      description: 'Découvrez les partenaires de Natural Hair Market : salons certifiés et prestataires de services.',
-    },
-    'buy-european-hair': {
-      title: 'Achats cheveux naturels européens - Qualité premium | Natural Hair Market',
-      description: 'Achats de cheveux naturels européens de qualité sur Natural Hair Market. Stocks disponibles, traçabilité garantie et livraison sécurisée en France.',
-    },
+    landing: { title: t('pageMeta.landing.title'), description: t('pageMeta.landing.description') },
+    marketplace: { title: t('pageMeta.marketplace.title'), description: t('pageMeta.marketplace.description') },
+    'sell-my-hair': { title: t('pageMeta.sell-my-hair.title'), description: t('pageMeta.sell-my-hair.description') },
+    faq: { title: t('pageMeta.faq.title'), description: t('pageMeta.faq.description') },
+    about: { title: t('pageMeta.about.title'), description: t('pageMeta.about.description') },
+    'guide-coupe': { title: t('pageMeta.guide-coupe.title'), description: t('pageMeta.guide-coupe.description') },
+    privacy: { title: t('pageMeta.privacy.title'), description: t('pageMeta.privacy.description') },
+    terms: { title: t('pageMeta.terms.title'), description: t('pageMeta.terms.description') },
+    sales: { title: t('pageMeta.sales.title'), description: t('pageMeta.sales.description') },
+    refund: { title: t('pageMeta.refund.title'), description: t('pageMeta.refund.description') },
+    safety: { title: t('pageMeta.safety.title'), description: t('pageMeta.safety.description') },
+    'seller-rules': { title: t('pageMeta.seller-rules.title'), description: t('pageMeta.seller-rules.description') },
+    'buyer-rules': { title: t('pageMeta.buyer-rules.title'), description: t('pageMeta.buyer-rules.description') },
+    partners: { title: t('pageMeta.partners.title'), description: t('pageMeta.partners.description') },
+    'buy-european-hair': { title: t('pageMeta.buy-european-hair.title'), description: t('pageMeta.buy-european-hair.description') },
   };
 
   useEffect(() => {
@@ -424,8 +379,8 @@ function AppContent() {
                 <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">NaturalHairMarket</h1>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => { setAuthMode('login'); navigateToView('profile'); }} className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium text-sm">Se connecter</button>
-                <button onClick={() => { setAuthMode('signup'); navigateToView('profile'); }} className="px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 text-sm">S'inscrire</button>
+                <button onClick={() => { setAuthMode('login'); navigateToView('profile'); }} className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium text-sm">{t('nav.login')}</button>
+                <button onClick={() => { setAuthMode('signup'); navigateToView('profile'); }} className="px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 text-sm">{t('nav.signup')}</button>
               </div>
             </div>
           </nav>
@@ -514,7 +469,7 @@ function AppContent() {
                   <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   <input
                     type="text"
-                    placeholder="Rechercher…"
+                    placeholder={t('nav.searchPlaceholderHair')}
                     className="flex-1 bg-transparent text-sm outline-none text-gray-700 placeholder-gray-400"
                     onFocus={() => {}}
                   />
@@ -525,7 +480,7 @@ function AppContent() {
                   <button
                     onClick={() => { setAuthMode('login'); navigateToView('profile'); }}
                     className="sm:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="Connexion"
+                    title={t('nav.loginTitle')}
                   >
                     <User className="w-4 h-4" />
                   </button>
@@ -540,7 +495,7 @@ function AppContent() {
                     className="p-2 sm:px-3 sm:py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold transition-all flex items-center gap-1.5 shadow-sm flex-shrink-0"
                   >
                     <Scissors className="w-4 h-4 flex-shrink-0" />
-                    <span className="hidden sm:inline text-sm">Vendre</span>
+                    <span className="hidden sm:inline text-sm">{t('nav.sell')}</span>
                   </button>
                 </div>
               </div>
@@ -616,7 +571,7 @@ function AppContent() {
                   type="text"
                   value={headerSearch}
                   onChange={(e) => setHeaderSearch(e.target.value)}
-                  placeholder="Rechercher des cheveux…"
+                  placeholder={t('nav.searchPlaceholderHair')}
                   className="flex-1 bg-transparent text-sm outline-none text-gray-700 placeholder-gray-400"
                 />
               </div>
@@ -736,13 +691,13 @@ function AppContent() {
                 className="ml-2 px-3 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-all transform hover:scale-105 flex items-center gap-1.5 text-sm shadow-sm whitespace-nowrap flex-shrink-0"
               >
                 <Scissors className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden lg:inline">Déposer une annonce</span>
-                <span className="lg:hidden">Vendre</span>
+                <span className="hidden lg:inline">{t('nav.depositListing')}</span>
+                <span className="lg:hidden">{t('nav.sell')}</span>
               </button>
               <button
                 onClick={signOut}
                 className="ml-1 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
-                title="Se déconnecter"
+                title={t('nav.logoutTitle')}
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -860,7 +815,7 @@ function AppContent() {
                 className="w-full px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors flex items-center gap-2"
               >
                 <Scissors className="w-5 h-5" />
-                Déposer une annonce
+                {t('nav.depositListing')}
               </button>
               <button
                 onClick={() => { signOut(); setMobileMenuOpen(false); }}

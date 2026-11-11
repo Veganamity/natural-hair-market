@@ -94,7 +94,7 @@ function DeadlineBanner({ transaction, isSellerView }: { transaction: Transactio
           <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-orange-800 font-medium">
             {t('orders.confirmDeadlineWarning').split('{date}')[0]}
-            <strong>{authDeadline.toLocaleDateString(locale)}</strong> {language === 'fr' ? 'à' : 'at'} {authDeadline.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+            <strong>{authDeadline.toLocaleDateString(locale)}</strong> {t('orders.at')} {authDeadline.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
             {t('orders.confirmDeadlineWarning').split('{date}')[1]}
           </p>
         </div>

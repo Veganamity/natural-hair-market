@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Info, Shield, CheckCircle, Heart, Users, TrendingUp, Package, CreditCard, Truck } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface AboutUsProps {
   onClose?: () => void;
@@ -7,17 +8,27 @@ interface AboutUsProps {
 }
 
 export function AboutUs({ onNavigate }: AboutUsProps) {
+  const { language } = useLanguage();
+
   useEffect(() => {
-    document.title = 'À propos de Natural Hair Market – La 1ère marketplace de cheveux naturels en Europe';
+    document.title = language === 'fr'
+      ? 'À propos de Natural Hair Market – La 1ère marketplace de cheveux naturels en Europe'
+      : 'About Natural Hair Market – The 1st Natural Hair Marketplace in Europe';
 
     const metaDesc = document.getElementById('meta-description') as HTMLMetaElement | null;
-    if (metaDesc) metaDesc.content = 'Natural Hair Market est la première marketplace française et européenne dédiée à l\'achat et la vente de cheveux naturels humains. Découvrez notre mission, nos valeurs et notre engagement.';
+    if (metaDesc) metaDesc.content = language === 'fr'
+      ? 'Natural Hair Market est la première marketplace française et européenne dédiée à l\'achat et à la vente de cheveux naturels humains. Découvrez notre mission, nos valeurs et notre engagement.'
+      : 'Natural Hair Market is the first French and European marketplace dedicated to buying and selling natural human hair. Discover our mission, our values and our commitment.';
 
     const ogTitle = document.getElementById('og-title') as HTMLMetaElement | null;
-    if (ogTitle) ogTitle.content = 'À propos de Natural Hair Market – Marketplace de cheveux naturels en Europe';
+    if (ogTitle) ogTitle.content = language === 'fr'
+      ? 'À propos de Natural Hair Market – Marketplace de cheveux naturels en Europe'
+      : 'About Natural Hair Market – Natural Hair Marketplace in Europe';
 
     const ogDesc = document.getElementById('og-description') as HTMLMetaElement | null;
-    if (ogDesc) ogDesc.content = 'Découvrez Natural Hair Market, la première marketplace de cheveux naturels humains en France et en Europe. Mission, valeurs et engagements.';
+    if (ogDesc) ogDesc.content = language === 'fr'
+      ? 'Découvrez Natural Hair Market, la première marketplace de cheveux naturels humains en France et en Europe. Mission, valeurs et engagements.'
+      : 'Discover Natural Hair Market, the first natural human hair marketplace in France and Europe. Mission, values and commitments.';
 
     const ogUrl = document.getElementById('og-url') as HTMLMetaElement | null;
     if (ogUrl) ogUrl.content = 'https://www.naturalhairmarket.com/about';
@@ -33,7 +44,7 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
           '@id': 'https://www.naturalhairmarket.com/about#webpage',
           'url': 'https://www.naturalhairmarket.com/about',
           'name': 'À propos de Natural Hair Market – La 1ère marketplace de cheveux naturels en Europe',
-          'description': 'Natural Hair Market est la première marketplace française et européenne dédiée à l\'achat et la vente de cheveux naturels humains entre particuliers, salons de coiffure et professionnels.',
+          'description': 'Natural Hair Market est la première marketplace française et européenne dédiée à l\'achat et à la vente de cheveux naturels humains entre particuliers, salons de coiffure et professionnels.',
           'inLanguage': 'fr-FR',
           'isPartOf': { '@id': 'https://www.naturalhairmarket.com/#website' },
           'about': { '@id': 'https://www.naturalhairmarket.com/#organization' },
@@ -49,7 +60,7 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
             '@type': 'ImageObject',
             'url': 'https://www.naturalhairmarket.com/file_0000000094ac71f49db79e27f27b239c.png',
           },
-          'description': 'Natural Hair Market est la première marketplace française dédiée à l\'achat et la vente de cheveux naturels humains entre particuliers, salons de coiffure et professionnels des extensions capillaires en Europe.',
+          'description': 'Natural Hair Market est la première marketplace française dédiée à l\'achat et à la vente de cheveux naturels humains entre particuliers, salons de coiffure et professionnels des extensions capillaires en Europe.',
           'foundingDate': '2024',
           'foundingLocation': { '@type': 'Place', 'name': 'France' },
           'areaServed': ['FR', 'BE', 'CH', 'LU', 'ES', 'DE', 'IT'],
@@ -76,7 +87,97 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
     return () => {
       document.getElementById('about-jsonld')?.remove();
     };
-  }, []);
+  }, [language]);
+
+  const visionItems = language === 'fr'
+    ? [
+        { titre: 'Transparent', texte: 'Les prix varient énormément selon les intermédiaires. NaturalHairMarket rétablit un lien direct entre vendeurs et acheteurs.' },
+        { titre: 'Éthique', texte: 'Nos annonces proviennent de personnes consentantes, qui vendent leurs cheveux volontairement et de manière encadrée.' },
+        { titre: 'Accessible', texte: 'Nous rendons les cheveux européens — rares et très demandés — accessibles sans passer par des circuits complexes ou opaques.' },
+        { titre: 'Équitable', texte: 'Le vendeur touche 100 % du montant de sa vente. L\'acheteur paie uniquement 10 % de commission sur la transaction.' },
+      ]
+    : [
+        { titre: 'Transparent', texte: 'Prices vary greatly depending on intermediaries. NaturalHairMarket restores a direct link between sellers and buyers.' },
+        { titre: 'Ethical', texte: 'Our listings come from consenting individuals who sell their hair voluntarily and in a regulated manner.' },
+        { titre: 'Accessible', texte: 'We make European hair — rare and in high demand — accessible without going through complex or opaque channels.' },
+        { titre: 'Fair', texte: 'The seller receives 100% of the sale amount. The buyer pays only a 10% commission on the transaction.' },
+      ];
+
+  const roleItems = language === 'fr'
+    ? [
+        { titre: 'Vérification des annonces', detail: 'Cheveux humains uniquement, mèches attachées, longueur et état conformes. Chaque annonce est vérifiée avant mise en ligne.' },
+        { titre: 'Sécurisation de la transaction', detail: 'Le paiement passe par NaturalHairMarket pour protéger à la fois le vendeur et l\'acheteur.' },
+        { titre: 'Organisation de l\'envoi', detail: 'Les frais de livraison sont à la charge de l\'acheteur. Le vendeur reçoit des instructions claires.' },
+        { titre: 'Service après-vente', detail: 'En cas de doute ou de problème, notre équipe intervient immédiatement. Aucun utilisateur n\'est laissé seul.' },
+      ]
+    : [
+        { titre: 'Listing Verification', detail: 'Human hair only, tied strands, length and condition verified. Each listing is checked before going online.' },
+        { titre: 'Transaction Security', detail: 'Payment goes through NaturalHairMarket to protect both the seller and the buyer.' },
+        { titre: 'Shipping Organization', detail: 'Shipping costs are borne by the buyer. The seller receives clear instructions.' },
+        { titre: 'After-Sales Service', detail: 'In case of doubt or problem, our team steps in immediately. No user is left alone.' },
+      ];
+
+  const stepsItems = language === 'fr'
+    ? [
+        { icon: Package, etape: '1. Annonce & vérification', detail: 'Cheveux humains uniquement, mèches attachées, longueur et état conformes. Chaque annonce est vérifiée avant mise en ligne.' },
+        { icon: CreditCard, etape: '2. Transaction sécurisée', detail: 'Le paiement transite par NaturalHairMarket pour protéger vendeurs et acheteurs à chaque étape.' },
+        { icon: Truck, etape: '3. Envoi & service après-vente', detail: 'L\'acheteur organise la livraison. En cas de doute ou de litige, notre équipe intervient rapidement.' },
+      ]
+    : [
+        { icon: Package, etape: '1. Listing & verification', detail: 'Human hair only, tied strands, length and condition verified. Each listing is checked before going online.' },
+        { icon: CreditCard, etape: '2. Secure transaction', detail: 'Payment goes through NaturalHairMarket to protect sellers and buyers at every step.' },
+        { icon: Truck, etape: '3. Shipping & after-sales service', detail: 'The buyer organizes delivery. In case of doubt or dispute, our team steps in quickly.' },
+      ];
+
+  const pourquoiItems = language === 'fr'
+    ? [
+        'Des salons qui jetaient ou stockaient des mèches très précieuses',
+        'Des particuliers qui ignoraient que leurs cheveux avaient de la valeur',
+        'Des acheteurs forcés d\'importer des cheveux souvent de qualité douteuse',
+        'Un marché dominé par des intermédiaires invisibles',
+      ]
+    : [
+        'Salons that threw away or stockpiled very precious hair strands',
+        'Individuals who didn\'t know their hair had value',
+        'Buyers forced to import hair of often questionable quality',
+        'A market dominated by invisible intermediaries',
+      ];
+
+  const valeurItems = language === 'fr'
+    ? [
+        { num: '1', titre: 'Transparence', detail: 'Chaque mèche est clairement décrite : longueur, poids, couleur, état.' },
+        { num: '2', titre: 'Sécurité', detail: 'Toutes les transactions passent par nous pour protéger chaque utilisateur.' },
+        { num: '3', titre: 'Accessibilité', detail: 'Les vendeurs ne paient rien. Les acheteurs paient seulement 10 % de commission.' },
+        { num: '4', titre: 'Éthique', detail: 'Pas de cheveux ramassés, pas de cheveux synthétiques, pas d\'ambiguïté.' },
+      ]
+    : [
+        { num: '1', titre: 'Transparency', detail: 'Each strand is clearly described: length, weight, color, condition.' },
+        { num: '2', titre: 'Security', detail: 'All transactions go through us to protect every user.' },
+        { num: '3', titre: 'Accessibility', detail: 'Sellers pay nothing. Buyers pay only a 10% commission.' },
+        { num: '4', titre: 'Ethics', detail: 'No swept-up hair, no synthetic hair, no ambiguity.' },
+      ];
+
+  const vendeurItems = language === 'fr'
+    ? ['Salons de coiffure', 'Particuliers', 'Personnes souhaitant valoriser leurs cheveux coupés']
+    : ['Hair salons', 'Individuals', 'People looking to monetize their cut hair'];
+
+  const acheteurItems = language === 'fr'
+    ? ['Perruquiers', 'Prothésistes capillaires', 'Fabricants d\'extensions', 'Artistes FX, théâtre, cinéma', 'Particuliers recherchant de vrais cheveux humains']
+    : ['Wig makers', 'Hair prosthesis specialists', 'Extension manufacturers', 'FX, theater and film artists', 'Individuals looking for real human hair'];
+
+  const ctaItems = language === 'fr'
+    ? [
+        'Vendeurs : créez votre annonce gratuitement',
+        'Acheteurs : trouvez des cheveux naturels ou colorés en quelques secondes',
+        'Une équipe disponible pour vous accompagner',
+        'Service après-vente réactif',
+      ]
+    : [
+        'Sellers: create your listing for free',
+        'Buyers: find natural or colored hair in seconds',
+        'A team available to support you',
+        'Responsive after-sales service',
+      ];
 
   return (
     <article
@@ -92,13 +193,17 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 leading-tight">
-              À propos de Natural Hair Market
+              {language === 'fr' ? 'À propos de Natural Hair Market' : 'About Natural Hair Market'}
             </h1>
-            <p className="text-gray-500 text-sm mt-0.5">La 1ère marketplace de cheveux naturels en France &amp; en Europe</p>
+            <p className="text-gray-500 text-sm mt-0.5">
+              {language === 'fr' ? 'La 1ère marketplace de cheveux naturels en France & en Europe' : 'The 1st natural hair marketplace in France & Europe'}
+            </p>
           </div>
         </div>
         <p className="text-gray-600 leading-relaxed text-sm md:text-base max-w-3xl" itemProp="description">
-          NaturalHairMarket est la première marketplace dédiée à la vente et à l'achat de cheveux humains naturels et colorés, coupés dans les salons de coiffure ou par des particuliers en France et en Europe. Nous avons créé cette plateforme pour offrir une alternative simple, éthique et sécurisée à un marché jusque-là opaque et difficile d'accès.
+          {language === 'fr'
+            ? "NaturalHairMarket est la première marketplace dédiée à la vente et à l'achat de cheveux humains naturels et colorés, coupés dans les salons de coiffure ou par des particuliers en France et en Europe. Nous avons créé cette plateforme pour offrir une alternative simple, éthique et sécurisée à un marché jusque-là opaque et difficile d'accès."
+            : "NaturalHairMarket is the first marketplace dedicated to selling and buying natural and colored human hair, cut in hair salons or by individuals in France and Europe. We created this platform to offer a simple, ethical and secure alternative to a market that was previously opaque and difficult to access."}
         </p>
       </header>
 
@@ -106,15 +211,10 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
       <section aria-labelledby="vision" className="bg-emerald-50 rounded-2xl p-6 mb-8">
         <h2 id="vision" className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-emerald-600" />
-          Notre vision : un marché du cheveu plus juste
+          {language === 'fr' ? 'Notre vision : un marché du cheveu plus juste' : 'Our vision: a fairer hair market'}
         </h2>
         <div className="space-y-4">
-          {[
-            { titre: 'Transparent', texte: 'Les prix varient énormément selon les intermédiaires. NaturalHairMarket rétablit un lien direct entre vendeurs et acheteurs.' },
-            { titre: 'Éthique', texte: 'Nos annonces proviennent de personnes consentantes, qui vendent leurs cheveux volontairement et de manière encadrée.' },
-            { titre: 'Accessible', texte: 'Nous rendons les cheveux européens — rares et très demandés — accessibles sans passer par des circuits complexes ou opaques.' },
-            { titre: 'Équitable', texte: 'Le vendeur touche 100 % du montant de sa vente. L\'acheteur paie uniquement 10 % de commission sur la transaction.' },
-          ].map(({ titre, texte }) => (
+          {visionItems.map(({ titre, texte }) => (
             <div key={titre} className="flex gap-3">
               <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
               <div>
@@ -130,18 +230,15 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
       <section aria-labelledby="role" className="mb-8">
         <h2 id="role" className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
           <Shield className="w-5 h-5 text-emerald-600" />
-          Notre rôle : un intermédiaire de confiance
+          {language === 'fr' ? 'Notre rôle : un intermédiaire de confiance' : 'Our role: a trusted intermediary'}
         </h2>
         <p className="text-gray-600 mb-5 text-sm md:text-base">
-          Contrairement aux plateformes classiques, NaturalHairMarket n'est pas un simple site d'annonces. Nous jouons un rôle central à chaque étape de la transaction.
+          {language === 'fr'
+            ? "Contrairement aux plateformes classiques, NaturalHairMarket n'est pas un simple site d'annonces. Nous jouons un rôle central à chaque étape de la transaction."
+            : "Unlike traditional platforms, NaturalHairMarket is not just a simple listing site. We play a central role at every step of the transaction."}
         </p>
         <div className="grid sm:grid-cols-2 gap-4 mb-6">
-          {[
-            { titre: 'Vérification des annonces', detail: 'Cheveux humains uniquement, mèches attachées, longueur et état conformes. Chaque annonce est vérifiée avant mise en ligne.' },
-            { titre: 'Sécurisation de la transaction', detail: 'Le paiement passe par NaturalHairMarket pour protéger à la fois le vendeur et l\'acheteur.' },
-            { titre: 'Organisation de l\'envoi', detail: 'Les frais de livraison sont à la charge de l\'acheteur. Le vendeur reçoit des instructions claires.' },
-            { titre: 'Service après-vente', detail: 'En cas de doute ou de problème, notre équipe intervient immédiatement. Aucun utilisateur n\'est laissé seul.' },
-          ].map(({ titre, detail }) => (
+          {roleItems.map(({ titre, detail }) => (
             <div key={titre} className="bg-white border border-gray-200 rounded-xl p-4">
               <h3 className="font-bold text-gray-800 mb-1 flex items-center gap-2 text-sm">
                 <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
@@ -154,13 +251,11 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
 
         {/* Comment ça marche */}
         <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-5 text-center">Comment ça marche — 3 étapes</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-5 text-center">
+            {language === 'fr' ? 'Comment ça marche — 3 étapes' : 'How it works — 3 steps'}
+          </h3>
           <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { icon: Package, etape: '1. Annonce & vérification', detail: 'Cheveux humains uniquement, mèches attachées, longueur et état conformes. Chaque annonce est vérifiée avant mise en ligne.' },
-              { icon: CreditCard, etape: '2. Transaction sécurisée', detail: 'Le paiement transite par NaturalHairMarket pour protéger vendeurs et acheteurs à chaque étape.' },
-              { icon: Truck, etape: '3. Envoi & service après-vente', detail: 'L\'acheteur organise la livraison. En cas de doute ou de litige, notre équipe intervient rapidement.' },
-            ].map(({ icon: Icon, etape, detail }) => (
+            {stepsItems.map(({ icon: Icon, etape, detail }) => (
               <div key={etape} className="bg-white rounded-xl p-5 shadow-sm flex flex-col gap-3">
                 <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <Icon className="w-5 h-5 text-emerald-600" />
@@ -177,15 +272,14 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
 
       {/* Pourquoi NHM existe */}
       <section aria-labelledby="pourquoi" className="bg-teal-50 rounded-2xl p-6 mb-8">
-        <h2 id="pourquoi" className="text-xl font-bold text-gray-800 mb-4">Pourquoi Natural Hair Market existe ?</h2>
-        <p className="text-gray-600 mb-3 text-sm">Pendant des années, nous avons constaté :</p>
+        <h2 id="pourquoi" className="text-xl font-bold text-gray-800 mb-4">
+          {language === 'fr' ? 'Pourquoi Natural Hair Market existe ?' : 'Why does Natural Hair Market exist?'}
+        </h2>
+        <p className="text-gray-600 mb-3 text-sm">
+          {language === 'fr' ? 'Pendant des années, nous avons constaté :' : 'For years, we have observed:'}
+        </p>
         <ul className="space-y-1.5 text-gray-600 text-sm mb-4">
-          {[
-            'Des salons qui jetaient ou stockaient des mèches très précieuses',
-            'Des particuliers qui ignoraient que leurs cheveux avaient de la valeur',
-            'Des acheteurs forcés d\'importer des cheveux souvent de qualité douteuse',
-            'Un marché dominé par des intermédiaires invisibles',
-          ].map((item) => (
+          {pourquoiItems.map((item) => (
             <li key={item} className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-2" />
               {item}
@@ -193,7 +287,9 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
           ))}
         </ul>
         <p className="text-gray-700 font-semibold text-sm">
-          NaturalHairMarket connecte directement ceux qui coupent et ceux qui transforment. C'est plus juste pour tout le monde.
+          {language === 'fr'
+            ? "NaturalHairMarket connecte directement ceux qui coupent et ceux qui transforment. C'est plus juste pour tout le monde."
+            : "NaturalHairMarket directly connects those who cut and those who transform. It's fairer for everyone."}
         </p>
       </section>
 
@@ -201,23 +297,24 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
       <section aria-labelledby="valeurs" className="mb-8">
         <h2 id="valeurs" className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
           <Heart className="w-5 h-5 text-emerald-600" />
-          Nos valeurs
+          {language === 'fr' ? 'Nos valeurs' : 'Our values'}
         </h2>
         <div className="grid sm:grid-cols-2 gap-4">
-          {[
-            { num: '1', titre: 'Transparence', detail: 'Chaque mèche est clairement décrite : longueur, poids, couleur, état.' },
-            { num: '2', titre: 'Sécurité', detail: 'Toutes les transactions passent par nous pour protéger chaque utilisateur.' },
-            { num: '3', titre: 'Accessibilité', detail: 'Les vendeurs ne paient rien. Les acheteurs paient seulement 10 % de commission.' },
-            { num: '4', titre: 'Éthique', detail: 'Pas de cheveux ramassés, pas de cheveux synthétiques, pas d\'ambiguïté.' },
-          ].map(({ num, titre, detail }) => (
+          {valeurItems.map(({ num, titre, detail }) => (
             <div key={num} className="bg-white border border-gray-200 rounded-xl p-4">
               <h3 className="font-bold text-gray-800 mb-1 text-sm">{num}. {titre}</h3>
               <p className="text-gray-600 text-sm">{detail}</p>
             </div>
           ))}
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:col-span-2">
-            <h3 className="font-bold text-gray-800 mb-1 text-sm">5. Respect du travail des salons</h3>
-            <p className="text-gray-600 text-sm">Nous aidons les coiffeurs à valoriser un matériau qu'ils ne valorisaient pas.</p>
+            <h3 className="font-bold text-gray-800 mb-1 text-sm">
+              {language === 'fr' ? '5. Respect du travail des salons' : '5. Respect for salon work'}
+            </h3>
+            <p className="text-gray-600 text-sm">
+              {language === 'fr'
+                ? "Nous aidons les coiffeurs à valoriser un matériau qu'ils ne valorisaient pas."
+                : "We help hairdressers monetize a material they weren't valuing."}
+            </p>
           </div>
         </div>
       </section>
@@ -226,16 +323,16 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
       <section aria-labelledby="audience" className="mb-8">
         <h2 id="audience" className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">
           <Users className="w-5 h-5 text-emerald-600" />
-          À qui s'adresse Natural Hair Market ?
+          {language === "fr" ? "À qui s'adresse Natural Hair Market ?" : 'Who is Natural Hair Market for?'}
         </h2>
         <div className="grid sm:grid-cols-2 gap-6">
           <div className="bg-emerald-50 rounded-xl p-5">
             <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-emerald-600" />
-              Aux vendeurs
+              {language === 'fr' ? 'Aux vendeurs' : 'For sellers'}
             </h3>
             <ul className="space-y-1 text-sm text-gray-600">
-              {['Salons de coiffure', 'Particuliers', 'Personnes souhaitant valoriser leurs cheveux coupés'].map((v) => (
+              {vendeurItems.map((v) => (
                 <li key={v} className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0 mt-1.5" />{v}
                 </li>
@@ -245,10 +342,10 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
           <div className="bg-teal-50 rounded-xl p-5">
             <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm">
               <CheckCircle className="w-4 h-4 text-teal-600" />
-              Aux acheteurs
+              {language === 'fr' ? 'Aux acheteurs' : 'For buyers'}
             </h3>
             <ul className="space-y-1 text-sm text-gray-600">
-              {['Perruquiers', 'Prothésistes capillaires', 'Fabricants d\'extensions', 'Artistes FX, théâtre, cinéma', 'Particuliers recherchant de vrais cheveux humains'].map((v) => (
+              {acheteurItems.map((v) => (
                 <li key={v} className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" />{v}
                 </li>
@@ -260,26 +357,31 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
 
       {/* Le mot de la fondatrice */}
       <section className="bg-white border-2 border-emerald-600 rounded-2xl p-6 mb-8">
-        <h2 className="text-lg font-bold text-gray-800 mb-3 italic">Le mot de la fondatrice</h2>
+        <h2 className="text-lg font-bold text-gray-800 mb-3 italic">
+          {language === 'fr' ? 'Le mot de la fondatrice' : 'A word from the founder'}
+        </h2>
         <blockquote className="text-gray-600 leading-relaxed italic mb-3 text-sm md:text-base" cite="https://www.naturalhairmarket.com/about">
-          « J'ai créé NaturalHairMarket pour mettre fin au gaspillage des cheveux coupés en salon, pour offrir une alternative aux importations, et pour permettre à chacun de vendre ses cheveux dans un cadre juste et sécurisé. Aujourd'hui, c'est la première plateforme française qui protège à la fois les vendeurs et les acheteurs. »
+          {language === 'fr'
+            ? "« J'ai créé NaturalHairMarket pour mettre fin au gaspillage des cheveux coupés en salon, pour offrir une alternative aux importations, et pour permettre à chacun de vendre ses cheveux dans un cadre juste et sécurisé. Aujourd'hui, c'est la première plateforme française qui protège à la fois les vendeurs et les acheteurs. »"
+            : "\"I created NaturalHairMarket to put an end to the waste of cut hair in salons, to offer an alternative to imports, and to allow everyone to sell their hair in a fair and secure framework. Today, it is the first French platform that protects both sellers and buyers.\""}
         </blockquote>
-        <p className="text-gray-800 font-semibold text-right text-sm">— Fondatrice de Natural Hair Market</p>
+        <p className="text-gray-800 font-semibold text-right text-sm">
+          {language === 'fr' ? '— Fondatrice de Natural Hair Market' : '— Founder of Natural Hair Market'}
+        </p>
       </section>
 
       {/* CTA */}
       <section className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl p-8 mb-8 text-center">
-        <h2 className="text-xl font-bold mb-3">Rejoignez Natural Hair Market</h2>
+        <h2 className="text-xl font-bold mb-3">
+          {language === 'fr' ? 'Rejoignez Natural Hair Market' : 'Join Natural Hair Market'}
+        </h2>
         <p className="text-emerald-50 mb-5 text-sm leading-relaxed max-w-xl mx-auto">
-          Plus qu'une marketplace : un nouveau standard, une plateforme fiable, éthique et innovante pour tous ceux qui travaillent avec les cheveux humains.
+          {language === 'fr'
+            ? "Plus qu'une marketplace : un nouveau standard, une plateforme fiable, éthique et innovante pour tous ceux qui travaillent avec les cheveux humains."
+            : "More than a marketplace: a new standard, a reliable, ethical and innovative platform for everyone who works with human hair."}
         </p>
         <div className="space-y-2 text-left max-w-xl mx-auto text-sm mb-4">
-          {[
-            'Vendeurs : créez votre annonce gratuitement',
-            'Acheteurs : trouvez des cheveux naturels ou colorés en quelques secondes',
-            'Une équipe disponible pour vous accompagner',
-            'Service après-vente réactif',
-          ].map((item) => (
+          {ctaItems.map((item) => (
             <div key={item} className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{item}</span>
@@ -290,13 +392,15 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
           onClick={() => onNavigate?.('sell-my-hair')}
           className="inline-block mt-2 px-6 py-2.5 bg-white text-emerald-700 font-bold rounded-lg hover:bg-emerald-50 transition-colors text-sm"
         >
-          Commencer à vendre mes cheveux →
+          {language === 'fr' ? 'Commencer à vendre mes cheveux →' : 'Start selling my hair →'}
         </button>
       </section>
 
       {/* Contact */}
       <section aria-labelledby="contact" className="bg-white border border-gray-200 rounded-2xl p-6">
-        <h2 id="contact" className="text-xl font-bold text-gray-800 mb-5 text-center">Nous contacter</h2>
+        <h2 id="contact" className="text-xl font-bold text-gray-800 mb-5 text-center">
+          {language === 'fr' ? 'Nous contacter' : 'Contact Us'}
+        </h2>
         <div className="space-y-3 max-w-md mx-auto">
           <a
             href="mailto:naturalhairmarket@gmail.com"
@@ -308,7 +412,9 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
               </svg>
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-medium">Email</p>
+              <p className="text-xs text-gray-500 font-medium">
+                {language === 'fr' ? 'Email' : 'Email'}
+              </p>
               <span className="text-emerald-600 font-semibold text-sm">naturalhairmarket@gmail.com</span>
             </div>
           </a>
@@ -322,14 +428,18 @@ export function AboutUs({ onNavigate }: AboutUsProps) {
               </svg>
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-medium">Téléphone</p>
+              <p className="text-xs text-gray-500 font-medium">
+                {language === 'fr' ? 'Téléphone' : 'Phone'}
+              </p>
               <span className="text-emerald-600 font-semibold text-sm">+33 7 84 89 86 47</span>
             </div>
           </a>
         </div>
         <p className="text-center text-gray-500 text-xs mt-4">
-          Réponse sous 24h ·{' '}
-          <a href="mailto:naturalhairmarket@gmail.com" className="text-emerald-600 font-semibold hover:underline">Nous contacter</a>
+          {language === 'fr' ? 'Réponse sous 24h · ' : 'Reply within 24h · '}
+          <a href="mailto:naturalhairmarket@gmail.com" className="text-emerald-600 font-semibold hover:underline">
+            {language === 'fr' ? 'Nous contacter' : 'Contact Us'}
+          </a>
         </p>
       </section>
     </article>

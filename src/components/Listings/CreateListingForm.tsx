@@ -12,7 +12,7 @@ interface CreateListingFormProps {
 
 export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps) {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -59,29 +59,56 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
 
     const parts: string[] = [];
 
-    parts.push(
-      `Cette annonce propose des cheveux ${type}${formData.hair_color ? ` de couleur ${formData.hair_color}` : ''}.`
-    );
+    if (language === 'fr') {
+      parts.push(
+        `Cette annonce propose des cheveux ${type}${formData.hair_color ? ` de couleur ${formData.hair_color}` : ''}.`
+      );
 
-    if (lengthCm && lengthInches && weightNum) {
-      parts.push(`D'une longueur de ${lengthCm} cm (${lengthInches} pouces), cette pièce pèse environ ${weightNum} g.`);
-    } else if (lengthCm && lengthInches) {
-      parts.push(`D'une longueur de ${lengthCm} cm (${lengthInches} pouces).`);
-    }
+      if (lengthCm && lengthInches && weightNum) {
+        parts.push(`D'une longueur de ${lengthCm} cm (${lengthInches} pouces), cette pièce pèse environ ${weightNum} g.`);
+      } else if (lengthCm && lengthInches) {
+        parts.push(`D'une longueur de ${lengthCm} cm (${lengthInches} pouces).`);
+      }
 
-    const textureStr = formData.hair_texture ? `La texture est ${formData.hair_texture} et l'` : "L'";
-    parts.push(`${textureStr}article est dans un état ${condition}.`);
+      const textureStr = formData.hair_texture ? `La texture est ${formData.hair_texture} et l'` : "L'";
+      parts.push(`${textureStr}article est dans un état ${condition}.`);
 
-    if (formData.country) {
-      parts.push(`Provenance : ${formData.country}.`);
-    }
+      if (formData.country) {
+        parts.push(`Provenance : ${formData.country}.`);
+      }
 
-    if (formData.is_natural_color) {
-      parts.push('Ces cheveux sont naturels.');
-    }
+      if (formData.is_natural_color) {
+        parts.push('Ces cheveux sont naturels.');
+      }
 
-    if (formData.is_dyed || formData.is_treated) {
-      parts.push('Note : Cheveux colorés ou traités.');
+      if (formData.is_dyed || formData.is_treated) {
+        parts.push('Note : Cheveux colorés ou traités.');
+      }
+    } else {
+      parts.push(
+        `This listing offers ${type} hair${formData.hair_color ? ` in color ${formData.hair_color}` : ''}.`
+      );
+
+      if (lengthCm && lengthInches && weightNum) {
+        parts.push(`With a length of ${lengthCm} cm (${lengthInches} inches), this piece weighs approximately ${weightNum} g.`);
+      } else if (lengthCm && lengthInches) {
+        parts.push(`With a length of ${lengthCm} cm (${lengthInches} inches).`);
+      }
+
+      const textureStr = formData.hair_texture ? `The texture is ${formData.hair_texture} and the ` : 'The ';
+      parts.push(`${textureStr}item is in ${condition} condition.`);
+
+      if (formData.country) {
+        parts.push(`Origin: ${formData.country}.`);
+      }
+
+      if (formData.is_natural_color) {
+        parts.push('This hair is natural.');
+      }
+
+      if (formData.is_dyed || formData.is_treated) {
+        parts.push('Note: Colored or treated hair.');
+      }
     }
 
     return parts.join(' ');
@@ -101,10 +128,10 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
     }
 
     if (formData.is_natural_color) {
-      parts.push('naturels');
+      parts.push(language === 'fr' ? 'naturels' : 'natural');
     }
 
-    return `Cheveux ${parts.join(' ')}`;
+    return language === 'fr' ? `Cheveux ${parts.join(' ')}` : `Hair ${parts.join(' ')}`;
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

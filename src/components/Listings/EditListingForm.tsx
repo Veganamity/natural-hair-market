@@ -28,7 +28,7 @@ function parseWeightGrams(hairWeight: string): number {
 
 export function EditListingForm({ listing, onClose, onSuccess }: EditListingFormProps) {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -73,10 +73,10 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
     }
 
     if (formData.is_natural_color) {
-      parts.push('naturels');
+      parts.push(language === 'fr' ? 'naturels' : 'natural');
     }
 
-    return `Cheveux ${parts.join(' ')}`;
+    return language === 'fr' ? `Cheveux ${parts.join(' ')}` : `Hair ${parts.join(' ')}`;
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +127,9 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
 
     try {
       const title = generateTitle();
-      const description = `Cheveux ${formData.hair_type} de ${formData.hair_length}, couleur ${formData.hair_color}${formData.is_natural_color ? ' (naturelle)' : ''}${formData.is_dyed ? ', colorés' : ''}${formData.is_treated ? ', traités' : ''}. État: ${formData.condition}.`;
+      const description = language === 'fr'
+        ? `Cheveux ${formData.hair_type} de ${formData.hair_length}, couleur ${formData.hair_color}${formData.is_natural_color ? ' (naturelle)' : ''}${formData.is_dyed ? ', colorés' : ''}${formData.is_treated ? ', traités' : ''}. État: ${formData.condition}.`
+        : `Hair ${formData.hair_type} of ${formData.hair_length}, color ${formData.hair_color}${formData.is_natural_color ? ' (natural)' : ''}${formData.is_dyed ? ', dyed' : ''}${formData.is_treated ? ', treated' : ''}. Condition: ${formData.condition}.`;
 
       const { error: updateError } = await supabase
         .from('listings')

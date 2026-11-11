@@ -153,8 +153,8 @@ export function TransactionsView() {
         } else if (response.status === 503) {
           console.log('503: label not ready yet, retrying...');
         } else {
-          const err = await response.json().catch(() => ({ error: `Erreur ${response.status}` }));
-          throw new Error(err.error || `Erreur ${response.status}`);
+          const err = await response.json().catch(() => ({ error: t('transactions.errorStatus').replace('{status}', String(response.status)) }));
+          throw new Error(err.error || t('transactions.errorStatus').replace('{status}', String(response.status)));
         }
 
         const remaining = deadline - Date.now();

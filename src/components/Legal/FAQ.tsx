@@ -1,5 +1,6 @@
 import { HelpCircle, ChevronDown, Scissors, ShoppingBag, Shield } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface FAQProps {
   onClose?: () => void;
@@ -11,7 +12,7 @@ interface FAQItem {
   answer: string;
 }
 
-const SELL_FAQS: FAQItem[] = [
+const SELL_FAQS_FR: FAQItem[] = [
   {
     question: 'Quels types de cheveux puis-je vendre sur Natural Hair Market ?',
     answer:
@@ -39,7 +40,7 @@ const SELL_FAQS: FAQItem[] = [
   },
 ];
 
-const BUY_FAQS: FAQItem[] = [
+const BUY_FAQS_FR: FAQItem[] = [
   {
     question: 'Comment acheter des cheveux naturels sur la plateforme ?',
     answer:
@@ -57,7 +58,53 @@ const BUY_FAQS: FAQItem[] = [
   },
 ];
 
-const ALL_FAQS = [...SELL_FAQS, ...BUY_FAQS];
+const SELL_FAQS_EN: FAQItem[] = [
+  {
+    question: 'What types of hair can I sell on Natural Hair Market?',
+    answer:
+      'Natural Hair Market accepts all natural human hair: European natural hair, French natural hair, colored hair, highlighted hair, gray hair, white hair, curly, straight or kinky hair. It must be cut, tied at the root and in good condition (dry, clean, untangled). Synthetic hair, floor-swept hair or damaged hair is strictly refused. Each hair sale listing is verified by our team before publication to guarantee the quality offered to buyers.',
+  },
+  {
+    question: 'What is the minimum length required to sell hair?',
+    answer:
+      'The minimum length to sell your hair on Natural Hair Market is 15 cm, measured from root to tip. Below this length, strands can only be offered as special lots for artistic uses (FX, theater, weaving). The longer your hair, the higher the natural hair buyback price: a strand of 40 cm or more is particularly sought after by wig makers and extension manufacturers in Europe.',
+  },
+  {
+    question: 'How is my hair evaluated and appraised?',
+    answer:
+      'The natural hair buyback price depends on several criteria: length (in centimeters), weight (in grams), color (virgin, colored or gray) and texture. Our built-in price calculator gives you an instant, free estimate in seconds. Virgin uncolored natural hair gets the highest valuations. Natural gray hair is also highly prized in the European market. You then freely set your selling price.',
+  },
+  {
+    question: 'How and when am I paid after the sale?',
+    answer:
+      'As soon as a buyer confirms their order, payment is secured on our platform via Stripe. Once the strand is shipped and received by the buyer, the transfer is released to your bank account within 48 business hours. The seller receives 100% of the price shown in their listing — Natural Hair Market takes no commission on the sale. Shipping costs are entirely borne by the buyer; you advance nothing.',
+  },
+  {
+    question: 'Is it legal to sell your hair in France?',
+    answer:
+      'Yes, selling your hair is perfectly legal in France and Europe. No law prohibits the voluntary and consensual sale of human hair. It is an ancient and regulated practice, particularly in the wig-making, hair extension and medical hair prosthesis sectors. Natural Hair Market acts as a transparent and secure intermediary between individual or salon sellers and professional or individual buyers, in strict compliance with current regulations.',
+  },
+];
+
+const BUY_FAQS_EN: FAQItem[] = [
+  {
+    question: 'How to buy natural hair on the platform?',
+    answer:
+      'Buying natural hair on Natural Hair Market is simple and secure. Browse listings filterable by length, color, texture and location. Once you find your ideal strand, add it to your cart and pay online via Stripe (bank card). A transparent 10% commission is added to the seller\'s price. Natural Hair Market then coordinates shipping with the seller. You receive your order at home or at a pickup point anywhere in France and Europe.',
+  },
+  {
+    question: 'What is the origin and traceability of the hair offered?',
+    answer:
+      'All hair offered for purchase as European natural hair on Natural Hair Market comes exclusively from voluntary donors: French and European individuals, partner hair salons. Each listing is verified by our team (real photos, compliant length, certified condition). European natural hair is particularly valued for its quality, density and compatibility with extension application techniques or the making of medical wigs and hair prostheses.',
+  },
+  {
+    question: 'What guarantees are offered to buyers?',
+    answer:
+      'Natural Hair Market protects every natural hair buyer. Payment is held securely until confirmation of order receipt — you only release the transfer to the seller after validating the conformity of the received strand. In case of a dispute (non-conforming strand, difference in length or color), our after-sales service intervenes to open a mediation file, organize a return and proceed with a full refund if necessary. You are never alone facing a problem.',
+  },
+];
+
+const ALL_FAQS_FR = [...SELL_FAQS_FR, ...BUY_FAQS_FR];
 
 function FAQAccordion({ items, color }: { items: FAQItem[]; color: 'amber' | 'emerald' }) {
   const [open, setOpen] = useState<number | null>(null);
@@ -105,17 +152,30 @@ function FAQAccordion({ items, color }: { items: FAQItem[]; color: 'amber' | 'em
 }
 
 export function FAQ({ onNavigate }: FAQProps) {
+  const { language } = useLanguage();
+
+  const SELL_FAQS = language === 'fr' ? SELL_FAQS_FR : SELL_FAQS_EN;
+  const BUY_FAQS = language === 'fr' ? BUY_FAQS_FR : BUY_FAQS_EN;
+
   useEffect(() => {
-    document.title = 'FAQ – Vendre et acheter des cheveux naturels | Natural Hair Market';
+    document.title = language === 'fr'
+      ? 'FAQ – Vendre et acheter des cheveux naturels | Natural Hair Market'
+      : 'FAQ – Sell and buy natural hair | Natural Hair Market';
 
     const metaDesc = document.getElementById('meta-description') as HTMLMetaElement | null;
-    if (metaDesc) metaDesc.content = 'Toutes les réponses à vos questions sur la vente et l\'achat de cheveux naturels sur Natural Hair Market. Légalité, prix, garanties, livraison.';
+    if (metaDesc) metaDesc.content = language === 'fr'
+      ? 'Toutes les réponses à vos questions sur la vente et l\'achat de cheveux naturels sur Natural Hair Market. Légalité, prix, garanties, livraison.'
+      : 'All the answers to your questions about selling and buying natural hair on Natural Hair Market. Legality, pricing, guarantees, shipping.';
 
     const ogTitle = document.getElementById('og-title') as HTMLMetaElement | null;
-    if (ogTitle) ogTitle.content = 'FAQ – Vendre et acheter des cheveux naturels | Natural Hair Market';
+    if (ogTitle) ogTitle.content = language === 'fr'
+      ? 'FAQ – Vendre et acheter des cheveux naturels | Natural Hair Market'
+      : 'FAQ – Sell and buy natural hair | Natural Hair Market';
 
     const ogDesc = document.getElementById('og-description') as HTMLMetaElement | null;
-    if (ogDesc) ogDesc.content = 'Toutes les réponses à vos questions sur la vente et l\'achat de cheveux naturels sur Natural Hair Market.';
+    if (ogDesc) ogDesc.content = language === 'fr'
+      ? 'Toutes les réponses à vos questions sur la vente et l\'achat de cheveux naturels sur Natural Hair Market.'
+      : 'All the answers to your questions about selling and buying natural hair on Natural Hair Market.';
 
     const ogUrl = document.getElementById('og-url') as HTMLMetaElement | null;
     if (ogUrl) ogUrl.content = 'https://www.naturalhairmarket.com/faq';
@@ -142,7 +202,7 @@ export function FAQ({ onNavigate }: FAQProps) {
           'availableLanguage': 'French',
         },
       },
-      'mainEntity': ALL_FAQS.map(({ question, answer }) => ({
+      'mainEntity': ALL_FAQS_FR.map(({ question, answer }) => ({
         '@type': 'Question',
         'name': question,
         'acceptedAnswer': { '@type': 'Answer', 'text': answer },
@@ -153,7 +213,19 @@ export function FAQ({ onNavigate }: FAQProps) {
     return () => {
       document.getElementById('faq-jsonld')?.remove();
     };
-  }, []);
+  }, [language]);
+
+  const badges = language === 'fr'
+    ? [
+        { icon: Scissors, label: '5 questions vendeurs', color: 'amber' },
+        { icon: ShoppingBag, label: '3 questions acheteurs', color: 'emerald' },
+        { icon: Shield, label: 'Transactions 100 % sécurisées', color: 'teal' },
+      ]
+    : [
+        { icon: Scissors, label: '5 seller questions', color: 'amber' },
+        { icon: ShoppingBag, label: '3 buyer questions', color: 'emerald' },
+        { icon: Shield, label: '100% secure transactions', color: 'teal' },
+      ];
 
   return (
     <article
@@ -169,38 +241,56 @@ export function FAQ({ onNavigate }: FAQProps) {
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 leading-tight">
-              Questions fréquentes — vente &amp; achat de cheveux naturels
+              {language === 'fr' ? 'Questions fréquentes — vente & achat de cheveux naturels' : 'Frequently Asked Questions — selling & buying natural hair'}
             </h1>
-            <p className="text-gray-500 text-sm mt-0.5">Natural Hair Market · Réponses mises à jour en 2025</p>
+            <p className="text-gray-500 text-sm mt-0.5">
+              {language === 'fr' ? 'Natural Hair Market · Réponses mises à jour en 2025' : 'Natural Hair Market · Answers updated in 2025'}
+            </p>
           </div>
         </div>
 
         <p className="text-gray-600 leading-relaxed max-w-3xl text-sm md:text-base">
-          Vous souhaitez <strong>vendre ses cheveux</strong> pour la première fois ou réaliser un{' '}
-          <strong>achat cheveux naturels</strong> de qualité ? Retrouvez ci-dessous les réponses aux
-          questions les plus fréquentes. Pour aller plus loin, consultez notre guide{' '}
-          <button
-            onClick={() => onNavigate?.('sell-my-hair')}
-            className="text-emerald-600 font-semibold hover:underline"
-          >
-            vendre mes cheveux
-          </button>
-          {' '}ou{' '}
-          <button
-            onClick={() => onNavigate?.('buy-european-hair')}
-            className="text-emerald-600 font-semibold hover:underline"
-          >
-            acheter des cheveux naturels européens
-          </button>
-          .
+          {language === 'fr' ? (
+            <>Vous souhaitez <strong>vendre ses cheveux</strong> pour la première fois ou réaliser un{' '}
+            <strong>achat cheveux naturels</strong> de qualité ? Retrouvez ci-dessous les réponses aux
+            questions les plus fréquentes. Pour aller plus loin, consultez notre guide{' '}
+            <button
+              onClick={() => onNavigate?.('sell-my-hair')}
+              className="text-emerald-600 font-semibold hover:underline"
+            >
+              vendre mes cheveux
+            </button>
+            {' '}ou{' '}
+            <button
+              onClick={() => onNavigate?.('buy-european-hair')}
+              className="text-emerald-600 font-semibold hover:underline"
+            >
+              acheter des cheveux naturels européens
+            </button>
+            .</>
+          ) : (
+            <>Want to <strong>sell your hair</strong> for the first time or make a quality{' '}
+            <strong>natural hair purchase</strong>? Find below the answers to the
+            most frequently asked questions. To learn more, check our guide to{' '}
+            <button
+              onClick={() => onNavigate?.('sell-my-hair')}
+              className="text-emerald-600 font-semibold hover:underline"
+            >
+              selling my hair
+            </button>
+            {' '}or{' '}
+            <button
+              onClick={() => onNavigate?.('buy-european-hair')}
+              className="text-emerald-600 font-semibold hover:underline"
+            >
+              buying European natural hair
+            </button>
+            .</>
+          )}
         </p>
 
         <div className="flex flex-wrap gap-3 mt-5">
-          {[
-            { icon: Scissors, label: '5 questions vendeurs', color: 'amber' },
-            { icon: ShoppingBag, label: '3 questions acheteurs', color: 'emerald' },
-            { icon: Shield, label: 'Transactions 100 % sécurisées', color: 'teal' },
-          ].map(({ icon: Icon, label, color }) => (
+          {badges.map(({ icon: Icon, label, color }) => (
             <span
               key={label}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-${color}-50 text-${color}-700 border border-${color}-200`}
@@ -219,8 +309,12 @@ export function FAQ({ onNavigate }: FAQProps) {
             <Scissors className="w-5 h-5 text-amber-600" />
           </div>
           <div>
-            <h2 id="faq-vendeurs" className="text-xl font-bold text-gray-900">Questions sur la vente de cheveux</h2>
-            <p className="text-sm text-gray-500">Publication gratuite · Aucune commission vendeur · Paiement sécurisé</p>
+            <h2 id="faq-vendeurs" className="text-xl font-bold text-gray-900">
+              {language === 'fr' ? 'Questions sur la vente de cheveux' : 'Questions about selling hair'}
+            </h2>
+            <p className="text-sm text-gray-500">
+              {language === 'fr' ? 'Publication gratuite · Aucune commission vendeur · Paiement sécurisé' : 'Free listing · No seller commission · Secure payment'}
+            </p>
           </div>
         </div>
         <FAQAccordion items={SELL_FAQS} color="amber" />
@@ -230,7 +324,7 @@ export function FAQ({ onNavigate }: FAQProps) {
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:text-amber-800 hover:underline transition-colors"
           >
             <Scissors className="w-4 h-4" />
-            Voir notre guide complet pour vendre mes cheveux naturels →
+            {language === 'fr' ? 'Voir notre guide complet pour vendre mes cheveux naturels →' : 'See our complete guide to selling my natural hair →'}
           </button>
         </div>
       </section>
@@ -242,8 +336,12 @@ export function FAQ({ onNavigate }: FAQProps) {
             <ShoppingBag className="w-5 h-5 text-emerald-600" />
           </div>
           <div>
-            <h2 id="faq-acheteurs" className="text-xl font-bold text-gray-900">Questions sur l'achat de cheveux naturels</h2>
-            <p className="text-sm text-gray-500">Cheveux naturels européens · Qualité vérifiée · 10 % de commission acheteur</p>
+            <h2 id="faq-acheteurs" className="text-xl font-bold text-gray-900">
+              {language === "fr" ? "Questions sur l'achat de cheveux naturels" : 'Questions about buying natural hair'}
+            </h2>
+            <p className="text-sm text-gray-500">
+              {language === 'fr' ? 'Cheveux naturels européens · Qualité vérifiée · 10 % de commission acheteur' : 'European natural hair · Verified quality · 10% buyer commission'}
+            </p>
           </div>
         </div>
         <FAQAccordion items={BUY_FAQS} color="emerald" />
@@ -253,16 +351,20 @@ export function FAQ({ onNavigate }: FAQProps) {
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-800 hover:underline transition-colors"
           >
             <ShoppingBag className="w-4 h-4" />
-            En savoir plus sur l'achat cheveux naturels européens →
+            {language === "fr" ? "En savoir plus sur l'achat cheveux naturels européens →" : 'Learn more about buying European natural hair →'}
           </button>
         </div>
       </section>
 
       {/* Contact */}
       <section className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-        <h2 className="text-base font-bold text-gray-800 mb-2">Vous n'avez pas trouvé votre réponse ?</h2>
+        <h2 className="text-base font-bold text-gray-800 mb-2">
+          {language === 'fr' ? "Vous n'avez pas trouvé votre réponse ?" : "Didn't find your answer?"}
+        </h2>
         <p className="text-sm text-gray-600 mb-4">
-          Notre équipe répond à toutes vos questions sur la vente et l'achat de cheveux naturels sous 24h.
+          {language === 'fr'
+            ? "Notre équipe répond à toutes vos questions sur la vente et l'achat de cheveux naturels sous 24h."
+            : "Our team answers all your questions about selling and buying natural hair within 24h."}
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <a

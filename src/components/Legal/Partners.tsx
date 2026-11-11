@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { ExternalLink, Handshake } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Partner {
   name: string;
@@ -18,14 +19,18 @@ const partners: Partner[] = [
 ];
 
 export function Partners() {
+  const { language } = useLanguage();
+
   useEffect(() => {
     const prevTitle = document.title;
     const m = document.getElementById('meta-description') as HTMLMetaElement | null;
     const prevDesc = m?.content ?? '';
-    document.title = 'Nos Partenaires | Natural Hair Market';
-    if (m) m.content = 'Découvrez les partenaires de Natural Hair Market : annuaires beauté, professionnels de la coiffure et acteurs de référence du secteur capillaire en France.';
+    document.title = language === 'fr' ? 'Nos Partenaires | Natural Hair Market' : 'Our Partners | Natural Hair Market';
+    if (m) m.content = language === 'fr'
+      ? 'Découvrez les partenaires de Natural Hair Market : annuaires beauté, professionnels de la coiffure et acteurs de référence du secteur capillaire en France.'
+      : 'Discover the partners of Natural Hair Market: beauty directories, hair professionals and leading players in the hair industry in France.';
     return () => { document.title = prevTitle; if (m) m.content = prevDesc; };
-  }, []);
+  }, [language]);
 
   return (
     <article className="max-w-3xl mx-auto">
@@ -33,13 +38,15 @@ export function Partners() {
       <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-8 md:p-12 text-white mb-10 text-center shadow-lg">
         <div className="inline-flex items-center gap-2 bg-white/20 text-white px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
           <Handshake className="w-4 h-4" />
-          Partenariats
+          {language === 'fr' ? 'Partenariats' : 'Partnerships'}
         </div>
         <h1 className="text-2xl md:text-3xl font-bold leading-tight mb-4">
-          Nos Partenaires
+          {language === 'fr' ? 'Nos Partenaires' : 'Our Partners'}
         </h1>
         <p className="text-emerald-50 text-base md:text-lg leading-relaxed max-w-2xl mx-auto">
-          Natural Hair Market collabore avec des acteurs de confiance du secteur de la beauté et de la coiffure pour vous offrir la meilleure expérience possible.
+          {language === 'fr'
+            ? 'Natural Hair Market collabore avec des acteurs de confiance du secteur de la beauté et de la coiffure pour vous offrir la meilleure expérience possible.'
+            : 'Natural Hair Market collaborates with trusted players in the beauty and hair industry to offer you the best possible experience.'}
         </p>
       </div>
 
@@ -55,7 +62,7 @@ export function Partners() {
           >
             <div className="bg-emerald-50 border-b border-emerald-100 px-6 py-4 flex items-center justify-between">
               <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
-                {partner.category}
+                {language === 'fr' ? partner.category : 'Beauty Directory'}
               </span>
               <ExternalLink className="w-4 h-4 text-emerald-500 group-hover:text-emerald-700 transition-colors" />
             </div>
@@ -64,7 +71,9 @@ export function Partners() {
                 {partner.name}
               </h2>
               <p className="text-gray-600 text-sm leading-relaxed flex-1">
-                {partner.description}
+                {language === 'fr'
+                  ? partner.description
+                  : "The leading directory of beauty and hairdressing professionals in France. Find qualified service providers near you."}
               </p>
               <span className="text-emerald-600 text-sm font-medium group-hover:underline break-all">
                 {partner.url}
@@ -76,24 +85,32 @@ export function Partners() {
         {/* Placeholder card */}
         <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-300 px-6 py-8 flex flex-col items-center justify-center text-center gap-3">
           <Handshake className="w-8 h-8 text-gray-300" />
-          <p className="text-gray-400 text-sm font-medium">Prochainement</p>
+          <p className="text-gray-400 text-sm font-medium">
+            {language === 'fr' ? 'Prochainement' : 'Coming Soon'}
+          </p>
           <p className="text-gray-400 text-xs">
-            De nouveaux partenariats sont en cours de négociation.
+            {language === 'fr'
+              ? 'De nouveaux partenariats sont en cours de négociation.'
+              : 'New partnerships are currently being negotiated.'}
           </p>
         </div>
       </div>
 
       {/* Contact CTA */}
       <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 md:p-8 text-center">
-        <h2 className="text-lg font-bold text-gray-800 mb-2">Vous souhaitez devenir partenaire ?</h2>
+        <h2 className="text-lg font-bold text-gray-800 mb-2">
+          {language === 'fr' ? 'Vous souhaitez devenir partenaire ?' : 'Want to become a partner?'}
+        </h2>
         <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
-          Vous êtes un acteur de la beauté, de la coiffure ou du bien-être et souhaitez collaborer avec Natural Hair Market ? Contactez-nous.
+          {language === 'fr'
+            ? 'Vous êtes un acteur de la beauté, de la coiffure ou du bien-être et souhaitez collaborer avec Natural Hair Market ? Contactez-nous.'
+            : 'Are you a beauty, hairdressing or wellness professional and want to collaborate with Natural Hair Market? Contact us.'}
         </p>
         <a
           href="mailto:naturalhairmarket@gmail.com"
           className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-sm"
         >
-          Nous contacter
+          {language === 'fr' ? 'Nous contacter' : 'Contact Us'}
         </a>
       </div>
     </article>
