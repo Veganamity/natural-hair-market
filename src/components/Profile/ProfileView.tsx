@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useUnreadOffersCount } from '../../hooks/useUnreadOffers';
 import { Database } from '../../lib/database.types';
 import { CreditCard as Edit, Trash2, Package, CreditCard, CheckCircle, AlertCircle, MapPin, LogOut, BadgeCheck, Shield, Scissors, AlertOctagon, Bell, Tag } from 'lucide-react';
@@ -17,6 +18,7 @@ interface ProfileViewProps {
 
 export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { unreadCount } = useUnreadOffersCount();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
@@ -207,7 +209,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   };
 
   const handleDeleteListing = async (listingId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette annonce ?')) return;
+    if (!confirm(t('common.deleteAccountConfirm'))) return;
 
     const { error } = await supabase
       .from('listings')
@@ -307,7 +309,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   };
 
   const handleLogout = async () => {
-    if (!confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) return;
+    if (!confirm(t('common.logoutConfirm'))) return;
     await supabase.auth.signOut();
     window.location.href = '/';
   };
@@ -341,7 +343,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Chargement du profil...</div>
+        <div className="text-gray-500">{t('common.loadingProfile')}</div>
       </div>
     );
   }
@@ -350,7 +352,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="text-red-600 text-center">
-          <p className="font-semibold">Erreur</p>
+          <p className="font-semibold">{t('common.error')}</p>
           <p className="text-sm">{error}</p>
         </div>
         <div className="flex gap-3">
@@ -358,14 +360,14 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             onClick={() => fetchProfile()}
             className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
           >
-            Réessayer
+            {t('common.retry')}
           </button>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             <LogOut className="w-4 h-4" />
-            Se déconnecter
+            {t('nav.logout')}
           </button>
         </div>
       </div>
@@ -375,7 +377,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   if (!profile) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Aucun profil trouvé</div>
+        <div className="text-gray-500">{t('common.noProfileFound')}</div>
       </div>
     );
   }
@@ -405,29 +407,29 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           </div>
           <div className="flex-1">
             <p className="font-semibold text-red-800">
-              {unreadCount} nouvelle{unreadCount > 1 ? 's' : ''} offre{unreadCount > 1 ? 's' : ''} reçue{unreadCount > 1 ? 's' : ''}
+              {unreadCount} {t('profile.offersNotification')}
             </p>
-            <p className="text-sm text-red-600">Cliquez ici pour consulter et répondre à vos offres</p>
+            <p className="text-sm text-red-600">{t('profile.offersNotificationDesc')}</p>
           </div>
-          <span className="text-red-600 text-sm font-medium">Voir →</span>
+          <span className="text-red-600 text-sm font-medium">{t('profile.seeOffers')}</span>
         </div>
       )}
       {saveSuccess && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
           <CheckCircle className="w-6 h-6 text-green-600" />
-          <p className="text-green-800 font-semibold">Profil mis à jour avec succès !</p>
+          <p className="text-green-800 font-semibold">{t('profile.profileUpdatedSuccess')}</p>
         </div>
       )}
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Mon Profil</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t('profile.title')}</h2>
           {!editing && (
             <button
               onClick={() => setEditing(true)}
               className="flex items-center gap-2 px-4 py-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
             >
               <Edit className="w-4 h-4" />
-              Modifier
+              {t('common.edit')}
             </button>
           )}
         </div>
@@ -438,7 +440,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
                 <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
                 <div>
-                  <p className="text-red-800 font-semibold">Erreur</p>
+                  <p className="text-red-800 font-semibold">{t('common.error')}</p>
                   <p className="text-red-700 text-sm">{error}</p>
                 </div>
               </div>
@@ -446,7 +448,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Prénom <span className="text-red-500">*</span>
+                  {t('profile.firstName')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -458,7 +460,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom <span className="text-red-500">*</span>
+                  {t('profile.lastName')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -472,23 +474,23 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Téléphone
+                {t('profile.phone')}
               </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Ex : +33 6 12 34 56 78"
+                placeholder={t('profile.phonePlaceholder')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Indiquez l'indicatif de votre pays (ex : +33 pour la France, +32 pour la Belgique, +44 pour le Royaume-Uni).
+                {t('profile.phoneHelper')}
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Localisation
+                {t('profile.location')}
               </label>
               <input
                 type="text"
@@ -500,7 +502,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bio
+                {t('profile.bio')}
               </label>
               <textarea
                 value={formData.bio}
@@ -514,7 +516,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-emerald-600" />
-                  Adresse postale
+                  {t('profile.mailingAddress')}
                 </h3>
                 <button
                   type="button"
@@ -530,14 +532,14 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                   }}
                   className="text-sm text-red-600 hover:text-red-700 font-medium"
                 >
-                  Effacer l'adresse
+                  {t('profile.clearAddress')}
                 </button>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Adresse ligne 1
+                    {t('profile.addressLine1')}
                   </label>
                   <input
                     type="text"
@@ -549,7 +551,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Adresse ligne 2 (optionnel)
+                    {t('profile.addressLine2')}
                   </label>
                   <input
                     type="text"
@@ -562,7 +564,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Code postal
+                      {t('profile.postalCode')}
                     </label>
                     <input
                       type="text"
@@ -574,7 +576,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ville
+                      {t('profile.city')}
                     </label>
                     <input
                       type="text"
@@ -587,7 +589,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Pays
+                    {t('profile.country')}
                   </label>
                   <select
                     value={formData.country}
@@ -607,23 +609,22 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 <div className="flex items-start gap-3">
                   <BadgeCheck className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-bold text-gray-800 mb-2">Vérification Salon Professionnel</h3>
+                    <h3 className="font-bold text-gray-800 mb-2">{t('profile.salonVerificationTitle')}</h3>
                     <p className="text-sm text-gray-700 mb-3">
-                      Si vous êtes un salon de coiffure, renseignez votre SIRET ou SIREN pour obtenir le badge
-                      <strong className="text-blue-600"> "Salon Vérifié"</strong> sur votre profil et vos annonces.
+                      {t('profile.salonVerificationDesc')}
                     </p>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      SIRET / SIREN (optionnel)
+                      {t('profile.siret')}
                     </label>
                     <input
                       type="text"
                       value={formData.siret}
                       onChange={(e) => setFormData({ ...formData, siret: e.target.value })}
-                      placeholder="Ex: 123 456 789 00012"
+                      placeholder={t('profile.siretPlaceholder')}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <p className="text-xs text-gray-600 mt-2">
-                      Le badge "Salon Vérifié" apparaîtra automatiquement dès que vous enregistrerez un numéro SIRET/SIREN valide.
+                      {t('profile.siretHelper')}
                     </p>
                   </div>
                 </div>
@@ -637,7 +638,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 disabled={loading}
                 className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
@@ -647,10 +648,10 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 {loading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Enregistrement...
+                    {t('profile.saving')}
                   </>
                 ) : (
-                  'Enregistrer'
+                  t('common.save')
                 )}
               </button>
             </div>
@@ -659,33 +660,33 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-600">Prénom</label>
-                <p className="font-semibold text-gray-800">{profile.first_name || (profile.full_name ? profile.full_name.split(' ')[0] : 'Non renseigné')}</p>
+                <label className="text-sm text-gray-600">{t('profile.firstName')}</label>
+                <p className="font-semibold text-gray-800">{profile.first_name || (profile.full_name ? profile.full_name.split(' ')[0] : t('common.notProvided'))}</p>
               </div>
               <div>
-                <label className="text-sm text-gray-600">Nom</label>
-                <p className="font-semibold text-gray-800">{profile.last_name || (profile.full_name ? profile.full_name.split(' ').slice(1).join(' ') : 'Non renseigné') || 'Non renseigné'}</p>
+                <label className="text-sm text-gray-600">{t('profile.lastName')}</label>
+                <p className="font-semibold text-gray-800">{profile.last_name || (profile.full_name ? profile.full_name.split(' ').slice(1).join(' ') : t('common.notProvided')) || t('common.notProvided')}</p>
               </div>
             </div>
             <div>
-              <label className="text-sm text-gray-600">Email</label>
+              <label className="text-sm text-gray-600">{t('profile.email')}</label>
               <p className="font-semibold text-gray-800">{profile.email}</p>
             </div>
             {profile.phone && (
               <div>
-                <label className="text-sm text-gray-600">Téléphone</label>
+                <label className="text-sm text-gray-600">{t('profile.phone')}</label>
                 <p className="font-semibold text-gray-800">{profile.phone}</p>
               </div>
             )}
             {profile.location && (
               <div>
-                <label className="text-sm text-gray-600">Localisation</label>
+                <label className="text-sm text-gray-600">{t('profile.location')}</label>
                 <p className="font-semibold text-gray-800">{profile.location}</p>
               </div>
             )}
             {profile.bio && (
               <div>
-                <label className="text-sm text-gray-600">Bio</label>
+                <label className="text-sm text-gray-600">{t('profile.bio')}</label>
                 <p className="text-gray-800">{profile.bio}</p>
               </div>
             )}
@@ -694,7 +695,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               <div className="border-t pt-4">
                 <label className="text-sm text-gray-600 flex items-center gap-2 mb-2">
                   <MapPin className="w-4 h-4" />
-                  Adresse postale
+                  {t('profile.mailingAddress')}
                 </label>
                 <div className="text-gray-800">
                   {profile.address_line1 && <p>{profile.address_line1}</p>}
@@ -712,13 +713,13 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                   <div className="flex items-center gap-3">
                     <BadgeCheck className="w-8 h-8 text-blue-600" />
                     <div>
-                      <h3 className="font-bold text-blue-800">Salon Certifié</h3>
+                      <h3 className="font-bold text-blue-800">{t('profile.certifiedSalonTitle')}</h3>
                       <p className="text-sm text-gray-700">
-                        Ce compte est vérifié en tant que salon professionnel
+                        {t('profile.certifiedSalonDesc')}
                       </p>
                       {profile.siret && (
                         <p className="text-xs text-gray-600 mt-1">
-                          SIRET: {profile.siret}
+                          {t('profile.siret')}: {profile.siret}
                         </p>
                       )}
                     </div>
@@ -738,8 +739,8 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               <Scissors className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">Mes demandes de rachat</h2>
-              <p className="text-sm text-gray-600">Suivez le statut de vos demandes et recuperez vos etiquettes d'envoi</p>
+              <h2 className="text-xl font-bold text-gray-800">{t('profile.buybackRequests')}</h2>
+              <p className="text-sm text-gray-600">{t('profile.buybackRequestsDesc')}</p>
             </div>
           </div>
           <button
@@ -747,7 +748,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
           >
             <Scissors className="w-5 h-5" />
-            Voir mes demandes
+            {t('profile.viewRequests')}
           </button>
         </div>
       </div>
@@ -760,8 +761,8 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-800">Certification Salon Professionnel</h2>
-                <p className="text-sm text-gray-600">Obtenez le badge "Salon certifié" sur vos annonces</p>
+                <h2 className="text-xl font-bold text-gray-800">{t('profile.becomeCertifiedTitle')}</h2>
+                <p className="text-sm text-gray-600">{t('profile.becomeCertifiedDesc')}</p>
               </div>
             </div>
             <button
@@ -769,7 +770,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               <Shield className="w-5 h-5" />
-              Demander le badge Salon certifié
+              {t('profile.requestBadge')}
             </button>
           </div>
           <div className="mt-4 text-sm text-gray-600">
@@ -786,10 +787,10 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                Salon Certifié
+                {t('profile.certifiedBadgeTitle')}
                 <Shield className="w-6 h-6 text-green-600" />
               </h2>
-              <p className="text-sm text-gray-600">Votre salon est certifié. Le badge apparaît sur votre profil et vos annonces.</p>
+              <p className="text-sm text-gray-600">{t('profile.certifiedBadgeDesc')}</p>
             </div>
           </div>
         </div>
@@ -803,8 +804,8 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-800">Administration</h2>
-                <p className="text-sm text-gray-600">Gérer les certifications des salons</p>
+                <h2 className="text-xl font-bold text-gray-800">{t('profile.administration')}</h2>
+                <p className="text-sm text-gray-600">{t('profile.manageSalonCerts')}</p>
               </div>
             </div>
             <div className="flex flex-col gap-3">
@@ -813,35 +814,35 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center gap-2"
               >
                 <Shield className="w-5 h-5" />
-                Certifications Salons
+                {t('profile.salonCerts')}
               </button>
               <button
                 onClick={() => onNavigate?.('admin-listings')}
                 className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
               >
                 <Package className="w-5 h-5" />
-                Gestion Annonces
+                {t('profile.listingManagement')}
               </button>
               <button
                 onClick={() => onNavigate?.('admin-buybacks')}
                 className="px-6 py-3 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center gap-2"
               >
                 <Scissors className="w-5 h-5" />
-                Rachats de cheveux
+                {t('profile.buybacks')}
               </button>
               <button
                 onClick={() => onNavigate?.('admin-disputes')}
                 className="px-6 py-3 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors flex items-center gap-2"
               >
                 <AlertOctagon className="w-5 h-5" />
-                Gestion des Litiges
+                {t('profile.disputeManagement')}
               </button>
               <button
                 onClick={() => onNavigate?.('admin-offers')}
                 className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2"
               >
                 <Tag className="w-5 h-5" />
-                Gestion des Offres
+                {t('profile.offerManagement')}
               </button>
             </div>
           </div>
@@ -852,17 +853,17 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <CreditCard className="w-6 h-6 text-emerald-600" />
-              <h2 className="text-2xl font-bold text-gray-800">Informations bancaires</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{t('profile.bankingInfo')}</h2>
             </div>
             {profile.stripe_onboarding_completed ? (
               <div className="flex items-center gap-2 text-green-600">
                 <CheckCircle className="w-5 h-5" />
-                <span className="font-semibold">Compte vérifié</span>
+                <span className="font-semibold">{t('profile.accountVerified')}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2 text-yellow-600">
                 <AlertCircle className="w-5 h-5" />
-                <span className="font-semibold">Configuration requise</span>
+                <span className="font-semibold">{t('profile.setupRequired')}</span>
               </div>
             )}
           </div>
@@ -870,7 +871,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           {profile.stripe_onboarding_completed && profile.stripe_account_id ? (
             <div className="space-y-4">
               <p className="text-gray-600">
-                Votre compte bancaire est configuré. Vous pouvez recevoir des paiements pour vos ventes.
+                {t('profile.bankAccountConfigured')}
               </p>
               <button
                 onClick={handleOpenStripeDashboard}
@@ -882,7 +883,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 ) : (
                   <CreditCard className="w-5 h-5" />
                 )}
-                Gérer mes informations bancaires
+                {t('profile.manageBankInfo')}
               </button>
             </div>
           ) : (
@@ -891,30 +892,29 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-red-800">
-                    <strong>Attention :</strong> sans informations bancaires configurées, vous ne pouvez pas recevoir d'offres sur vos annonces.
-                    Les acheteurs ne pourront pas vous proposer de paiement tant que votre compte bancaire ne sera pas activé.
+                    {t('profile.noBankWarning')}
                   </p>
                 </div>
               </div>
               <p className="text-gray-600">
-                Pour recevoir des paiements de vos ventes, configurez votre compte bancaire directement ici.
+                {t('profile.toReceivePayments')}
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm font-semibold text-blue-900">
-                  Vendeurs particuliers et professionnels
+                  {t('profile.sellersProAndIndividual')}
                 </p>
                 <p className="text-sm text-blue-800 mt-1">
-                  Votre compte est configuré en tant que personne physique. Vous fournirez votre pièce d'identité et votre IBAN à Stripe pour recevoir vos paiements. Aucune déclaration professionnelle n'est exigée par Stripe pour des ventes occasionnelles de biens personnels.
+                  {t('profile.proAccountDesc')}
                 </p>
               </div>
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                 <p className="text-sm text-emerald-800">
-                  <strong>Informations requises :</strong>
+                  <strong>{t('profile.requiredInfo')}</strong>
                 </p>
                 <ul className="list-disc list-inside text-sm text-emerald-800 mt-2 space-y-1">
-                  <li>Pièce d'identité (carte d'identité ou passeport)</li>
-                  <li>Coordonnées bancaires (RIB/IBAN)</li>
-                  <li>Informations personnelles</li>
+                  <li>{t('profile.reqId')}</li>
+                  <li>{t('profile.reqBankDetails')}</li>
+                  <li>{t('profile.reqPersonalInfo')}</li>
                 </ul>
               </div>
               <button
@@ -927,7 +927,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 ) : (
                   <CreditCard className="w-5 h-5" />
                 )}
-                Configurer mon compte bancaire
+                {t('profile.setupBankAccount')}
               </button>
             </div>
           )}
@@ -936,14 +936,14 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center gap-2 mb-6">
           <Package className="w-6 h-6 text-emerald-600" />
-          <h2 className="text-2xl font-bold text-gray-800">Mes Annonces</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t('profile.myListings')}</h2>
           <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-semibold">
             {listings.length}
           </span>
         </div>
 
         {listings.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">Vous n'avez pas encore d'annonces</p>
+          <p className="text-gray-500 text-center py-8">{t('profile.noListingsYet')}</p>
         ) : (
           <div className="space-y-4">
             {listings.map((listing) => {
@@ -971,14 +971,14 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                           <button
                             onClick={() => setEditingListing(listing)}
                             className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                            title="Modifier"
+                            title={t('common.edit')}
                           >
                             <Edit className="w-5 h-5" />
                           </button>
                           <button
                             onClick={() => handleDeleteListing(listing.id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Supprimer"
+                            title={t('common.delete')}
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
@@ -995,10 +995,10 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                           }`}
                         >
                           {listing.status === 'active'
-                            ? 'Actif'
+                            ? t('listing.active')
                             : listing.status === 'sold'
-                            ? 'Vendu'
-                            : 'Réservé'}
+                            ? t('listing.sold')
+                            : t('listing.reserved')}
                         </span>
                         {listing.status === 'active' && (
                           <>
@@ -1006,13 +1006,13 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                               onClick={() => handleUpdateListingStatus(listing.id, 'reserved')}
                               className="text-sm text-yellow-600 hover:underline"
                             >
-                              Marquer réservé
+                              {t('listing.markReserved')}
                             </button>
                             <button
                               onClick={() => handleUpdateListingStatus(listing.id, 'sold')}
                               className="text-sm text-gray-600 hover:underline"
                             >
-                              Marquer vendu
+                              {t('listing.markSold')}
                             </button>
                           </>
                         )}
@@ -1021,7 +1021,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                             onClick={() => handleUpdateListingStatus(listing.id, 'active')}
                             className="text-sm text-emerald-600 hover:underline"
                           >
-                            Réactiver
+                            {t('listing.reactivate')}
                           </button>
                         )}
                       </div>
@@ -1038,13 +1038,13 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <LogOut className="w-6 h-6 text-gray-600" />
-            <h2 className="text-2xl font-bold text-gray-800">Déconnexion</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{t('nav.logout')}</h2>
           </div>
           <button
             onClick={handleLogout}
             className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors"
           >
-            Se déconnecter
+            {t('nav.logout')}
           </button>
         </div>
 
@@ -1053,10 +1053,9 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             <div className="flex items-start gap-3 mb-3">
               <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <h3 className="font-bold text-red-800 mb-1">Zone de danger</h3>
+                <h3 className="font-bold text-red-800 mb-1">{t('profile.dangerZone')}</h3>
                 <p className="text-sm text-red-700 mb-3">
-                  La suppression de votre compte est définitive et irréversible.
-                  Toutes vos données, annonces, transactions et favoris seront définitivement supprimés.
+                  {t('profile.deleteAccountDesc')}
                 </p>
                 <button
                   onClick={() => setShowDeleteModal(true)}
@@ -1064,7 +1063,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                   className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Supprimer définitivement mon compte
+                  {t('profile.deletePermanently')}
                 </button>
               </div>
             </div>
@@ -1081,15 +1080,14 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
               <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-3">
                 <Trash2 className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-lg font-bold">Supprimer le compte ?</h3>
-              <p className="text-red-100 text-sm mt-1">Cette action est définitive et irréversible.</p>
+              <h3 className="text-lg font-bold">{t('profile.deleteAccountTitle')}</h3>
+              <p className="text-red-100 text-sm mt-1">{t('profile.deleteAccountWarning')}</p>
             </div>
             <div className="px-6 py-5">
               <ul className="text-sm text-gray-600 space-y-2 bg-red-50 border border-red-100 rounded-xl p-4 mb-5">
-                <li className="flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" /> Toutes vos données personnelles</li>
-                <li className="flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" /> Toutes vos annonces publiées</li>
-                <li className="flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" /> Votre historique de transactions</li>
-                <li className="flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" /> Vos favoris et offres reçues</li>
+                {t('profile.deleteAccountItems').split(';').map((item, i) => (
+                  <li key={i} className="flex items-center gap-2"><AlertCircle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" /> {item}</li>
+                ))}
               </ul>
               <div className="flex gap-3">
                 <button
@@ -1097,7 +1095,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                   disabled={loading}
                   className="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-all disabled:opacity-50"
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleDeleteAccount}
@@ -1106,7 +1104,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 >
                   {loading
                     ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    : <><Trash2 className="w-4 h-4" /> Supprimer définitivement</>
+                    : <><Trash2 className="w-4 h-4" /> {t('profile.deleteAccountConfirmBtn')}</>
                   }
                 </button>
               </div>

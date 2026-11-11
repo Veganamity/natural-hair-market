@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Database } from '../../lib/database.types';
 import { Receipt, TrendingUp, TrendingDown, Package, Truck, MapPin, HandHeart, Wallet, BarChart2, ChevronDown, ChevronUp, Download, Loader2, AlertCircle } from 'lucide-react';
 
@@ -18,6 +19,7 @@ interface TransactionWithDetails extends Transaction {
 
 export function TransactionsView() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [purchases, setPurchases] = useState<TransactionWithDetails[]>([]);
   const [sales, setSales] = useState<TransactionWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,8 @@ export function TransactionsView() {
   const [stripeOnboardingCompleted, setStripeOnboardingCompleted] = useState(false);
   const [showBalances, setShowBalances] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
+
+  const locale = language === 'fr' ? 'fr-FR' : 'en-US';
 
   useEffect(() => {
     fetchTransactions();
@@ -79,10 +83,10 @@ export function TransactionsView() {
       });
     }
 
-    const enrich = (t: any): TransactionWithDetails => ({
-      ...t,
-      buyer: profilesMap[t.buyer_id] || { id: t.buyer_id, full_name: 'Utilisateur' } as Profile,
-      seller: profilesMap[t.seller_id] || { id: t.seller_id, full_name: 'Utilisateur' } as Profile,
+    const enrich = (tx: any): TransactionWithDetails => ({
+      ...tx,
+      buyer: profilesMap[tx.buyer_id] || { id: tx.buyer_id, full_name: t('common.user') } as Profile,
+      seller: profilesMap[tx.seller_id] || { id: tx.seller_id, full_name: t('common.user') } as Profile,
     });
 
     setPurchases(rawPurchases.map(enrich));
@@ -106,7 +110,7 @@ export function TransactionsView() {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Non authentifié');
+      if (!session) throw new Error(t('transactions.notAuthenticated'));
 
       while (Date.now() < deadline) {
         let response: Response;
@@ -125,7 +129,7 @@ export function TransactionsView() {
           );
         } catch (networkErr) {
           console.error('Network error during label fetch:', networkErr);
-          throw new Error('Erreur réseau lors du téléchargement.');
+          throw new Error(t('transactions.networkError'));
         }
 
         console.log('download-shipping-label response status:', response.status, 'content-type:', response.headers.get('content-type'));
@@ -158,9 +162,9 @@ export function TransactionsView() {
         await new Promise(r => setTimeout(r, Math.min(RETRY_DELAY_MS, remaining)));
       }
 
-      throw new Error("Délai d'attente dépassé. L'étiquette n'est pas encore disponible, réessayez dans quelques instants.");
+      throw new Error(t('transactions.timeoutError'));
     } catch (err: any) {
-      setLabelErrors(prev => ({ ...prev, [transaction.id]: err.message || 'Erreur inconnue' }));
+      setLabelErrors(prev => ({ ...prev, [transaction.id]: err.message || t('transactions.unknownError') }));
     } finally {
       setGeneratingLabel(null);
     }
@@ -177,13 +181,13 @@ export function TransactionsView() {
     };
 
     const labels: Record<string, string> = {
-      pending: 'En attente',
-      processing: 'En cours',
-      completed: 'Terminé',
-      failed: 'Échoué',
-      refunded: 'Remboursé',
-      cancelled: 'Annulé',
-      disputed: 'Litige',
+      pending: t('orders.pending'),
+      processing: t('transactions.inProgress'),
+      completed: t('transactions.done'),
+      failed: t('orders.failed'),
+      refunded: t('orders.refunded'),
+      cancelled: t('orders.cancelled'),
+      disputed: t('orders.disputed'),
     };
 
     return (
@@ -194,7 +198,7 @@ export function TransactionsView() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    return new Date(dateString).toLocaleDateString(locale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -209,7 +213,7 @@ export function TransactionsView() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Chargement des transactions...</div>
+        <div className="text-gray-500">{t('transactions.loading')}</div>
       </div>
     );
   }
@@ -219,26 +223,26 @@ export function TransactionsView() {
       <div>
         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-4">
           <Receipt className="w-7 h-7 text-emerald-600" />
-          Mes Transactions
+          {t('transactions.title')}
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md p-6 text-white">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium opacity-90">Total Dépensé</h3>
+              <h3 className="text-sm font-medium opacity-90">{t('transactions.totalSpent')}</h3>
               <TrendingDown className="w-5 h-5 opacity-75" />
             </div>
             <p className="text-3xl font-bold">{totalPurchases.toFixed(2)}€</p>
-            <p className="text-xs opacity-75 mt-1">{purchases.filter(t => t.status === 'completed').length} achats terminés</p>
+            <p className="text-xs opacity-75 mt-1">{purchases.filter(t => t.status === 'completed').length} {t('transactions.purchasesCompleted')}</p>
           </div>
 
           <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-md p-6 text-white">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium opacity-90">Total Gagné</h3>
+              <h3 className="text-sm font-medium opacity-90">{t('transactions.totalEarned')}</h3>
               <TrendingUp className="w-5 h-5 opacity-75" />
             </div>
             <p className="text-3xl font-bold">{totalSales.toFixed(2)}€</p>
-            <p className="text-xs opacity-75 mt-1">{sales.filter(t => t.status === 'completed').length} ventes terminées</p>
+            <p className="text-xs opacity-75 mt-1">{sales.filter(t => t.status === 'completed').length} {t('transactions.salesCompleted')}</p>
           </div>
         </div>
 
@@ -251,7 +255,7 @@ export function TransactionsView() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Achats ({purchases.length})
+            {t('transactions.purchases')} ({purchases.length})
           </button>
           <button
             onClick={() => setActiveTab('sales')}
@@ -261,7 +265,7 @@ export function TransactionsView() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Ventes ({sales.length})
+            {t('transactions.sales')} ({sales.length})
           </button>
           {stripeAccountId && stripeOnboardingCompleted && (
             <button
@@ -273,7 +277,7 @@ export function TransactionsView() {
               }`}
             >
               <Wallet className="w-4 h-4" />
-              Mon Tableau de bord
+              {t('transactions.dashboard')}
             </button>
           )}
         </div>
@@ -292,8 +296,8 @@ export function TransactionsView() {
                     <Wallet className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-gray-800">Mon Solde & Virements</p>
-                    <p className="text-xs text-gray-500">Consultez votre solde disponible et vos virements</p>
+                    <p className="font-bold text-gray-800">{t('transactions.stripeDashboard')}</p>
+                    <p className="text-xs text-gray-500">{t('transactions.stripeDashboardDesc')}</p>
                   </div>
                 </div>
                 {showBalances ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
@@ -301,7 +305,7 @@ export function TransactionsView() {
               {showBalances && (
                 <div className="border-t border-gray-100 p-4">
                   <div className="text-center py-8">
-                    <p className="text-gray-500 mb-4">Consultez votre solde et vos virements directement sur votre tableau de bord Stripe.</p>
+                    <p className="text-gray-500 mb-4">{t('transactions.stripeDashboardDesc2')}</p>
                     <a
                       href="https://dashboard.stripe.com"
                       target="_blank"
@@ -309,7 +313,7 @@ export function TransactionsView() {
                       className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
                     >
                       <Wallet className="w-5 h-5" />
-                      Ouvrir mon tableau de bord Stripe
+                      {t('transactions.openStripe')}
                     </a>
                   </div>
                 </div>
@@ -326,8 +330,8 @@ export function TransactionsView() {
                     <BarChart2 className="w-5 h-5 text-teal-600" />
                   </div>
                   <div className="text-left">
-                    <p className="font-bold text-gray-800">Mes Paiements reçus</p>
-                    <p className="text-xs text-gray-500">Détail de tous les paiements sur votre compte</p>
+                    <p className="font-bold text-gray-800">{t('transactions.receivedPayments')}</p>
+                    <p className="text-xs text-gray-500">{t('transactions.receivedPaymentsDesc')}</p>
                   </div>
                 </div>
                 {showPayments ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
@@ -335,7 +339,7 @@ export function TransactionsView() {
               {showPayments && (
                 <div className="border-t border-gray-100 p-4">
                   <div className="text-center py-8">
-                    <p className="text-gray-500 mb-4">Consultez le detail de vos paiements directement sur votre tableau de bord Stripe.</p>
+                    <p className="text-gray-500 mb-4">{t('transactions.receivedPaymentsDesc2')}</p>
                     <a
                       href="https://dashboard.stripe.com"
                       target="_blank"
@@ -343,7 +347,7 @@ export function TransactionsView() {
                       className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
                     >
                       <BarChart2 className="w-5 h-5" />
-                      Ouvrir mon tableau de bord Stripe
+                      {t('transactions.openStripe')}
                     </a>
                   </div>
                 </div>
@@ -354,13 +358,13 @@ export function TransactionsView() {
 
         {activeTab === 'purchases' && purchases.length === 0 && (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <p className="text-gray-500">Aucun achat</p>
+            <p className="text-gray-500">{t('transactions.noPurchases')}</p>
           </div>
         )}
 
         {activeTab === 'sales' && sales.length === 0 && (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <p className="text-gray-500">Aucune vente</p>
+            <p className="text-gray-500">{t('transactions.noSales')}</p>
           </div>
         )}
 
@@ -372,10 +376,10 @@ export function TransactionsView() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h3 className="font-bold text-gray-800 text-lg mb-1">
-                        {transaction.listing?.title || 'Article supprimé'}
+                        {transaction.listing?.title || t('transactions.articleDeleted')}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Vendeur: <span className="font-semibold">{transaction.seller.full_name || 'Utilisateur'}</span>
+                        {t('transactions.seller')} <span className="font-semibold">{transaction.seller.full_name || t('common.user')}</span>
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -383,16 +387,16 @@ export function TransactionsView() {
                       <button
                         onClick={() => downloadInvoicePDF({ transaction, listing: transaction.listing, buyer: transaction.buyer, seller: transaction.seller })}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
-                        title="Télécharger la facture"
+                        title={t('transactions.downloadInvoice')}
                       >
                         <Download className="w-3.5 h-3.5" />
-                        Facture
+                        {t('transactions.invoice')}
                       </button>
                     </div>
                   </div>
                   <div className="flex items-center gap-6 mb-2">
                     <div>
-                      <span className="text-sm text-gray-600">Montant payé:</span>
+                      <span className="text-sm text-gray-600">{t('transactions.amountPaid')}</span>
                       <span className="ml-2 font-bold text-gray-800 text-lg">{Number(transaction.amount).toFixed(2)}€</span>
                     </div>
                   </div>
@@ -408,17 +412,17 @@ export function TransactionsView() {
                         )}
                         <span className="text-sm font-semibold text-gray-800">
                           {transaction.shipping_method === 'mondial_relay'
-                            ? 'Mondial Relay'
+                            ? t('transactions.mondialRelay')
                             : transaction.shipping_method === 'hand_delivery'
-                            ? 'Remise en main propre'
-                            : 'Chronopost'}
+                            ? t('transactions.handDelivery')
+                            : t('transactions.chronopost')}
                         </span>
                         {transaction.shipping_cost ? (
                           <span className="text-sm text-gray-600">
                             ({Number(transaction.shipping_cost).toFixed(2)}€)
                           </span>
                         ) : (
-                          <span className="text-sm text-green-600 font-semibold">(Gratuit)</span>
+                          <span className="text-sm text-green-600 font-semibold">({t('transactions.free')})</span>
                         )}
                       </div>
                       {transaction.shipping_method === 'mondial_relay' && transaction.relay_point_name && (
@@ -432,17 +436,17 @@ export function TransactionsView() {
                       )}
                       {transaction.tracking_number && (
                         <p className="text-xs text-gray-600 mt-2">
-                          Suivi: <span className="font-mono font-semibold">{transaction.tracking_number}</span>
+                          {t('transactions.tracking')} <span className="font-mono font-semibold">{transaction.tracking_number}</span>
                         </p>
                       )}
                       {transaction.shipped_at && (
                         <p className="text-xs text-teal-600 mt-1">
-                          Expédié le {formatDate(transaction.shipped_at)}
+                          {t('transactions.shippedOn')} {formatDate(transaction.shipped_at)}
                         </p>
                       )}
                       {transaction.delivered_at && (
                         <p className="text-xs text-green-600 mt-1">
-                          Livré le {formatDate(transaction.delivered_at)}
+                          {t('transactions.deliveredOn')} {formatDate(transaction.delivered_at)}
                         </p>
                       )}
                     </div>
@@ -461,10 +465,10 @@ export function TransactionsView() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h3 className="font-bold text-gray-800 text-lg mb-1">
-                        {transaction.listing?.title || 'Article supprimé'}
+                        {transaction.listing?.title || t('transactions.articleDeleted')}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Acheteur: <span className="font-semibold">{transaction.buyer.full_name || 'Utilisateur'}</span>
+                        {t('transactions.buyer')} <span className="font-semibold">{transaction.buyer.full_name || t('common.user')}</span>
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -472,24 +476,24 @@ export function TransactionsView() {
                       <button
                         onClick={() => downloadInvoicePDF({ transaction, listing: transaction.listing, buyer: transaction.buyer, seller: transaction.seller })}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
-                        title="Télécharger la facture"
+                        title={t('transactions.downloadInvoice')}
                       >
                         <Download className="w-3.5 h-3.5" />
-                        Facture
+                        {t('transactions.invoice')}
                       </button>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2 mb-2">
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">Prix de vente</span>
+                      <span className="text-xs text-gray-500">{t('transactions.salePrice')}</span>
                       <span className="font-semibold text-gray-800 text-sm">{Number(transaction.amount).toFixed(2)}€</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">Commission</span>
+                      <span className="text-xs text-gray-500">{t('transactions.commission')}</span>
                       <span className="font-semibold text-red-600 text-sm">-{Number(transaction.platform_fee).toFixed(2)}€</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-500">Vous recevez</span>
+                      <span className="text-xs text-gray-500">{t('transactions.youReceive')}</span>
                       <span className="font-bold text-emerald-600 text-sm">{Number(transaction.seller_amount).toFixed(2)}€</span>
                     </div>
                   </div>
@@ -505,17 +509,17 @@ export function TransactionsView() {
                         )}
                         <span className="text-sm font-semibold text-gray-800">
                           {transaction.shipping_method === 'mondial_relay'
-                            ? 'Mondial Relay'
+                            ? t('transactions.mondialRelay')
                             : transaction.shipping_method === 'hand_delivery'
-                            ? 'Remise en main propre'
-                            : 'Chronopost'}
+                            ? t('transactions.handDelivery')
+                            : t('transactions.chronopost')}
                         </span>
                         {transaction.shipping_cost ? (
                           <span className="text-sm text-gray-600">
                             ({Number(transaction.shipping_cost).toFixed(2)}€)
                           </span>
                         ) : (
-                          <span className="text-sm text-green-600 font-semibold">(Gratuit)</span>
+                          <span className="text-sm text-green-600 font-semibold">({t('transactions.free')})</span>
                         )}
                       </div>
                       {transaction.shipping_method === 'mondial_relay' && transaction.relay_point_name && (
@@ -535,9 +539,9 @@ export function TransactionsView() {
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                           >
                             {generatingLabel === transaction.id ? (
-                              <><Loader2 className="w-3.5 h-3.5 animate-spin" />Téléchargement...</>
+                              <><Loader2 className="w-3.5 h-3.5 animate-spin" />{t('transactions.downloading')}</>
                             ) : (
-                              <><Download className="w-3.5 h-3.5" />Télécharger l'étiquette</>
+                              <><Download className="w-3.5 h-3.5" />{t('transactions.downloadLabel')}</>
                             )}
                           </button>
                           {labelErrors[transaction.id] && (
@@ -550,17 +554,17 @@ export function TransactionsView() {
                       )}
                       {transaction.tracking_number && (
                         <p className="text-xs text-gray-600 mt-2">
-                          Suivi: <span className="font-mono font-semibold">{transaction.tracking_number}</span>
+                          {t('transactions.tracking')} <span className="font-mono font-semibold">{transaction.tracking_number}</span>
                         </p>
                       )}
                       {transaction.shipped_at && (
                         <p className="text-xs text-teal-600 mt-1">
-                          Expédié le {formatDate(transaction.shipped_at)}
+                          {t('transactions.shippedOn')} {formatDate(transaction.shipped_at)}
                         </p>
                       )}
                       {transaction.delivered_at && (
                         <p className="text-xs text-green-600 mt-1">
-                          Livré le {formatDate(transaction.delivered_at)}
+                          {t('transactions.deliveredOn')} {formatDate(transaction.delivered_at)}
                         </p>
                       )}
                     </div>
@@ -568,12 +572,12 @@ export function TransactionsView() {
                   <p className="text-xs text-gray-500 mt-2">{formatDate(transaction.created_at)}</p>
                   {transaction.status === 'completed' && (
                     <p className="text-xs text-emerald-600 font-medium mt-1">
-                      Paiement envoyé à votre compte bancaire
+                      {t('transactions.paymentSent')}
                     </p>
                   )}
                   {transaction.status === 'refunded' && (
                     <p className="text-xs text-orange-600 font-medium mt-1">
-                      Paiement remboursé à l'acheteur
+                      {t('transactions.paymentRefunded')}
                     </p>
                   )}
                 </div>

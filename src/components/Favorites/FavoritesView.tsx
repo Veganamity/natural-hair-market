@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { ListingCard } from '../Listings/ListingCard';
 import { Database } from '../../lib/database.types';
 import { Heart } from 'lucide-react';
@@ -15,6 +16,7 @@ interface FavoriteWithDetails {
 
 export function FavoritesView() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [favorites, setFavorites] = useState<FavoriteWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +84,7 @@ export function FavoritesView() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-gray-600">Chargement...</div>
+        <div className="text-gray-600">{t('common.loading')}</div>
       </div>
     );
   }
@@ -92,10 +94,10 @@ export function FavoritesView() {
       <div className="flex flex-col items-center justify-center h-64 text-center">
         <Heart className="w-16 h-16 text-gray-300 mb-4" />
         <h3 className="text-xl font-semibold text-gray-700 mb-2">
-          Aucun favori pour le moment
+          {t('favorites.empty')}
         </h3>
         <p className="text-gray-500">
-          Ajoutez des annonces à vos favoris pour les retrouver facilement ici
+          {t('favorites.emptyDesc')}
         </p>
       </div>
     );
@@ -106,10 +108,10 @@ export function FavoritesView() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <Heart className="w-7 h-7 text-emerald-600" />
-          Mes Favoris
+          {t('favorites.title')}
         </h2>
         <p className="text-gray-600 mt-1">
-          {favorites.length} {favorites.length === 1 ? 'annonce' : 'annonces'}
+          {favorites.length} {t('favorites.count')}
         </p>
       </div>
 

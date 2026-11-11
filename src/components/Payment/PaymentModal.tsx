@@ -4,6 +4,7 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { supabase } from '../../lib/supabaseClient';
 import { getStripe } from '../../lib/stripe';
 import { ShippingSelection } from '../Shipping/ShippingSelection';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface PaymentModalProps {
   listingId: string;
@@ -22,6 +23,7 @@ interface PaymentFormProps {
 }
 
 function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormProps) {
+  const { t } = useLanguage();
   const stripe = useStripe();
   const elements = useElements();
   const [elementReady, setElementReady] = useState(false);
@@ -43,13 +45,13 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
       });
 
       if (error) {
-        onError(`Erreur Stripe (${error.type}): ${error.message || 'Erreur inattendue'}`);
+        onError(`${t('payment.stripeError')} (${error.type}): ${error.message || t('payment.unexpectedError')}`);
         setLoading(false);
       } else {
         onSuccess();
       }
     } catch (err: any) {
-      onError(err.message || 'Erreur lors du paiement');
+      onError(err.message || t('payment.paymentError'));
       setLoading(false);
     }
   };
@@ -60,7 +62,7 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
         <div className="p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-xs font-semibold text-red-800">Impossible de charger le formulaire de paiement</p>
+            <p className="text-xs font-semibold text-red-800">{t('payment.loadError')}</p>
             <p className="text-xs text-red-700 mt-0.5 font-mono break-all">{elementLoadError}</p>
           </div>
         </div>
@@ -68,7 +70,7 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
       {!elementReady && !elementLoadError && (
         <div className="flex items-center justify-center py-6 gap-2 text-gray-500">
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-sm">Chargement du formulaire de paiement...</span>
+          <span className="text-sm">{t('payment.loadingForm')}</span>
         </div>
       )}
       <div className={elementReady ? 'block' : 'invisible h-0 overflow-hidden'}>
@@ -90,10 +92,10 @@ function PaymentForm({ onSuccess, onError, loading, setLoading }: PaymentFormPro
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Traitement en cours...
+              {t('payment.processing')}
             </>
           ) : (
-            'Confirmer le paiement'
+            t('payment.confirmPayment')
           )}
         </button>
       )}
@@ -109,6 +111,7 @@ export function PaymentModal({
   onClose,
   onSuccess,
 }: PaymentModalProps) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string | null>(null);
@@ -126,11 +129,11 @@ export function PaymentModal({
 
   const createPaymentIntent = async () => {
     if (!shippingData || !shippingData.address) {
-      setError('Veuillez renseigner une adresse de livraison');
+      setError(t('payment.addressRequired'));
       return;
     }
     if (shippingData.method === 'mondial_relay' && !shippingData.relayPointId) {
-      setError('Veuillez sélectionner un point relais');
+      setError(t('payment.relayPointRequired'));
       return;
     }
 
@@ -141,7 +144,7 @@ export function PaymentModal({
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        throw new Error('Non authentifie - veuillez vous reconnecter');
+        throw new Error(t('payment.notAuthenticated'));
       }
 
       const response = await fetch(
@@ -159,7 +162,7 @@ export function PaymentModal({
       const responseData = await response.json();
 
       if (!response.ok) {
-        const errMsg = responseData.error || `Erreur serveur (HTTP ${response.status})`;
+        const errMsg = responseData.error || t('payment.serverError').replace('{status}', String(response.status));
         throw new Error(errMsg);
       }
 
@@ -167,12 +170,12 @@ export function PaymentModal({
 
       if (!secret || typeof secret !== 'string' || !secret.includes('_secret_')) {
         setDebugInfo(`Valeur recue pour clientSecret: "${secret}"`);
-        throw new Error('Le serveur n\'a pas retourne une cle de paiement valide.');
+        throw new Error(t('payment.noPaymentKey'));
       }
 
       setClientSecret(secret);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la creation du paiement');
+      setError(err.message || t('payment.paymentCreationError'));
     } finally {
       setCreatingIntent(false);
     }
@@ -186,7 +189,7 @@ export function PaymentModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-3">
       <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full max-h-[95vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-3 py-2 flex items-center justify-between z-10 rounded-t-xl">
-          <h3 className="text-sm font-bold text-gray-800">Paiement</h3>
+          <h3 className="text-sm font-bold text-gray-800">{t('payment.title')}</h3>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -211,25 +214,25 @@ export function PaymentModal({
                 <h4 className="font-semibold text-gray-800 mb-1 text-xs">{listingTitle}</h4>
                 <div className="space-y-1 text-[11px]">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Prix de l'article:</span>
+                    <span className="text-gray-600">{t('payment.itemPrice')}</span>
                     <span className="font-semibold">{amount.toFixed(2)} EUR</span>
                   </div>
                   {shippingCost > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Frais de livraison ({shippingData?.method}):</span>
+                      <span className="text-gray-600">{t('payment.shippingFee')} ({shippingData?.method}):</span>
                       <span className="font-semibold">{shippingCost.toFixed(2)} EUR</span>
                     </div>
                   )}
                   <div className="flex justify-between text-gray-600">
-                    <span>Commission ({(marketplaceCommissionRate * 100).toFixed(0)}%):</span>
+                    <span>{t('payment.commission')} ({(marketplaceCommissionRate * 100).toFixed(0)}%):</span>
                     <span className="font-semibold">+{marketplaceCommission.toFixed(2)} EUR</span>
                   </div>
                   <div className="border-t border-gray-200 pt-1 flex justify-between">
-                    <span className="text-gray-600">Le vendeur recevra:</span>
+                    <span className="text-gray-600">{t('payment.sellerReceives')}</span>
                     <span className="font-semibold text-emerald-600">{sellerReceives.toFixed(2)} EUR</span>
                   </div>
                   <div className="border-t-2 border-gray-300 pt-1 flex justify-between text-xs">
-                    <span className="font-bold text-gray-800">Total a payer:</span>
+                    <span className="font-bold text-gray-800">{t('payment.totalToPay')}</span>
                     <span className="font-bold text-teal-600">{totalAmount.toFixed(2)} EUR</span>
                   </div>
                 </div>
@@ -253,7 +256,7 @@ export function PaymentModal({
                   disabled={creatingIntent}
                   className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 text-sm"
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={createPaymentIntent}
@@ -263,10 +266,10 @@ export function PaymentModal({
                   {creatingIntent ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Chargement...
+                      {t('payment.loading')}
                     </>
                   ) : (
-                    `Continuer - ${totalAmount.toFixed(2)} EUR`
+                    `${t('payment.continue')} - ${totalAmount.toFixed(2)} EUR`
                   )}
                 </button>
               </div>
@@ -275,7 +278,7 @@ export function PaymentModal({
             <>
               <div className="p-2 bg-gray-50 rounded-lg mb-3">
                 <div className="flex justify-between text-sm">
-                  <span className="font-medium text-gray-700">Total a payer:</span>
+                  <span className="font-medium text-gray-700">{t('payment.totalToPay')}</span>
                   <span className="font-bold text-teal-600">{totalAmount.toFixed(2)} EUR</span>
                 </div>
               </div>
@@ -313,12 +316,12 @@ export function PaymentModal({
                 disabled={loading}
                 className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 text-sm mt-2"
               >
-                Retour
+                {t('payment.back')}
               </button>
 
               <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg mt-2">
                 <p className="text-[11px] text-blue-800">
-                  Paiement securise par Stripe. Vos informations bancaires ne sont jamais stockees sur notre plateforme.
+                  {t('payment.securityNote')}
                 </p>
               </div>
             </>

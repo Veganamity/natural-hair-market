@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Database } from '../../lib/database.types';
 import { Package, Clock, CheckCircle, XCircle, Download, AlertTriangle, Shield, AlertOctagon } from 'lucide-react';
 import { ShippingLabelManager } from '../Shipping/ShippingLabelManager';
@@ -17,6 +18,8 @@ type Transaction = Database['public']['Tables']['transactions']['Row'] & {
 };
 
 function DeadlineBanner({ transaction, isSellerView }: { transaction: Transaction; isSellerView: boolean }) {
+  const { t, language } = useLanguage();
+  const locale = language === 'fr' ? 'fr-FR' : 'en-US';
   const now = new Date();
 
   if (isSellerView && transaction.delivery_status === 'pending' && transaction.shipping_deadline_at) {
@@ -30,7 +33,7 @@ function DeadlineBanner({ transaction, isSellerView }: { transaction: Transactio
         <div className="bg-red-50 border border-red-300 rounded-lg p-3 mb-3 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-800 font-medium">
-            Délai d'expédition dépassé — cette commande sera annulée et l'acheteur remboursé automatiquement.
+            {t('orders.deadlineExpired')}
           </p>
         </div>
       );
@@ -41,7 +44,10 @@ function DeadlineBanner({ transaction, isSellerView }: { transaction: Transactio
         <div className="bg-orange-50 border border-orange-300 rounded-lg p-3 mb-3 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-orange-800 font-medium">
-            Urgent : expédiez le colis avant le {deadline.toLocaleDateString('fr-FR')} à {deadline.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} (dans {hoursLeft}h).
+            {t('orders.deadlineUrgent')
+              .replace('{date}', deadline.toLocaleDateString(locale))
+              .replace('{time}', deadline.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }))
+              .replace('{hoursLeft}', String(hoursLeft))}
           </p>
         </div>
       );
@@ -51,7 +57,9 @@ function DeadlineBanner({ transaction, isSellerView }: { transaction: Transactio
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3 flex items-start gap-2">
         <Clock className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-amber-800">
-          Expédiez avant le <strong>{deadline.toLocaleDateString('fr-FR')}</strong> pour éviter l'annulation automatique.
+          {t('orders.deadlineWarning').split('{date}')[0]}
+          <strong>{deadline.toLocaleDateString(locale)}</strong>
+          {t('orders.deadlineWarning').split('{date}')[1]}
         </p>
       </div>
     );
@@ -66,7 +74,9 @@ function DeadlineBanner({ transaction, isSellerView }: { transaction: Transactio
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 flex items-start gap-2">
           <Clock className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-blue-800">
-            Confirmez la réception avant le <strong>{deadline.toLocaleDateString('fr-FR')}</strong> ({daysLeft} jour{daysLeft > 1 ? 's' : ''} restant{daysLeft > 1 ? 's' : ''}). Après ce délai, le paiement sera libéré automatiquement au vendeur.
+            {t('orders.confirmDeadline').split('{date}')[0]}
+            <strong>{deadline.toLocaleDateString(locale)}</strong>
+            {t('orders.confirmDeadline').split('{date}')[1].replace('{daysLeft}', String(daysLeft))}
           </p>
         </div>
       );
@@ -83,7 +93,9 @@ function DeadlineBanner({ transaction, isSellerView }: { transaction: Transactio
         <div className="bg-orange-50 border border-orange-300 rounded-lg p-3 mb-3 flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-orange-800 font-medium">
-            Vous avez jusqu'au <strong>{authDeadline.toLocaleDateString('fr-FR')}</strong> à {authDeadline.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} pour confirmer la réception. Passé ce délai, le paiement sera automatiquement finalisé.
+            {t('orders.confirmDeadlineWarning').split('{date}')[0]}
+            <strong>{authDeadline.toLocaleDateString(locale)}</strong> {language === 'fr' ? 'à' : 'at'} {authDeadline.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+            {t('orders.confirmDeadlineWarning').split('{date}')[1]}
           </p>
         </div>
       );
@@ -94,7 +106,9 @@ function DeadlineBanner({ transaction, isSellerView }: { transaction: Transactio
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 flex items-start gap-2">
           <Clock className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-blue-800">
-            Vous avez jusqu'au <strong>{authDeadline.toLocaleDateString('fr-FR')}</strong> pour confirmer la réception. Passé ce délai, le paiement sera automatiquement finalisé.
+            {t('orders.confirmDeadlineWarning').split('{date}')[0]}
+            <strong>{authDeadline.toLocaleDateString(locale)}</strong>
+            {t('orders.confirmDeadlineWarning').split('{date}')[1]}
           </p>
         </div>
       );
@@ -106,6 +120,8 @@ function DeadlineBanner({ transaction, isSellerView }: { transaction: Transactio
 
 export function OrderManagement() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
+  const locale = language === 'fr' ? 'fr-FR' : 'en-US';
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
@@ -136,10 +152,10 @@ export function OrderManagement() {
 
       setDisputeModal(null);
       setDisputeReason('');
-      alert('Litige ouvert. L\'administrateur examinera votre demande dans les plus brefs délais.');
+      alert(t('orders.disputeOpened'));
       fetchTransactions();
     } catch (error: any) {
-      alert(`Erreur: ${error.message}`);
+      alert(`${t('common.error')}: ${error.message}`);
     } finally {
       setProcessingId(null);
     }
@@ -206,7 +222,7 @@ export function OrderManagement() {
   };
 
   const handleConfirmDelivery = async (transactionId: string) => {
-    if (!confirm('Confirmer la réception du colis ? Le paiement sera immédiatement libéré au vendeur.')) return;
+    if (!confirm(t('orders.confirmReceptionMsg'))) return;
 
     setProcessingId(transactionId);
 
@@ -230,11 +246,11 @@ export function OrderManagement() {
 
       if (!response.ok) throw new Error(result.error || 'Failed to capture payment');
 
-      alert('Livraison confirmée ! Le paiement a été libéré au vendeur.');
+      alert(t('orders.receptionConfirmed'));
       fetchTransactions();
     } catch (error: any) {
       console.error('Error capturing payment:', error);
-      alert(`Erreur: ${error.message}`);
+      alert(`${t('common.error')}: ${error.message}`);
     } finally {
       setProcessingId(null);
     }
@@ -243,9 +259,9 @@ export function OrderManagement() {
   const handleCancelOrder = async (transactionId: string, hasPayment: boolean, isBuyer: boolean) => {
     const confirmMsg = hasPayment
       ? isBuyer
-        ? 'Annuler cette commande ? Vous serez remboursé intégralement. Les fonds n\'ont pas encore été prélevés sur votre compte.'
-        : 'Annuler cette commande et rembourser l\'acheteur ?'
-      : 'Annuler cette transaction ?';
+        ? t('orders.cancelConfirmBuyer')
+        : t('orders.cancelConfirmSeller')
+      : t('orders.cancelConfirmNoPayment');
 
     if (!confirm(confirmMsg)) return;
 
@@ -265,7 +281,7 @@ export function OrderManagement() {
             'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ transactionId, reason: 'Annulation par l\'utilisateur' }),
+          body: JSON.stringify({ transactionId, reason: t('orders.cancelReason') }),
         }
       );
 
@@ -275,15 +291,15 @@ export function OrderManagement() {
 
       const successMsg = hasPayment
         ? result.action === 'refunded'
-          ? 'Commande annulée. Le remboursement sera crédité sur votre moyen de paiement sous 5 à 10 jours ouvrés.'
-          : 'Commande annulée avec succès.'
-        : 'Transaction annulée avec succès.';
+          ? t('orders.cancelSuccessRefunded')
+          : t('orders.cancelSuccess')
+        : t('orders.cancelSuccessNoPayment');
 
       alert(successMsg);
       fetchTransactions();
     } catch (error: any) {
       console.error('Error cancelling transaction:', error);
-      alert(`Erreur: ${error.message}`);
+      alert(`${t('common.error')}: ${error.message}`);
     } finally {
       setProcessingId(null);
     }
@@ -291,13 +307,13 @@ export function OrderManagement() {
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { bg: string; text: string; label: string }> = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'En attente' },
-      processing: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Paiement autorisé' },
-      completed: { bg: 'bg-green-100', text: 'text-green-800', label: 'Complété' },
-      cancelled: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Annulé' },
-      refunded: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Remboursé' },
-      failed: { bg: 'bg-red-100', text: 'text-red-800', label: 'Échoué' },
-      disputed: { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Litige en cours' },
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: t('orders.pending') },
+      processing: { bg: 'bg-blue-100', text: 'text-blue-800', label: t('orders.paymentAuthorized') },
+      completed: { bg: 'bg-green-100', text: 'text-green-800', label: t('orders.completed') },
+      cancelled: { bg: 'bg-gray-100', text: 'text-gray-800', label: t('orders.cancelled') },
+      refunded: { bg: 'bg-orange-100', text: 'text-orange-800', label: t('orders.refunded') },
+      failed: { bg: 'bg-red-100', text: 'text-red-800', label: t('orders.failed') },
+      disputed: { bg: 'bg-amber-100', text: 'text-amber-800', label: t('orders.disputed') },
     };
 
     const badge = badges[status] || badges.pending;
@@ -311,10 +327,10 @@ export function OrderManagement() {
 
   const getDeliveryBadge = (status: string) => {
     const badges: Record<string, { bg: string; text: string; label: string }> = {
-      pending: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Non expédié' },
-      shipped: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Expédié' },
-      delivered: { bg: 'bg-green-100', text: 'text-green-800', label: 'Livré' },
-      cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: 'Annulé' },
+      pending: { bg: 'bg-gray-100', text: 'text-gray-800', label: t('orders.notShipped') },
+      shipped: { bg: 'bg-blue-100', text: 'text-blue-800', label: t('orders.shipped') },
+      delivered: { bg: 'bg-green-100', text: 'text-green-800', label: t('orders.delivered') },
+      cancelled: { bg: 'bg-red-100', text: 'text-red-800', label: t('orders.cancelled') },
     };
 
     const badge = badges[status] || badges.pending;
@@ -329,7 +345,7 @@ export function OrderManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Chargement des commandes...</div>
+        <div className="text-gray-500">{t('orders.loading')}</div>
       </div>
     );
   }
@@ -339,11 +355,11 @@ export function OrderManagement() {
       <div>
         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-1">
           <Package className="w-7 h-7 text-teal-600" />
-          Gestion des Commandes
+          {t('orders.title')}
         </h2>
         <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 mb-4">
           <Shield className="w-4 h-4 flex-shrink-0" />
-          <span>Paiements sécurisés — les fonds ne sont transférés au vendeur qu'après confirmation de réception.</span>
+          <span>{t('orders.securityBanner')}</span>
         </div>
 
         <div className="flex gap-2 mb-4">
@@ -355,7 +371,7 @@ export function OrderManagement() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            En cours ({transactions.length})
+            {t('orders.inProgress')} ({transactions.length})
           </button>
           <button
             onClick={() => setActiveTab('completed')}
@@ -365,7 +381,7 @@ export function OrderManagement() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Historique
+            {t('orders.history')}
           </button>
         </div>
       </div>
@@ -373,7 +389,7 @@ export function OrderManagement() {
       <div className="space-y-4">
         {transactions.length === 0 && (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <p className="text-gray-500">Aucune commande</p>
+            <p className="text-gray-500">{t('orders.noOrders')}</p>
           </div>
         )}
 
@@ -394,10 +410,10 @@ export function OrderManagement() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <h3 className="font-bold text-gray-800 text-lg mb-1">
-                        {transaction.listing?.title || 'Annonce supprimée'}
+                        {transaction.listing?.title || t('transactions.articleDeleted')}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        {isSellerView ? 'Acheteur' : 'Vendeur'}: <span className="font-semibold">{otherParty?.full_name || 'Utilisateur'}</span>
+                        {isSellerView ? t('orders.buyer') : t('orders.seller')}: <span className="font-semibold">{otherParty?.full_name || t('common.user')}</span>
                       </p>
                     </div>
                     <div className="flex flex-col gap-2 items-end">
@@ -412,9 +428,9 @@ export function OrderManagement() {
                     <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 mb-3 flex items-start gap-2">
                       <AlertOctagon className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-sm font-semibold text-amber-800">Litige en cours</p>
+                        <p className="text-sm font-semibold text-amber-800">{t('orders.disputeInProgress')}</p>
                         <p className="text-xs text-amber-700 mt-0.5">
-                          L'administrateur examine votre litige. Les fonds sont bloqués jusqu'à résolution.
+                          {t('orders.disputeDesc')}
                         </p>
                         {(transaction as any).dispute_reason && (
                           <p className="text-xs text-amber-600 mt-1 italic">"{(transaction as any).dispute_reason}"</p>
@@ -428,8 +444,8 @@ export function OrderManagement() {
                         <Shield className="w-4 h-4" />
                         <p className="text-sm font-medium">
                           {isSellerView
-                            ? 'Paiement autorisé et sécurisé — sera libéré à la confirmation de livraison par l\'acheteur.'
-                            : 'Votre paiement est sécurisé — il ne sera débité qu\'à la confirmation de livraison.'}
+                            ? t('orders.paymentSecured')
+                            : t('orders.paymentSecuredBuyer')}
                         </p>
                       </div>
                     </div>
@@ -437,40 +453,40 @@ export function OrderManagement() {
 
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div>
-                      <span className="text-sm text-gray-600">Montant total:</span>
+                      <span className="text-sm text-gray-600">{t('orders.totalAmount')}</span>
                       <span className="ml-2 font-bold text-gray-800">{Number(transaction.amount).toFixed(2)}€</span>
                     </div>
                     {isSellerView && (
                       <div>
-                        <span className="text-sm text-gray-600">Vous recevez:</span>
+                        <span className="text-sm text-gray-600">{t('orders.youReceive')}</span>
                         <span className="ml-2 font-bold text-green-600">{Number(transaction.seller_amount).toFixed(2)}€</span>
                       </div>
                     )}
                     <div>
-                      <span className="text-sm text-gray-600">Commission:</span>
+                      <span className="text-sm text-gray-600">{t('orders.commission')}</span>
                       <span className="ml-2 font-semibold text-gray-700">{Number(transaction.platform_fee).toFixed(2)}€</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Date:</span>
-                      <span className="ml-2 text-gray-700">{new Date(transaction.created_at).toLocaleDateString('fr-FR')}</span>
+                      <span className="text-sm text-gray-600">{t('orders.date')}</span>
+                      <span className="ml-2 text-gray-700">{new Date(transaction.created_at).toLocaleDateString(locale)}</span>
                     </div>
                     {transaction.shipping_carrier && (
                       <div>
-                        <span className="text-sm text-gray-600">Transporteur:</span>
+                        <span className="text-sm text-gray-600">{t('orders.carrier')}</span>
                         <span className="ml-2 font-semibold text-gray-800">{transaction.shipping_carrier}</span>
                       </div>
                     )}
                     {transaction.shipping_price && transaction.shipping_price > 0 && (
                       <div>
-                        <span className="text-sm text-gray-600">Frais d'envoi:</span>
+                        <span className="text-sm text-gray-600">{t('orders.shippingFee')}</span>
                         <span className="ml-2 font-semibold text-gray-800">{Number(transaction.shipping_price).toFixed(2)}€</span>
                       </div>
                     )}
                     {isSellerView && transaction.shipping_deadline_at && transaction.delivery_status === 'pending' && (
                       <div className="col-span-2">
-                        <span className="text-sm text-gray-600">Date limite d'expédition:</span>
+                        <span className="text-sm text-gray-600">{t('orders.shippingDeadline')}</span>
                         <span className="ml-2 font-semibold text-amber-700">
-                          {new Date(transaction.shipping_deadline_at).toLocaleDateString('fr-FR')}
+                          {new Date(transaction.shipping_deadline_at).toLocaleDateString(locale)}
                         </span>
                       </div>
                     )}
@@ -485,7 +501,7 @@ export function OrderManagement() {
                       className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <CheckCircle className="w-4 h-4" />
-                      {processingId === transaction.id ? 'En cours...' : 'Confirmer réception'}
+                      {processingId === transaction.id ? t('common.loading') : t('orders.confirmReception')}
                     </button>
                   )}
                   {canDispute && (
@@ -495,7 +511,7 @@ export function OrderManagement() {
                       className="px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <AlertOctagon className="w-4 h-4" />
-                      Signaler un problème
+                      {t('orders.reportProblem')}
                     </button>
                   )}
                   {canCancel && (
@@ -505,7 +521,7 @@ export function OrderManagement() {
                       className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <XCircle className="w-4 h-4" />
-                      {processingId === transaction.id ? 'En cours...' : isBuyerView ? 'Annuler & Rembourser' : 'Annuler'}
+                      {processingId === transaction.id ? t('common.loading') : isBuyerView ? t('orders.cancelRefund') : t('orders.cancel')}
                     </button>
                   )}
                   {['completed', 'cancelled', 'refunded'].includes(transaction.status) && (
@@ -519,7 +535,7 @@ export function OrderManagement() {
                       className="px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg font-semibold hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2"
                     >
                       <Download className="w-4 h-4" />
-                      Télécharger la facture
+                      {t('orders.downloadInvoice')}
                     </button>
                   )}
                 </div>
@@ -566,19 +582,19 @@ export function OrderManagement() {
                 <AlertOctagon className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Signaler un problème</h3>
-                <p className="text-sm text-gray-500">Les fonds resteront bloqués jusqu'à résolution par l'administrateur.</p>
+                <h3 className="text-lg font-bold text-gray-900">{t('orders.disputeModalTitle')}</h3>
+                <p className="text-sm text-gray-500">{t('orders.disputeModalDesc')}</p>
               </div>
             </div>
             <div className="mb-5">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Décrivez le problème <span className="text-red-500">*</span>
+                {t('orders.describeProblem')} <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={disputeReason}
                 onChange={(e) => setDisputeReason(e.target.value)}
                 rows={4}
-                placeholder="Ex: Le colis est arrivé endommagé, la mèche ne correspond pas à la description..."
+                placeholder={t('orders.problemPlaceholder')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
               />
             </div>
@@ -587,14 +603,14 @@ export function OrderManagement() {
                 onClick={() => { setDisputeModal(null); setDisputeReason(''); }}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => handleOpenDispute(disputeModal.transactionId, disputeReason)}
                 disabled={!disputeReason.trim() || processingId === disputeModal.transactionId}
                 className="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {processingId === disputeModal.transactionId ? 'Envoi...' : 'Ouvrir le litige'}
+                {processingId === disputeModal.transactionId ? t('orders.openingDispute') : t('orders.openDispute')}
               </button>
             </div>
           </div>

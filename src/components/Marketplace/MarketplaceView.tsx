@@ -178,7 +178,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Chargement des annonces...</div>
+        <div className="text-gray-500">{t('common.loadingListings')}</div>
       </div>
     );
   }
@@ -221,7 +221,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
           }`}
         >
           <SlidersHorizontal className="w-4 h-4" />
-          <span className="hidden sm:inline">Filtres</span>
+          <span className="hidden sm:inline">{t('common.filters')}</span>
           {activeFilterCount > 0 && (
             <span className={`text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ${filtersOpen ? 'bg-white text-emerald-700' : 'bg-emerald-500 text-white'}`}>
               {activeFilterCount}
@@ -235,7 +235,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
         <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-4 space-y-4">
           {/* Type de cheveux — chips */}
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Type</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('common.type')}</p>
             <div className="flex flex-wrap gap-2">
               {hairTypeOptions.map(({ value, label }) => (
                 <button
@@ -321,7 +321,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
                 onClick={() => { setFilterType('all'); setMinPrice(''); setMaxPrice(''); setMinLength(''); setMaxLength(''); }}
                 className="text-sm text-red-500 hover:text-red-600 font-medium transition-colors"
               >
-                Réinitialiser tous les filtres
+                {t('common.resetFilters')}
               </button>
             </div>
           )}
@@ -331,7 +331,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
       {/* ── Barre résultats + tri + vue ── */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">
-          <span className="font-semibold text-gray-800">{filteredAndSortedListings.length}</span> annonce{filteredAndSortedListings.length !== 1 ? 's' : ''}
+          <span className="font-semibold text-gray-800">{filteredAndSortedListings.length}</span> {t('common.results')}
         </p>
 
         <div className="flex items-center gap-2">
@@ -357,7 +357,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
               className={`p-1.5 rounded transition-colors ${
                 viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-gray-600'
               }`}
-              title="Mosaïque"
+              title={t('common.gridView')}
             >
               <Grid className="w-4 h-4" />
             </button>
@@ -366,7 +366,7 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
               className={`p-1.5 rounded transition-colors ${
                 viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-gray-600'
               }`}
-              title="Liste"
+              title={t('common.listView')}
             >
               <List className="w-4 h-4" />
             </button>
@@ -420,8 +420,8 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
       {filteredAndSortedListings.length === 0 && !loading && (
         <div className="text-center py-16 text-gray-400">
           <Search className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="font-medium text-gray-600">Aucune annonce trouvée</p>
-          <p className="text-sm mt-1">Essayez d'autres termes ou réinitialisez les filtres</p>
+          <p className="font-medium text-gray-600">{t('common.noResults')}</p>
+          <p className="text-sm mt-1">{t('common.noResultsDesc')}</p>
         </div>
       )}
     </div>

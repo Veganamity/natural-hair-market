@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { Database } from '../../lib/database.types';
 import { Check, X, Tag, Eye, CreditCard } from 'lucide-react';
 import { ListingDetails } from '../Listings/ListingDetails';
@@ -17,6 +18,7 @@ interface OfferWithDetails extends Offer {
 
 export function OffersView() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [receivedOffers, setReceivedOffers] = useState<OfferWithDetails[]>([]);
   const [sentOffers, setSentOffers] = useState<OfferWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,7 +172,7 @@ export function OffersView() {
 
     if (!error) {
       sendBuyerOfferNotification(offerId, 'accepted');
-      alert('Offre acceptée ! Un email a été envoyé à l\'acheteur.');
+      alert(t('offers.offerAccepted'));
       fetchOffers();
     }
   };
@@ -187,7 +189,7 @@ export function OffersView() {
 
     if (!error) {
       sendBuyerOfferNotification(offerId, 'rejected');
-      alert('Offre refusée. Un email a été envoyé à l\'acheteur.');
+      alert(t('offers.offerRejected'));
       fetchOffers();
     }
   };
@@ -199,7 +201,7 @@ export function OffersView() {
       .eq('id', offerId);
 
     if (!error) {
-      alert('Offre retirée');
+      alert(t('offers.offerWithdrawn'));
       fetchOffers();
     }
   };
@@ -244,10 +246,10 @@ export function OffersView() {
     };
 
     const labels = {
-      pending: 'En attente',
-      accepted: 'Acceptée',
-      rejected: 'Refusée',
-      withdrawn: 'Retirée',
+      pending: t('offers.pending'),
+      accepted: t('offers.accepted'),
+      rejected: t('offers.rejected'),
+      withdrawn: t('offers.withdrawn'),
     };
 
     return (
@@ -260,7 +262,7 @@ export function OffersView() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Chargement des offres...</div>
+        <div className="text-gray-500">{t('offers.loading')}</div>
       </div>
     );
   }
@@ -270,7 +272,7 @@ export function OffersView() {
       <div>
         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 mb-4">
           <Tag className="w-7 h-7 text-teal-600" />
-          Mes Offres
+          {t('offers.title')}
         </h2>
 
         <div className="flex gap-2 mb-4">
@@ -282,7 +284,7 @@ export function OffersView() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Reçues ({receivedOffers.length})
+            {t('offers.received')} ({receivedOffers.length})
           </button>
           <button
             onClick={() => setActiveTab('sent')}
@@ -292,7 +294,7 @@ export function OffersView() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Envoyées ({sentOffers.length})
+            {t('offers.sent')} ({sentOffers.length})
           </button>
         </div>
       </div>
@@ -300,13 +302,13 @@ export function OffersView() {
       <div className="space-y-4">
         {activeTab === 'received' && receivedOffers.length === 0 && (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <p className="text-gray-500">Aucune offre reçue</p>
+            <p className="text-gray-500">{t('offers.noReceived')}</p>
           </div>
         )}
 
         {activeTab === 'sent' && sentOffers.length === 0 && (
           <div className="bg-white rounded-xl shadow-md p-12 text-center">
-            <p className="text-gray-500">Aucune offre envoyée</p>
+            <p className="text-gray-500">{t('offers.noSent')}</p>
           </div>
         )}
 
@@ -325,18 +327,18 @@ export function OffersView() {
                         <Eye className="w-4 h-4" />
                       </button>
                       <p className="text-sm text-gray-600 mb-2">
-                        De: <span className="font-semibold">{offer.buyer.full_name || 'Utilisateur'}</span>
+                        {t('offers.from')} <span className="font-semibold">{offer.buyer.full_name || t('common.user')}</span>
                       </p>
                     </div>
                     {getStatusBadge(offer.status)}
                   </div>
                   <div className="flex items-center gap-4 mb-2">
                     <div>
-                      <span className="text-sm text-gray-600">Prix demandé:</span>
+                      <span className="text-sm text-gray-600">{t('offers.askedPrice')}</span>
                       <span className="ml-2 font-semibold text-gray-800">{offer.listing.price}€</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Offre:</span>
+                      <span className="text-sm text-gray-600">{t('offers.offerAmount')}</span>
                       <span className="ml-2 font-bold text-teal-600 text-lg">{offer.amount}€</span>
                     </div>
                   </div>
@@ -354,14 +356,14 @@ export function OffersView() {
                         className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
                       >
                         <Check className="w-4 h-4" />
-                        Accepter
+                        {t('offers.accept')}
                       </button>
                       <button
                         onClick={() => handleRejectOffer(offer.id)}
                         className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center gap-2"
                       >
                         <X className="w-4 h-4" />
-                        Refuser
+                        {t('offers.refuse')}
                       </button>
                     </div>
                   )}
@@ -397,11 +399,11 @@ export function OffersView() {
                   </div>
                   <div className="flex items-center gap-4 mb-2">
                     <div>
-                      <span className="text-sm text-gray-600">Prix demandé:</span>
+                      <span className="text-sm text-gray-600">{t('offers.askedPrice')}</span>
                       <span className="ml-2 font-semibold text-gray-800">{offer.listing.price}€</span>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600">Votre offre:</span>
+                      <span className="text-sm text-gray-600">{t('offers.yourOffer')}</span>
                       <span className="ml-2 font-bold text-teal-600 text-lg">{offer.amount}€</span>
                     </div>
                   </div>
@@ -417,7 +419,7 @@ export function OffersView() {
                       onClick={() => handleWithdrawOffer(offer.id)}
                       className="px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors"
                     >
-                      Retirer l'offre
+                      {t('offers.withdraw')}
                     </button>
                   )}
                   {offer.status === 'accepted' && (
@@ -426,7 +428,7 @@ export function OffersView() {
                       className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                     >
                       <CreditCard className="w-4 h-4" />
-                      Payer maintenant
+                      {t('offers.payNow')}
                     </button>
                   )}
                 </div>

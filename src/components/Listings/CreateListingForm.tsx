@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { compressImage } from '../../lib/imageUtils';
 import { X, Upload, Image, ShieldCheck, FileText, AlertCircle } from 'lucide-react';
 
@@ -11,6 +12,7 @@ interface CreateListingFormProps {
 
 export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -36,16 +38,16 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
   const inchesToCm = (inches: number) => Math.round(inches * 2.54);
 
   const hairTypeLabels: Record<string, string> = {
-    straight: 'raides',
-    wavy: 'ondulés',
-    curly: 'bouclés',
-    coily: 'frisés',
+    straight: t('hairTypes.straight'),
+    wavy: t('hairTypes.wavy'),
+    curly: t('hairTypes.curly'),
+    coily: t('hairTypes.coily'),
   };
 
   const conditionLabels: Record<string, string> = {
-    excellent: 'excellent',
-    good: 'bon',
-    fair: 'moyen',
+    excellent: t('condition.excellent'),
+    good: t('condition.good'),
+    fair: t('condition.fair'),
   };
 
   const generateDescription = (): string => {
@@ -156,19 +158,19 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
       const description = generateDescription();
 
       if (uploadedImages.length === 0) {
-        throw new Error('Veuillez ajouter au moins une photo de vos cheveux.');
+        throw new Error(t('createListing.addPhotoError'));
       }
 
       if (!formData.hair_texture) {
-        throw new Error('Veuillez sélectionner la texture de vos cheveux.');
+        throw new Error(t('createListing.textureError'));
       }
 
       if (!formData.hair_weight) {
-        throw new Error('Veuillez indiquer le poids de vos cheveux.');
+        throw new Error(t('createListing.weightError'));
       }
 
       if (!formData.certification_accepted) {
-        throw new Error('Vous devez certifier l\'authenticité des cheveux pour publier cette annonce.');
+        throw new Error(t('createListing.certifyError'));
       }
 
       const { error: insertError } = await supabase
@@ -207,7 +209,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-800">Créer une annonce</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t('createListing.title')}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -225,7 +227,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
 
           <div className="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-lg">
             <p className="text-sm text-emerald-800 font-medium">
-              Aperçu du titre: <span className="font-bold">{generateTitle()}</span>
+              {t('createListing.titlePreview')} <span className="font-bold">{generateTitle()}</span>
             </p>
           </div>
 
@@ -233,9 +235,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-amber-800">
-                <strong>Rappel :</strong> pour recevoir des offres et des paiements sur cette annonce,
-                vous devez avoir configuré vos informations bancaires dans votre profil.
-                Sans compte bancaire, les acheteurs ne pourront pas vous faire d'offre.
+                {t('createListing.bankWarning')}
               </p>
             </div>
           </div>
@@ -243,7 +243,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Prix de l'article (€) *
+                {t('createListing.priceLabel')}
               </label>
               <input
                 type="number"
@@ -253,9 +253,9 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
-                placeholder="150.00"
+                placeholder={t('createListing.pricePlaceholder')}
               />
-              <p className="text-xs text-gray-500 mt-1">Commission marketplace: 10%</p>
+              <p className="text-xs text-gray-500 mt-1">{t('createListing.commissionHelper')}</p>
             </div>
           </div>
 
@@ -264,7 +264,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-sm font-medium text-gray-700">
-                  Longueur *
+                  {t('createListing.lengthLabel')}
                 </label>
                 <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
                   <button
@@ -276,7 +276,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    cm
+                    {t('createListing.cm')}
                   </button>
                   <button
                     type="button"
@@ -287,7 +287,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    pouces
+                    {t('createListing.inches')}
                   </button>
                 </div>
               </div>
@@ -318,13 +318,10 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                   placeholder={lengthUnit === 'cm' ? '50' : '20'}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
-                  {lengthUnit === 'cm' ? 'cm' : 'pouces'}
+                  {lengthUnit === 'cm' ? t('createListing.cm') : t('createListing.inches')}
                   {formData.hair_length && (
                     <span className="ml-1 text-xs text-gray-400">
-                      ({lengthUnit === 'cm'
-                        ? `${cmToInches(parseInt(formData.hair_length))} pouces`
-                        : `${formData.hair_length}`
-                      })
+                      ({lengthUnit === 'cm' ? cmToInches(parseInt(formData.hair_length)) + ' ' + t('createListing.inches') : formData.hair_length})
                     </span>
                   )}
                 </div>
@@ -335,7 +332,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Type de cheveux *
+                {t('createListing.typeLabel')}
               </label>
               <select
                 value={formData.hair_type}
@@ -343,16 +340,16 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="straight">Raides</option>
-                <option value="wavy">Ondulés</option>
-                <option value="curly">Bouclés</option>
-                <option value="coily">Frisés</option>
+                <option value="straight">{t('hairTypes.straight')}</option>
+                <option value="wavy">{t('hairTypes.wavy')}</option>
+                <option value="curly">{t('hairTypes.curly')}</option>
+                <option value="coily">{t('hairTypes.coily')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Couleur *
+                {t('createListing.colorLabel')}
               </label>
               <select
                 value={formData.hair_color}
@@ -360,22 +357,22 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="">Sélectionnez</option>
-                <option value="noir">Noir</option>
-                <option value="brun foncé">Brun foncé</option>
-                <option value="brun">Brun</option>
-                <option value="châtain foncé">Châtain foncé</option>
-                <option value="châtain">Châtain</option>
-                <option value="châtain clair">Châtain clair</option>
-                <option value="blond foncé">Blond foncé</option>
-                <option value="blond">Blond</option>
-                <option value="blond clair">Blond clair</option>
-                <option value="blond platine">Blond platine</option>
-                <option value="roux foncé">Roux foncé</option>
-                <option value="roux">Roux</option>
-                <option value="roux clair">Roux clair</option>
-                <option value="gris">Gris</option>
-                <option value="blanc">Blanc</option>
+                <option value="">{t('hairColors.select')}</option>
+                <option value="noir">{t('hairColors.black')}</option>
+                <option value="brun foncé">{t('hairColors.dark_brown')}</option>
+                <option value="brun">{t('hairColors.brown')}</option>
+                <option value="châtain foncé">{t('hairColors.dark_chestnut')}</option>
+                <option value="châtain">{t('hairColors.chestnut')}</option>
+                <option value="châtain clair">{t('hairColors.light_chestnut')}</option>
+                <option value="blond foncé">{t('hairColors.dark_blond')}</option>
+                <option value="blond">{t('hairColors.blond')}</option>
+                <option value="blond clair">{t('hairColors.light_blond')}</option>
+                <option value="blond platine">{t('hairColors.platinum_blond')}</option>
+                <option value="roux foncé">{t('hairColors.dark_red')}</option>
+                <option value="roux">{t('hairColors.red')}</option>
+                <option value="roux clair">{t('hairColors.light_red')}</option>
+                <option value="gris">{t('hairColors.gray')}</option>
+                <option value="blanc">{t('hairColors.white')}</option>
               </select>
             </div>
           </div>
@@ -383,25 +380,25 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Texture *
+                {t('createListing.textureLabel')}
               </label>
               <select
                 value={formData.hair_texture}
                 onChange={(e) => setFormData({ ...formData, hair_texture: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               >
-                <option value="">Sélectionnez</option>
-                <option value="très fin">Très fin</option>
-                <option value="fin">Fin</option>
-                <option value="moyen">Moyen</option>
-                <option value="épais">Épais</option>
-                <option value="très épais">Très épais</option>
+                <option value="">{t('hairTextures.select')}</option>
+                <option value="très fin">{t('hairTextures.very_fine')}</option>
+                <option value="fin">{t('hairTextures.fine')}</option>
+                <option value="moyen">{t('hairTextures.medium')}</option>
+                <option value="épais">{t('hairTextures.thick')}</option>
+                <option value="très épais">{t('hairTextures.very_thick')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Poids *
+                {t('createListing.weightLabel')}
               </label>
               <div className="relative">
                 <input
@@ -419,7 +416,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                     }
                   }}
                   className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  placeholder="100"
+                  placeholder={t('createListing.weightPlaceholder')}
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
                   g
@@ -431,7 +428,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                État *
+                {t('createListing.conditionLabel')}
               </label>
               <select
                 value={formData.condition}
@@ -439,15 +436,15 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="excellent">Excellent</option>
-                <option value="good">Bon</option>
-                <option value="fair">Moyen</option>
+                <option value="excellent">{t('condition.excellent')}</option>
+                <option value="good">{t('condition.good')}</option>
+                <option value="fair">{t('condition.fair')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Pays de provenance *
+                {t('createListing.countryLabel')}
               </label>
               <select
                 value={formData.country}
@@ -455,8 +452,8 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="">-- Sélectionner un pays --</option>
-                <optgroup label="Europe">
+                <option value="">{t('countries.select')}</option>
+                <optgroup label={t('countries.europe')}>
                   <option value="France">France</option>
                   <option value="Belgique">Belgique</option>
                   <option value="Suisse">Suisse</option>
@@ -478,14 +475,14 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                   <option value="Russie">Russie</option>
                   <option value="Ukraine">Ukraine</option>
                 </optgroup>
-                <optgroup label="Asie">
+                <optgroup label={t('countries.asia')}>
                   <option value="Inde">Inde</option>
                   <option value="Chine">Chine</option>
                 </optgroup>
-                <optgroup label="Amérique latine">
+                <optgroup label={t('countries.latam')}>
                   <option value="Brésil">Brésil</option>
                 </optgroup>
-                <optgroup label="Autre">
+                <optgroup label={t('countries.other')}>
                   <option value="Autre">Autre</option>
                 </optgroup>
               </select>
@@ -500,7 +497,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 onChange={(e) => setFormData({ ...formData, is_natural_color: e.target.checked })}
                 className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
               />
-              <span className="text-sm font-medium text-gray-700">Couleur naturelle</span>
+              <span className="text-sm font-medium text-gray-700">{t('createListing.naturalColor')}</span>
             </label>
 
             <label className="flex items-center space-x-3">
@@ -510,7 +507,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 onChange={(e) => setFormData({ ...formData, is_dyed: e.target.checked })}
                 className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
               />
-              <span className="text-sm font-medium text-gray-700">Cheveux colorés</span>
+              <span className="text-sm font-medium text-gray-700">{t('createListing.dyedHair')}</span>
             </label>
 
             <label className="flex items-center space-x-3">
@@ -520,14 +517,14 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                 onChange={(e) => setFormData({ ...formData, is_treated: e.target.checked })}
                 className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
               />
-              <span className="text-sm font-medium text-gray-700">Cheveux traités chimiquement</span>
+              <span className="text-sm font-medium text-gray-700">{t('createListing.treatedHair')}</span>
             </label>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Image className="w-4 h-4 inline mr-1" />
-              Photos des cheveux *
+              {t('createListing.photosLabel')}
             </label>
 
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-emerald-500 transition-colors">
@@ -546,10 +543,10 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
               >
                 <Upload className="w-12 h-12 text-gray-400 mb-2" />
                 <span className="text-sm text-gray-600 font-medium">
-                  {uploading ? 'Téléchargement...' : 'Cliquez pour télécharger des photos'}
+                  {uploading ? t('createListing.uploading') : t('createListing.clickToUpload')}
                 </span>
                 <span className="text-xs text-gray-500 mt-1">
-                  PNG, JPG, JPEG jusqu'à 10MB
+                  {t('createListing.photoFormats')}
                 </span>
               </label>
             </div>
@@ -580,7 +577,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
             <div className="flex items-start gap-3">
               <ShieldCheck className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
               <div className="flex-1">
-                <h3 className="font-bold text-gray-800 mb-2">Certification obligatoire</h3>
+                <h3 className="font-bold text-gray-800 mb-2">{t('createListing.certificationRequired')}</h3>
                 <label className="flex items-start space-x-3 cursor-pointer">
                   <input
                     type="checkbox"
@@ -590,9 +587,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
                     required
                   />
                   <span className="text-sm text-gray-700">
-                    <strong className="text-red-600">Je certifie</strong> que les cheveux déposés sur cette annonce sont
-                    <strong> 100% humains, naturels et non synthétiques</strong>. Je comprends qu'en cas de fausse déclaration,
-                    l'acheteur peut demander un remboursement total et mon compte peut être suspendu.
+                    {t('createListing.certifyText')}
                   </span>
                 </label>
               </div>
@@ -602,11 +597,11 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <FileText className="w-4 h-4 text-emerald-600" />
-              <span className="text-sm font-semibold text-gray-700">Aperçu de la description SEO</span>
-              <span className="text-xs text-gray-400 ml-auto">Générée automatiquement — lecture seule</span>
+              <span className="text-sm font-semibold text-gray-700">{t('createListing.seoPreview')}</span>
+              <span className="text-xs text-gray-400 ml-auto">{t('createListing.seoAutoGenerated')}</span>
             </div>
             <p className="text-sm text-gray-600 leading-relaxed bg-white border border-gray-100 rounded-lg px-4 py-3 select-none">
-              {generateDescription() || <span className="text-gray-400 italic">Remplissez les champs ci-dessus pour voir la description générée.</span>}
+              {generateDescription() || <span className="text-gray-400 italic">{t('createListing.seoFillFields')}</span>}
             </p>
           </div>
 
@@ -616,14 +611,14 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Annuler
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Création...' : 'Créer l\'annonce'}
+              {loading ? t('createListing.creating') : t('createListing.createBtn')}
             </button>
           </div>
         </form>

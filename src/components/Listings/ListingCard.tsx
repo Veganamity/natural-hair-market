@@ -27,7 +27,7 @@ export function ListingCard({
   onClick,
   onSellerClick,
 }: ListingCardProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const isOldApi = onFavoriteToggle !== undefined;
   const isFav = isOldApi ? isFavorited : isFavorite;
   const images = Array.isArray(listing.images) ? listing.images as string[] : [];
@@ -38,7 +38,7 @@ export function ListingCard({
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('fr-FR', {
+    return new Date(date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -70,7 +70,7 @@ export function ListingCard({
         {listing.status === 'sold' && (
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full rotate-[-8deg] shadow-lg tracking-wide">
-              VENDU
+              {t('listing.soldRibbon')}
             </span>
           </div>
         )}
@@ -130,19 +130,19 @@ export function ListingCard({
           </div>
           <div className="flex items-center gap-1">
             {seller?.is_certified_salon && (
-              <div className="flex items-center gap-0.5 bg-blue-50 px-1.5 py-0.5 rounded-full" title="Salon Certifié">
+              <div className="flex items-center gap-0.5 bg-blue-50 px-1.5 py-0.5 rounded-full" title={t('listing.certifiedSalon')}>
                 <BadgeCheck className="w-3 h-3 text-blue-600" />
-                <span className="text-[10px] text-blue-700 font-medium">Salon Certifié</span>
+                <span className="text-[10px] text-blue-700 font-medium">{t('listing.certifiedSalon')}</span>
               </div>
             )}
             {listing.status === 'active' && (
               <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium text-[10px]">
-                Dispo
+                {t('listing.availPill')}
               </span>
             )}
             {listing.status === 'sold' && (
               <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-medium text-[10px]">
-                Vendu
+                {t('listing.soldPill')}
               </span>
             )}
           </div>
@@ -156,7 +156,7 @@ export function ListingCard({
             }}
             className="mt-1.5 w-full text-left text-[10px] text-emerald-600 hover:text-emerald-700 font-medium truncate transition-colors"
           >
-            {seller.full_name || 'Vendeur'} — voir sa boutique →
+            {seller.full_name || t('listing.seller')} — {t('listing.sellerStore')}
           </button>
         )}
       </div>

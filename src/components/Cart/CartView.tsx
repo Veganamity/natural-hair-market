@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Trash2, ShoppingCart, Package, ChevronRight, Scale } from 'lucide-react';
 import { useCart, CartBySeller } from '../../contexts/CartContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { CartPaymentModal } from './CartPaymentModal';
 
 export function CartView() {
   const { cartItems, removeFromCart, clearSellerCart, getCartBySeller } = useCart();
+  const { t } = useLanguage();
   const [checkoutSeller, setCheckoutSeller] = useState<CartBySeller | null>(null);
 
   const sellerGroups = getCartBySeller();
@@ -20,9 +22,9 @@ export function CartView() {
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <ShoppingCart className="w-8 h-8 text-gray-400" />
         </div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Votre panier est vide</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">{t('cart.empty')}</h2>
         <p className="text-gray-500 text-sm">
-          Parcourez le marketplace et ajoutez des articles à votre panier.
+          {t('cart.emptyDesc')}
         </p>
       </div>
     );
@@ -32,9 +34,9 @@ export function CartView() {
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-lg font-bold text-gray-800">
-          Mon Panier
+          {t('cart.title')}
           <span className="ml-2 text-sm font-normal text-gray-500">
-            ({cartItems.length} article{cartItems.length > 1 ? 's' : ''})
+            ({cartItems.length} {t('cart.items')})
           </span>
         </h2>
       </div>
@@ -43,11 +45,11 @@ export function CartView() {
         <div key={group.sellerId} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gray-50 border-b border-gray-200 px-4 py-2.5 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-gray-800">Vendeur: {group.sellerName}</p>
+              <p className="text-xs font-semibold text-gray-800">{t('cart.seller')} {group.sellerName}</p>
               <div className="flex items-center gap-3 mt-0.5">
                 <p className="text-[10px] text-gray-500 flex items-center gap-1">
                   <Package className="w-3 h-3" />
-                  {group.items.length} article{group.items.length > 1 ? 's' : ''}
+                  {group.items.length} {t('cart.items')}
                 </p>
                 <p className="text-[10px] text-gray-500 flex items-center gap-1">
                   <Scale className="w-3 h-3" />
@@ -61,7 +63,7 @@ export function CartView() {
               onClick={() => clearSellerCart(group.sellerId)}
               className="text-[10px] text-red-500 hover:text-red-700 font-medium transition-colors"
             >
-              Vider
+              {t('cart.clear')}
             </button>
           </div>
 
@@ -106,17 +108,17 @@ export function CartView() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-600">
-                  Sous-total: <span className="font-bold text-gray-800">{group.totalPrice.toFixed(2)} €</span>
+                  {t('cart.subtotal')} <span className="font-bold text-gray-800">{group.totalPrice.toFixed(2)} €</span>
                 </p>
                 <p className="text-[10px] text-gray-400 mt-0.5">
-                  + frais de livraison et commission (10%)
+                  {t('cart.shippingAndCommission')}
                 </p>
               </div>
               <button
                 onClick={() => setCheckoutSeller(group)}
                 className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors text-xs"
               >
-                Commander
+                {t('cart.checkout')}
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -127,7 +129,7 @@ export function CartView() {
       {sellerGroups.length > 1 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
           <p className="text-xs text-amber-800">
-            Vous avez des articles de {sellerGroups.length} vendeurs différents. Chaque commande est traitée séparément et nécessite un paiement distinct.
+            {t('cart.multiSellerWarning').replace('{count}', String(sellerGroups.length))}
           </p>
         </div>
       )}

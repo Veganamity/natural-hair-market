@@ -1,6 +1,7 @@
 import { X, Heart, CheckCircle, XCircle, ShoppingCart, Tag, Flag, BadgeCheck, Hash, Plus, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { PaymentModal } from '../Payment/PaymentModal';
@@ -30,6 +31,7 @@ export function ListingDetails({
   onSellerClick,
 }: ListingDetailsProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { addToCart, isInCart } = useCart();
   const [seller, setSeller] = useState<Profile | null>(null);
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -75,16 +77,16 @@ export function ListingDetails({
   }, [listing.description, listing.title]);
 
   const hairTypeLabels: Record<string, string> = {
-    straight: 'Raides',
-    wavy: 'Ondulés',
-    curly: 'Bouclés',
-    coily: 'Frisés',
+    straight: t('hairTypes.straight'),
+    wavy: t('hairTypes.wavy'),
+    curly: t('hairTypes.curly'),
+    coily: t('hairTypes.coily'),
   };
 
   const conditionLabels: Record<string, string> = {
-    excellent: 'Excellent',
-    good: 'Bon',
-    fair: 'Moyen',
+    excellent: t('condition.excellent'),
+    good: t('condition.good'),
+    fair: t('condition.fair'),
   };
 
   const cmToInches = (cm: number) => Math.round(cm / 2.54);
@@ -93,7 +95,7 @@ export function ListingDetails({
     const cm = parseInt(lengthStr);
     if (isNaN(cm)) return lengthStr;
     const inches = cmToInches(cm);
-    return `${cm}cm (${inches} pouces)`;
+    return `${cm}cm (${inches} ${t('marketplace.inches')})`;
   };
 
   const isOwner = user?.id === listing.seller_id;
@@ -127,12 +129,12 @@ export function ListingDetails({
         body: JSON.stringify({ listing_id: listing.id, offer_amount: parseFloat(offerAmount) }),
       }).catch(() => {});
 
-      alert('Votre offre a été envoyée au vendeur!');
+      alert(t('offers.offerSent'));
       setShowOfferModal(false);
       setOfferAmount('');
     } catch (error) {
       console.error('Error submitting offer:', error);
-      alert('Erreur lors de l\'envoi de l\'offre');
+      alert(t('offers.offerError'));
     } finally {
       setIsSubmittingOffer(false);
     }
@@ -142,7 +144,7 @@ export function ListingDetails({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-1 md:p-2">
       <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[98vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-2 py-1 flex items-center justify-between z-10 rounded-t-lg">
-          <h2 className="text-xs font-bold text-gray-800">Détails</h2>
+          <h2 className="text-xs font-bold text-gray-800">{t('listing.details')}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -173,12 +175,12 @@ export function ListingDetails({
                 </div>
                 {listing.status === 'active' && (
                   <span className="inline-block bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full text-[9px] font-medium">
-                    Disponible
+                    {t('listing.available')}
                   </span>
                 )}
                 {listing.status === 'sold' && (
                   <span className="inline-block bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full text-[9px] font-medium">
-                    Vendu
+                    {t('listing.sold')}
                   </span>
                 )}
               </div>
@@ -188,40 +190,40 @@ export function ListingDetails({
             <div className="space-y-1 border-t border-gray-200 pt-1">
               <div className="grid grid-cols-2 gap-1 text-sm">
                 <div>
-                  <span className="text-[10px] text-gray-600">Longueur</span>
+                  <span className="text-[10px] text-gray-600">{t('listing.hairLength')}</span>
                   <p className="font-semibold text-gray-800 text-xs">{formatLength(listing.hair_length)}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] text-gray-600">Type</span>
+                  <span className="text-[10px] text-gray-600">{t('listing.hairType')}</span>
                   <p className="font-semibold text-gray-800 text-xs">
                     {hairTypeLabels[listing.hair_type] || listing.hair_type}
                   </p>
                 </div>
                 <div>
-                  <span className="text-[10px] text-gray-600">Couleur</span>
+                  <span className="text-[10px] text-gray-600">{t('listing.hairColor')}</span>
                   <p className="font-semibold text-gray-800 text-xs">{listing.hair_color}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] text-gray-600">État</span>
+                  <span className="text-[10px] text-gray-600">{t('listing.condition')}</span>
                   <p className="font-semibold text-gray-800 text-xs">
                     {conditionLabels[listing.condition] || listing.condition}
                   </p>
                 </div>
                 {listing.country && (
                   <div>
-                    <span className="text-[10px] text-gray-600">Pays</span>
+                    <span className="text-[10px] text-gray-600">{t('listing.country')}</span>
                     <p className="font-semibold text-gray-800 text-xs">{listing.country}</p>
                   </div>
                 )}
                 {listing.hair_texture && (
                   <div>
-                    <span className="text-[10px] text-gray-600">Texture</span>
+                    <span className="text-[10px] text-gray-600">{t('listing.hairTexture')}</span>
                     <p className="font-semibold text-gray-800 text-xs">{listing.hair_texture}</p>
                   </div>
                 )}
                 {listing.hair_weight && (
                   <div>
-                    <span className="text-[10px] text-gray-600">Poids</span>
+                    <span className="text-[10px] text-gray-600">{t('listing.hairWeight')}</span>
                     <p className="font-semibold text-gray-800 text-xs">{listing.hair_weight}</p>
                   </div>
                 )}
@@ -234,7 +236,7 @@ export function ListingDetails({
                   ) : (
                     <XCircle className="w-2.5 h-2.5 text-gray-400" />
                   )}
-                  <span className="text-[9px] text-gray-700">Colorés</span>
+                  <span className="text-[9px] text-gray-700">{t('listing.isDyed')}</span>
                 </div>
                 <div className="flex items-center gap-0.5">
                   {listing.is_treated ? (
@@ -242,19 +244,19 @@ export function ListingDetails({
                   ) : (
                     <XCircle className="w-2.5 h-2.5 text-gray-400" />
                   )}
-                  <span className="text-[9px] text-gray-700">Traités</span>
+                  <span className="text-[9px] text-gray-700">{t('listing.isTreated')}</span>
                 </div>
               </div>
             </div>
 
             <div className="border-t border-gray-200 pt-1">
-              <h3 className="font-semibold text-gray-800 mb-0.5 text-[10px]">Description</h3>
+              <h3 className="font-semibold text-gray-800 mb-0.5 text-[10px]">{t('listing.description')}</h3>
               <p className="text-gray-600 leading-tight text-[9px]">{listing.description}</p>
             </div>
 
             {seller && (
               <div className="border-t border-gray-200 pt-1">
-                <h3 className="font-semibold text-gray-800 mb-0.5 text-[10px]">Vendeur</h3>
+                <h3 className="font-semibold text-gray-800 mb-0.5 text-[10px]">{t('listing.seller')}</h3>
                 <button
                   onClick={() => {
                     if (onSellerClick) {
@@ -272,12 +274,12 @@ export function ListingDetails({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-0.5 flex-wrap">
                       <p className={`font-semibold text-[10px] ${onSellerClick ? 'text-emerald-700 underline underline-offset-1' : 'text-gray-800'}`}>
-                        {seller.full_name || 'Utilisateur'}
+                        {seller.full_name || t('common.user')}
                       </p>
                       {seller.is_certified_salon && (
                         <div className="flex items-center gap-0.5 bg-blue-50 px-0.5 py-0.5 rounded-full">
                           <BadgeCheck className="w-2 h-2 text-blue-600" />
-                          <span className="text-[8px] text-blue-700 font-medium">Salon Certifié</span>
+                          <span className="text-[8px] text-blue-700 font-medium">{t('listing.certifiedSalon')}</span>
                         </div>
                       )}
                     </div>
@@ -285,7 +287,7 @@ export function ListingDetails({
                       <p className="text-[9px] text-gray-600">{seller.location}</p>
                     )}
                     {onSellerClick && (
-                      <p className="text-[8px] text-emerald-600 font-medium mt-0.5">Voir tous ses produits →</p>
+                      <p className="text-[8px] text-emerald-600 font-medium mt-0.5">{t('listing.sellerStore')}</p>
                     )}
                   </div>
                 </button>
@@ -296,7 +298,7 @@ export function ListingDetails({
               <div className="space-y-1 pt-1">
                 {listing.status !== 'active' ? (
                   <div className="w-full px-2 py-2 bg-red-50 border border-red-200 rounded-md text-center">
-                    <span className="text-[10px] font-semibold text-red-700">Cette annonce a été vendue</span>
+                    <span className="text-[10px] font-semibold text-red-700">{t('listing.thisListingSold')}</span>
                   </div>
                 ) : (
                   <>
@@ -307,7 +309,7 @@ export function ListingDetails({
                           className="flex-1 px-2 py-1 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-0.5 text-[10px]"
                         >
                           <ShoppingCart className="w-2.5 h-2.5" />
-                          Acheter
+                          {t('listing.buy')}
                         </button>
                       )}
                       {listing.accept_offers && (
@@ -316,7 +318,7 @@ export function ListingDetails({
                           className="flex-1 px-2 py-1 bg-teal-600 text-white rounded-md font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center gap-0.5 text-[10px]"
                         >
                           <Tag className="w-2.5 h-2.5" />
-                          Offre
+                          {t('listing.offer')}
                         </button>
                       )}
                     </div>
@@ -324,7 +326,7 @@ export function ListingDetails({
                       <button
                         onClick={() => {
                           if (!isInCart(listing.id)) {
-                            addToCart(listing, listing.seller_id, seller?.full_name || seller?.email || 'Vendeur');
+                            addToCart(listing, listing.seller_id, seller?.full_name || seller?.email || t('listing.seller'));
                           }
                         }}
                         className={`w-full px-2 py-1 rounded-md font-semibold transition-colors flex items-center justify-center gap-0.5 text-[10px] ${
@@ -336,12 +338,12 @@ export function ListingDetails({
                         {isInCart(listing.id) ? (
                           <>
                             <Check className="w-2.5 h-2.5" />
-                            Dans le panier
+                            {t('listing.inCart')}
                           </>
                         ) : (
                           <>
                             <Plus className="w-2.5 h-2.5" />
-                            Ajouter au panier
+                            {t('listing.addToCart')}
                           </>
                         )}
                       </button>
@@ -357,7 +359,7 @@ export function ListingDetails({
                   }`}
                 >
                   <Heart className={`w-2.5 h-2.5 ${isFavorited ? 'fill-current' : ''}`} />
-                  {isFavorited ? 'Retirer' : 'Favoris'}
+                  {isFavorited ? t('listing.remove') : t('listing.favorites')}
                 </button>
                 {user && (
                   <button
@@ -365,7 +367,7 @@ export function ListingDetails({
                     className="w-full px-2 py-1 bg-red-50 text-red-600 border border-red-200 rounded-md font-semibold hover:bg-red-100 transition-colors flex items-center justify-center gap-0.5 text-[10px]"
                   >
                     <Flag className="w-2.5 h-2.5" />
-                    Signaler
+                    {t('marketplace.report')}
                   </button>
                 )}
               </div>
@@ -378,7 +380,7 @@ export function ListingDetails({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
           <div className="bg-white rounded-lg shadow-2xl max-w-xs w-full p-2">
             <div className="flex items-center justify-between mb-1.5">
-              <h3 className="text-xs font-bold text-gray-800">Offre</h3>
+              <h3 className="text-xs font-bold text-gray-800">{t('listing.offer')}</h3>
               <button
                 onClick={() => setShowOfferModal(false)}
                 className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -389,14 +391,14 @@ export function ListingDetails({
 
             <div className="mb-1.5">
               <p className="text-[9px] text-gray-600">
-                Prix: <span className="font-semibold text-emerald-600">{listing.price}€</span>
+                {t('offers.askedPrice')} <span className="font-semibold text-emerald-600">{listing.price}€</span>
               </p>
             </div>
 
             <form onSubmit={handleSubmitOffer} className="space-y-1.5">
               <div>
                 <label className="block text-[10px] font-medium text-gray-700 mb-0.5">
-                  Votre offre (€) *
+                  {t('offers.yourOffer')}
                 </label>
                 <input
                   type="number"
@@ -406,7 +408,7 @@ export function ListingDetails({
                   value={offerAmount}
                   onChange={(e) => setOfferAmount(e.target.value)}
                   className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 focus:border-transparent text-[10px]"
-                  placeholder="Entrez votre offre"
+                  placeholder={t('offers.enterOffer')}
                   required
                 />
               </div>
@@ -417,14 +419,14 @@ export function ListingDetails({
                   onClick={() => setShowOfferModal(false)}
                   className="flex-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-semibold hover:bg-gray-200 transition-colors text-[10px]"
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingOffer || !offerAmount}
                   className="flex-1 px-2 py-1 bg-teal-600 text-white rounded-md font-semibold hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[10px]"
                 >
-                  {isSubmittingOffer ? 'Envoi...' : 'Envoyer'}
+                  {isSubmittingOffer ? t('offers.sending') : t('common.send')}
                 </button>
               </div>
             </form>

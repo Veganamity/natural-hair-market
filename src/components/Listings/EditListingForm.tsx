@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { compressImage } from '../../lib/imageUtils';
 import { X, Upload } from 'lucide-react';
 import { Database } from '../../lib/database.types';
@@ -27,6 +28,7 @@ function parseWeightGrams(hairWeight: string): number {
 
 export function EditListingForm({ listing, onClose, onSuccess }: EditListingFormProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -59,10 +61,10 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
     }
 
     const hairTypeLabels: Record<string, string> = {
-      straight: 'raides',
-      wavy: 'ondulés',
-      curly: 'bouclés',
-      coily: 'frisés',
+      straight: t('hairTypes.straight'),
+      wavy: t('hairTypes.wavy'),
+      curly: t('hairTypes.curly'),
+      coily: t('hairTypes.coily'),
     };
     parts.push(hairTypeLabels[formData.hair_type]);
 
@@ -162,7 +164,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-800">Modifier l'annonce</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t('editListing.title')}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -180,14 +182,14 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
 
           <div className="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-lg">
             <p className="text-sm text-emerald-800 font-medium">
-              Aperçu du titre: <span className="font-bold">{generateTitle()}</span>
+              {t('editListing.titlePreview')} <span className="font-bold">{generateTitle()}</span>
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Prix (€) *
+                {t('editListing.priceLabel')}
               </label>
               <input
                 type="number"
@@ -203,7 +205,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Longueur *
+                {t('editListing.lengthLabel')}
               </label>
               <select
                 value={formData.hair_length}
@@ -211,7 +213,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="">Sélectionner</option>
+                <option value="">{t('editListing.select')}</option>
                 <option value="15cm">15cm</option>
                 <option value="20cm">20cm</option>
                 <option value="25cm">25cm</option>
@@ -249,7 +251,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Type de cheveux *
+                {t('editListing.typeLabel')}
               </label>
               <select
                 value={formData.hair_type}
@@ -257,16 +259,16 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="straight">Raides</option>
-                <option value="wavy">Ondulés</option>
-                <option value="curly">Bouclés</option>
-                <option value="coily">Frisés</option>
+                <option value="straight">{t('hairTypes.straight')}</option>
+                <option value="wavy">{t('hairTypes.wavy')}</option>
+                <option value="curly">{t('hairTypes.curly')}</option>
+                <option value="coily">{t('hairTypes.coily')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Couleur *
+                {t('editListing.colorLabel')}
               </label>
               <select
                 value={formData.hair_color}
@@ -274,22 +276,22 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="">Sélectionner</option>
-                <option value="noir">Noir</option>
-                <option value="brun foncé">Brun foncé</option>
-                <option value="brun">Brun</option>
-                <option value="châtain foncé">Châtain foncé</option>
-                <option value="châtain">Châtain</option>
-                <option value="châtain clair">Châtain clair</option>
-                <option value="blond foncé">Blond foncé</option>
-                <option value="blond">Blond</option>
-                <option value="blond clair">Blond clair</option>
-                <option value="blond platine">Blond platine</option>
-                <option value="roux foncé">Roux foncé</option>
-                <option value="roux">Roux</option>
-                <option value="roux clair">Roux clair</option>
-                <option value="gris">Gris</option>
-                <option value="blanc">Blanc</option>
+                <option value="">{t('hairColors.select')}</option>
+                <option value="noir">{t('hairColors.black')}</option>
+                <option value="brun foncé">{t('hairColors.dark_brown')}</option>
+                <option value="brun">{t('hairColors.brown')}</option>
+                <option value="châtain foncé">{t('hairColors.dark_chestnut')}</option>
+                <option value="châtain">{t('hairColors.chestnut')}</option>
+                <option value="châtain clair">{t('hairColors.light_chestnut')}</option>
+                <option value="blond foncé">{t('hairColors.dark_blond')}</option>
+                <option value="blond">{t('hairColors.blond')}</option>
+                <option value="blond clair">{t('hairColors.light_blond')}</option>
+                <option value="blond platine">{t('hairColors.platinum_blond')}</option>
+                <option value="roux foncé">{t('hairColors.dark_red')}</option>
+                <option value="roux">{t('hairColors.red')}</option>
+                <option value="roux clair">{t('hairColors.light_red')}</option>
+                <option value="gris">{t('hairColors.gray')}</option>
+                <option value="blanc">{t('hairColors.white')}</option>
               </select>
             </div>
           </div>
@@ -297,32 +299,32 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Texture (optionnel)
+                {t('editListing.textureOptional')}
               </label>
               <select
                 value={formData.hair_texture}
                 onChange={(e) => setFormData({ ...formData, hair_texture: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               >
-                <option value="">Sélectionner</option>
-                <option value="très fin">Très fin</option>
-                <option value="fin">Fin</option>
-                <option value="moyen">Moyen</option>
-                <option value="épais">Épais</option>
-                <option value="très épais">Très épais</option>
+                <option value="">{t('hairTextures.select')}</option>
+                <option value="très fin">{t('hairTextures.very_fine')}</option>
+                <option value="fin">{t('hairTextures.fine')}</option>
+                <option value="moyen">{t('hairTextures.medium')}</option>
+                <option value="épais">{t('hairTextures.thick')}</option>
+                <option value="très épais">{t('hairTextures.very_thick')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Poids (optionnel)
+                {t('editListing.weightOptional')}
               </label>
               <select
                 value={formData.hair_weight}
                 onChange={(e) => setFormData({ ...formData, hair_weight: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               >
-                <option value="">Sélectionner</option>
+                <option value="">{t('editListing.select')}</option>
                 <option value="25g">25g</option>
                 <option value="50g">50g</option>
                 <option value="75g">75g</option>
@@ -370,7 +372,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                État *
+                {t('editListing.conditionLabel')}
               </label>
               <select
                 value={formData.condition}
@@ -378,15 +380,15 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="excellent">Excellent</option>
-                <option value="good">Bon</option>
-                <option value="fair">Correct</option>
+                <option value="excellent">{t('condition.excellent')}</option>
+                <option value="good">{t('condition.good')}</option>
+                <option value="fair">{t('condition.fair')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Pays de provenance *
+                {t('editListing.countryLabel')}
               </label>
               <select
                 value={formData.country}
@@ -394,8 +396,8 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 required
               >
-                <option value="">-- Sélectionner un pays --</option>
-                <optgroup label="Europe">
+                <option value="">{t('countries.select')}</option>
+                <optgroup label={t('countries.europe')}>
                   <option value="France">France</option>
                   <option value="Belgique">Belgique</option>
                   <option value="Suisse">Suisse</option>
@@ -417,14 +419,14 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                   <option value="Russie">Russie</option>
                   <option value="Ukraine">Ukraine</option>
                 </optgroup>
-                <optgroup label="Asie">
+                <optgroup label={t('countries.asia')}>
                   <option value="Inde">Inde</option>
                   <option value="Chine">Chine</option>
                 </optgroup>
-                <optgroup label="Amérique latine">
+                <optgroup label={t('countries.latam')}>
                   <option value="Brésil">Brésil</option>
                 </optgroup>
-                <optgroup label="Autre">
+                <optgroup label={t('countries.other')}>
                   <option value="Autre">Autre</option>
                 </optgroup>
               </select>
@@ -439,7 +441,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                 onChange={(e) => setFormData({ ...formData, is_natural_color: e.target.checked })}
                 className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
               />
-              <span className="text-sm font-medium text-gray-700">Couleur naturelle</span>
+              <span className="text-sm font-medium text-gray-700">{t('editListing.naturalColor')}</span>
             </label>
 
             <label className="flex items-center gap-2">
@@ -449,7 +451,7 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                 onChange={(e) => setFormData({ ...formData, is_dyed: e.target.checked })}
                 className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
               />
-              <span className="text-sm font-medium text-gray-700">Cheveux colorés</span>
+              <span className="text-sm font-medium text-gray-700">{t('editListing.dyedHair')}</span>
             </label>
 
             <label className="flex items-center gap-2">
@@ -459,13 +461,13 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
                 onChange={(e) => setFormData({ ...formData, is_treated: e.target.checked })}
                 className="w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
               />
-              <span className="text-sm font-medium text-gray-700">Cheveux traités chimiquement</span>
+              <span className="text-sm font-medium text-gray-700">{t('editListing.treatedHair')}</span>
             </label>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Photos
+              {t('editListing.photos')}
             </label>
             <div className="space-y-4">
               {uploadedImages.length > 0 && (
@@ -492,12 +494,12 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-emerald-500 transition-colors">
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   {uploading ? (
-                    <div className="text-gray-500">Téléchargement...</div>
+                    <div className="text-gray-500">{t('editListing.uploading')}</div>
                   ) : (
                     <>
                       <Upload className="w-8 h-8 text-gray-400 mb-2" />
                       <p className="text-sm text-gray-500">
-                        Cliquez pour ajouter des photos
+                        {t('editListing.clickToAdd')}
                       </p>
                     </>
                   )}
@@ -520,14 +522,14 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Annuler
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={loading || uploading || uploadedImages.length === 0}
               className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              {loading ? 'Modification...' : 'Modifier l\'annonce'}
+              {loading ? t('editListing.saving') : t('editListing.saveBtn')}
             </button>
           </div>
         </form>

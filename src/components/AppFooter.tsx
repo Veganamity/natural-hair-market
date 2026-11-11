@@ -1,25 +1,29 @@
+import { useLanguage } from '../contexts/LanguageContext';
+
 interface AppFooterProps {
   onNavigate: (view: string) => void;
 }
 
 const NAV_LINKS = [
-  { label: 'À propos', href: '/a-propos', view: 'about' },
-  { label: 'Mentions légales', href: '/mentions-legales', view: 'terms' },
-  { label: 'FAQ', href: '/faq', view: 'faq' },
-  { label: 'CGU', href: '/cgu', view: 'terms' },
-  { label: 'CGV', href: '/cgv', view: 'sales' },
-  { label: 'Remboursements', href: '/remboursements', view: 'refund' },
-  { label: 'Sécurité & Qualité', href: '/securite-qualite', view: 'safety' },
-  { label: 'Vendre mes cheveux', href: '/vendre-mes-cheveux', view: 'sell-my-hair' },
-  { label: 'Règlement vendeur', href: '/reglement-vendeur', view: 'seller-rules' },
-  { label: 'Règlement acheteur', href: '/reglement-acheteur', view: 'buyer-rules' },
-  { label: 'Politique de confidentialité', href: '/politique-de-confidentialite', view: 'privacy' },
-  { label: 'Guide de coupe', href: '/guide-coupe-conservation', view: 'guide-coupe' },
-  { label: 'Nos Partenaires', href: '/partenaires', view: 'partners' },
-  { label: 'Achats cheveux naturels européens', href: '/achat-cheveux-naturels-europeens', view: 'buy-european-hair' },
+  { labelKey: 'footer.aboutUs', href: '/a-propos', view: 'about' },
+  { labelKey: 'footer.legal', href: '/mentions-legales', view: 'terms' },
+  { labelKey: 'footer.faq', href: '/faq', view: 'faq' },
+  { labelKey: 'footer.termsOfService', href: '/cgu', view: 'terms' },
+  { labelKey: 'footer.salesTerms', href: '/cgv', view: 'sales' },
+  { labelKey: 'footer.refundPolicy', href: '/remboursements', view: 'refund' },
+  { labelKey: 'footer.safetyQuality', href: '/securite-qualite', view: 'safety' },
+  { labelKey: 'footer.sellMyHair', href: '/vendre-mes-cheveux', view: 'sell-my-hair' },
+  { labelKey: 'footer.sellerRules', href: '/reglement-vendeur', view: 'seller-rules' },
+  { labelKey: 'footer.buyerRules', href: '/reglement-acheteur', view: 'buyer-rules' },
+  { labelKey: 'footer.privacyPolicy', href: '/politique-de-confidentialite', view: 'privacy' },
+  { labelKey: 'footer.cutGuide', href: '/guide-coupe-conservation', view: 'guide-coupe' },
+  { labelKey: 'footer.partners', href: '/partenaires', view: 'partners' },
+  { labelKey: 'footer.buyEuropeanHair', href: '/achat-cheveux-naturels-europeens', view: 'buy-european-hair' },
 ];
 
 export function AppFooter({ onNavigate }: AppFooterProps) {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-gray-900 text-gray-300 py-10 px-4 mt-auto">
       <div className="max-w-6xl mx-auto">
@@ -31,7 +35,7 @@ export function AppFooter({ onNavigate }: AppFooterProps) {
             className="h-10 w-auto mx-auto mb-3 opacity-80"
           />
           <p className="text-sm text-gray-400">
-            La première marketplace française dédiée aux cheveux naturels & colorés humains
+            {t('footer.tagline')}
           </p>
         </div>
 
@@ -43,7 +47,7 @@ export function AppFooter({ onNavigate }: AppFooterProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h4 className="text-white font-semibold text-sm">Email</h4>
+              <h4 className="text-white font-semibold text-sm">{t('footer.email')}</h4>
             </div>
             <a href="mailto:naturalhairmarket@gmail.com" className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors break-all">
               naturalhairmarket@gmail.com
@@ -56,7 +60,7 @@ export function AppFooter({ onNavigate }: AppFooterProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
               </div>
-              <h4 className="text-white font-semibold text-sm">Téléphone</h4>
+              <h4 className="text-white font-semibold text-sm">{t('footer.phone')}</h4>
             </div>
             <a href="tel:+33784898647" className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors">
               +33 7 84 89 86 47
@@ -65,20 +69,20 @@ export function AppFooter({ onNavigate }: AppFooterProps) {
         </div>
 
         <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2 mb-6">
-          {NAV_LINKS.map(({ label, href, view }) => (
+          {NAV_LINKS.map(({ labelKey, href, view }) => (
             <a
               key={href}
               href={href}
               onClick={(e) => { e.preventDefault(); onNavigate(view); }}
               className="text-emerald-400 hover:text-emerald-300 text-sm transition-colors whitespace-nowrap"
             >
-              {label}
+              {t(labelKey)}
             </a>
           ))}
         </nav>
 
         <p className="text-xs text-gray-500 text-center">
-          © 2025 Natural Hair Market — Tous droits réservés.
+          {t('footer.copyright')}
         </p>
       </div>
     </footer>
