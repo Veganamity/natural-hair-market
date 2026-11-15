@@ -62,6 +62,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   };
 
   const [stripeRefreshNeeded, setStripeRefreshNeeded] = useState(false);
+  const [stripePendingVerification, setStripePendingVerification] = useState(false);
 
   const verifyStripeAccountStatus = async () => {
     if (!user) return;
@@ -89,8 +90,10 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
       const result = await response.json();
 
-      if (!result.onboarding_completed) {
+      if (result.status === 'incomplete') {
         setStripeRefreshNeeded(true);
+      } else if (result.status === 'pending' && !result.onboarding_completed) {
+        setStripePendingVerification(true);
       }
 
       fetchProfile();
@@ -473,6 +476,15 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
           >
             {t('profile.stripeRetryOnboarding')}
           </button>
+        </div>
+      )}
+      {stripePendingVerification && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
+          <Loader2 className="w-6 h-6 text-blue-600 flex-shrink-0 animate-spin" />
+          <div className="flex-1">
+            <p className="font-semibold text-blue-800">{t('profile.stripePendingTitle')}</p>
+            <p className="text-sm text-blue-700 mt-1">{t('profile.stripePendingDesc')}</p>
+          </div>
         </div>
       )}
       <div className="bg-white rounded-xl shadow-md p-6">
@@ -915,6 +927,11 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-semibold">{t('profile.accountVerified')}</span>
               </div>
+            ) : profile.stripe_account_id && profile.stripe_account_status === 'pending' ? (
+              <div className="flex items-center gap-2 text-blue-600">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="font-semibold">{t('profile.stripePendingTitle')}</span>
+              </div>
             ) : (
               <div className="flex items-center gap-2 text-yellow-600">
                 <AlertCircle className="w-5 h-5" />
@@ -932,6 +949,35 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 onClick={handleOpenStripeDashboard}
                 disabled={stripeLoading}
                 className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {stripeLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <CreditCard className="w-5 h-5" />
+                )}
+                {t('profile.manageBankInfo')}
+              </button>
+            </div>
+          ) : profile.stripe_account_id && profile.stripe_account_status === 'pending' ? (
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                <Loader2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 animate-spin" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-900">
+                    {t('profile.stripePendingTitle')}
+                  </p>
+                  <p className="text-sm text-blue-800 mt-1">
+                    {t('profile.stripePendingDesc')}
+                  </p>
+                </div>
+              </div>
+              <p className="text-gray-600">
+                {t('profile.stripePendingInfo')}
+              </p>
+              <button
+                onClick={handleOpenStripeDashboard}
+                disabled={stripeLoading}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 {stripeLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />

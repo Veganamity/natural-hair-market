@@ -46,7 +46,9 @@ Deno.serve(async (req: Request) => {
 
     let account;
     try {
-      account = await stripe.accounts.retrieve(profile.stripe_account_id);
+      account = await stripe.accounts.retrieve(profile.stripe_account_id, {
+        expand: ['requirements.currently_due', 'requirements.eventually_due'],
+      });
     } catch (_err) {
       await supabase.from("profiles").update({
         stripe_account_id: null,
@@ -66,15 +68,24 @@ Deno.serve(async (req: Request) => {
     const pendingRequirements = account.requirements?.pending_verification ?? [];
     const eventuallyDue = account.requirements?.eventually_due ?? [];
 
+    // Distinguish between "user must act" (incomplete) vs "Stripe is verifying" (pending)
+    // - incomplete: there are currently_due requirements the user must still provide
+    // - pending: no currently_due items, but Stripe is still verifying documents
+    // - active: both charges and payouts are enabled
     let newStatus: string;
     if (chargesEnabled && payoutsEnabled) {
       newStatus = "active";
-    } else if (requirements.length > 0 || eventuallyDue.length > 0) {
+    } else if (requirements.length > 0) {
       newStatus = "incomplete";
     } else {
       newStatus = "pending";
     }
 
+    // Onboarding is considered "submitted" (user did their part) when:
+    // - there are no currently_due requirements, OR
+    // - only pending_verification items remain (Stripe is checking documents)
+    // This is different from charges+payouts being enabled, which requires Stripe verification.
+    const onboardingSubmitted = requirements.length === 0;
     const onboardingCompleted = chargesEnabled && payoutsEnabled;
 
     if (
@@ -96,6 +107,7 @@ Deno.serve(async (req: Request) => {
         pending_verification: pendingRequirements,
         eventually_due: eventuallyDue,
         onboarding_completed: onboardingCompleted,
+        onboarding_submitted: onboardingSubmitted,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

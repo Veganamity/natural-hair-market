@@ -44,6 +44,8 @@ Deno.serve(async (req: Request) => {
 
     let accountId = profile.stripe_account_id;
 
+    // Check current Stripe account state to decide what type of link to create
+    let needsOnboarding = true;
     if (accountId) {
       try {
         const existingAccount = await stripe.accounts.retrieve(accountId);
@@ -58,6 +60,7 @@ Deno.serve(async (req: Request) => {
             })
             .eq("id", user.id);
         } else {
+          // Update individual info from profile
           await stripe.accounts.update(accountId, {
             individual: {
               first_name: profile.first_name || undefined,
@@ -75,6 +78,14 @@ Deno.serve(async (req: Request) => {
               product_description: productDescription,
             },
           });
+
+          // If there are no currently_due requirements, onboarding was already submitted.
+          // Use account_update instead of account_onboarding to avoid Stripe's
+          // "no pending onboarding" error.
+          const currentlyDue = existingAccount.requirements?.currently_due ?? [];
+          if (currentlyDue.length === 0) {
+            needsOnboarding = false;
+          }
         }
       } catch (_err) {
         accountId = null;
@@ -128,7 +139,7 @@ Deno.serve(async (req: Request) => {
       account: accountId,
       refresh_url: refreshUrl || `${Deno.env.get("FRONTEND_URL") || "https://www.naturalhairmarket.com"}/profile?stripe_refresh=true`,
       return_url: returnUrl || `${Deno.env.get("FRONTEND_URL") || "https://www.naturalhairmarket.com"}/profile?stripe_onboarding=success`,
-      type: "account_onboarding",
+      type: needsOnboarding ? "account_onboarding" : "account_update",
       collection_options: {
         fields: "currently_due",
       },
