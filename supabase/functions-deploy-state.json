@@ -55,7 +55,7 @@
     },
     "create-stripe-account-link": {
       "hasChanged": false,
-      "hash": "6b5045cd57c128f6f70dde3126d876a6e303c6ce96c779d4fbab6dfb59a7461e"
+      "hash": "4346268f1b1ccf48bdeb62cb2265018235c822b0f24c90c95ffb8d98e66efe98"
     },
     "create-stripe-connect-account": {
       "hasChanged": false,
@@ -63,7 +63,7 @@
     },
     "create-stripe-login-link": {
       "hasChanged": false,
-      "hash": "424257746ffe9896e782f2586f8cc3a93725d9f1becc5bca34225468520914ad"
+      "hash": "f6b0aa2f579c51907c75ecb5ab2851a80fb326aceb6a0596158edc9793a94f76"
     },
     "download-shipping-label": {
       "hasChanged": false,
@@ -88,6 +88,10 @@
     "manage-saved-addresses": {
       "hasChanged": false,
       "hash": "15151cdfa26c5dfc71fcf5007e8f89fe59da3b735ec038a254dec5096d3616db"
+    },
+    "notify-buyer-offer": {
+      "hasChanged": false,
+      "hash": "3260addddeeaee018fb2564982aec3b6a73f67f1c6f81f0b46a6cd4e97a269bf"
     },
     "notify-buyer-shipped": {
       "hasChanged": false,
@@ -136,10 +140,6 @@
     "submit-salon-verification": {
       "hasChanged": false,
       "hash": "69711bd70eded1d0307ee31e24eb66fb463ac4e319bfff7cda90b57562694922"
-    },
-    "notify-buyer-offer": {
-      "hasChanged": false,
-      "hash": "3260addddeeaee018fb2564982aec3b6a73f67f1c6f81f0b46a6cd4e97a269bf"
     }
   }
 }

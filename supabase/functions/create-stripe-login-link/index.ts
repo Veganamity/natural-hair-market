@@ -51,7 +51,7 @@ Deno.serve(async (req: Request) => {
       throw new Error("Votre compte Stripe doit être reconfiguré. Veuillez cliquer sur Configurer mon compte bancaire.");
     }
 
-    const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://naturalhairmarket.netlify.app";
+    const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://www.naturalhairmarket.com";
     const returnUrl = `${frontendUrl}/profile?stripe_onboarding=success`;
     const refreshUrl = `${frontendUrl}/profile?stripe_refresh=true`;
 

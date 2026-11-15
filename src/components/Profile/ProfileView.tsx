@@ -48,26 +48,59 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
     checkStripeOnboarding();
   }, [user]);
 
+  const [stripeOnboardingLoading, setStripeOnboardingLoading] = useState(false);
+
   const checkStripeOnboarding = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('stripe_onboarding') === 'success') {
-      updateStripeOnboardingStatus();
       window.history.replaceState({}, '', '/profile');
+      verifyStripeAccountStatus();
+    } else if (params.get('stripe_refresh') === 'true') {
+      window.history.replaceState({}, '', '/profile');
+      setStripeRefreshNeeded(true);
     }
   };
 
-  const updateStripeOnboardingStatus = async () => {
+  const [stripeRefreshNeeded, setStripeRefreshNeeded] = useState(false);
+
+  const verifyStripeAccountStatus = async () => {
     if (!user) return;
+    setStripeOnboardingLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error(t('profile.sessionExpired'));
 
-    await supabase
-      .from('profiles')
-      .update({
-        stripe_onboarding_completed: true,
-        stripe_account_status: 'active',
-      })
-      .eq('id', user.id);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-stripe-account-status`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        }
+      );
 
-    fetchProfile();
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || t('profile.stripeLinkError'));
+      }
+
+      const result = await response.json();
+
+      if (!result.onboarding_completed) {
+        setStripeRefreshNeeded(true);
+      }
+
+      fetchProfile();
+    } catch (err: any) {
+      console.error('Stripe status check error:', err);
+      setError(err.message || t('profile.stripeConnectionError'));
+      fetchProfile();
+    } finally {
+      setStripeOnboardingLoading(false);
+    }
   };
 
   const fetchProfile = async () => {
@@ -418,6 +451,28 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
           <CheckCircle className="w-6 h-6 text-green-600" />
           <p className="text-green-800 font-semibold">{t('profile.profileUpdatedSuccess')}</p>
+        </div>
+      )}
+      {stripeOnboardingLoading && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
+          <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+          <p className="text-blue-800 font-semibold">{t('profile.stripeCheckingStatus')}</p>
+        </div>
+      )}
+      {stripeRefreshNeeded && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+          <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="font-semibold text-amber-800">{t('profile.stripeIncompleteTitle')}</p>
+            <p className="text-sm text-amber-700 mt-1">{t('profile.stripeIncompleteDesc')}</p>
+          </div>
+          <button
+            onClick={() => { setStripeRefreshNeeded(false); handleStartOnboarding(); }}
+            disabled={stripeLoading}
+            className="px-4 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors text-sm whitespace-nowrap disabled:opacity-50"
+          >
+            {t('profile.stripeRetryOnboarding')}
+          </button>
         </div>
       )}
       <div className="bg-white rounded-xl shadow-md p-6">
