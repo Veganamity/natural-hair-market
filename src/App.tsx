@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { LanguageSelector } from './components/LanguageSelector';
@@ -214,22 +214,27 @@ function AppContent() {
 
   // Logged-in users can stay on the landing page — no auto-redirect
 
+  const initialAuthHandled = useRef(false);
+
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsPasswordReset(true);
         setAuthMode('reset-password');
       }
-      if (event === 'SIGNED_IN') {
-        setCurrentView('marketplace');
-        window.history.replaceState({ view: 'marketplace' }, '', '/marketplace');
+      if (event === 'SIGNED_IN' && !initialAuthHandled.current) {
+        initialAuthHandled.current = true;
+        if (currentView === 'landing' || currentView === 'not-found') {
+          setCurrentView('marketplace');
+          window.history.replaceState({ view: 'marketplace' }, '', '/marketplace');
+        }
       }
     });
 
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [currentView]);
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
