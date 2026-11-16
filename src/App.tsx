@@ -881,7 +881,14 @@ function AppContent() {
         {currentView === 'admin-salons' && <SalonVerificationAdmin />}
         {currentView === 'admin-buybacks' && <BuybackAdmin />}
         {currentView === 'admin-disputes' && <DisputeAdmin />}
-        {currentView === 'admin-offers' && <OfferAdmin />}
+        {currentView === 'admin-offers' && (
+          <OfferAdmin
+            onViewListing={(listingId) => {
+              setPreselectedListingId(listingId);
+              navigateToView('marketplace');
+            }}
+          />
+        )}
         {currentView === 'my-buybacks' && <MyBuybackRequests onBack={() => navigateToView('profile')} />}
         {currentView === 'admin-listings' && (
           <ListingAdmin

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
-import { Tag, AlertCircle, Search, RefreshCw, Phone, Mail, MessageSquare } from 'lucide-react';
+import { Tag, AlertCircle, Search, RefreshCw, Phone, Mail, MessageSquare, ExternalLink } from 'lucide-react';
 import { Database } from '../../lib/database.types';
 
 type OfferRow = Database['public']['Tables']['offers']['Row'];
@@ -18,6 +18,7 @@ interface OfferAdminItem extends OfferRow {
     id: string;
     title: string | null;
     price: string | null;
+    images: string[] | null;
     profiles: {
       full_name: string | null;
       email: string;
@@ -27,7 +28,11 @@ interface OfferAdminItem extends OfferRow {
   buyer: BuyerProfile | null;
 }
 
-export default function OfferAdmin() {
+interface OfferAdminProps {
+  onViewListing?: (listingId: string) => void;
+}
+
+export default function OfferAdmin({ onViewListing }: OfferAdminProps) {
   const { profile } = useAuth();
   const [offers, setOffers] = useState<OfferAdminItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +51,7 @@ export default function OfferAdmin() {
 
       let query = supabase
         .from('offers')
-        .select('*, listing:listings(title, price, profiles:seller_id(full_name, email, phone))')
+        .select('*, listing:listings(id, title, price, images, profiles:seller_id(full_name, email, phone))')
         .order('created_at', { ascending: false });
 
       if (statusFilter !== 'all') {
@@ -197,8 +202,37 @@ export default function OfferAdmin() {
                 {filteredOffers.map((offer) => (
                   <tr key={offer.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4">
-                      <p className="font-semibold text-gray-900 line-clamp-1">{offer.listing?.title || 'Annonce supprimée'}</p>
-                      <p className="text-sm text-gray-500">Prix: {offer.listing?.price ?? '—'}€</p>
+                      <div className="flex items-center gap-3">
+                        {offer.listing && onViewListing && (
+                          <button
+                            onClick={() => onViewListing(offer.listing.id)}
+                            className="flex-shrink-0 group relative"
+                            title="Voir l'annonce"
+                          >
+                            <img
+                              src={(Array.isArray(offer.listing.images) ? offer.listing.images[0] : null) || 'https://images.pexels.com/photos/3993449/pexels-photo-3993449.jpeg'}
+                              alt={offer.listing.title || 'Annonce'}
+                              className="w-14 h-14 object-cover rounded-lg transition-opacity group-hover:opacity-75 cursor-pointer"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <ExternalLink className="w-4 h-4 text-white drop-shadow-lg" />
+                            </div>
+                          </button>
+                        )}
+                        <div>
+                          <p className="font-semibold text-gray-900 line-clamp-1">{offer.listing?.title || 'Annonce supprimée'}</p>
+                          <p className="text-sm text-gray-500">Prix: {offer.listing?.price ?? '—'}€</p>
+                          {offer.listing && onViewListing && (
+                            <button
+                              onClick={() => onViewListing(offer.listing.id)}
+                              className="text-xs text-emerald-600 hover:text-emerald-700 hover:underline mt-0.5 flex items-center gap-1"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              Voir l'annonce
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       <p className="text-sm font-medium text-gray-900">{offer.buyer?.full_name || 'N/A'}</p>
