@@ -212,7 +212,7 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
           hair_color: formData.hair_color,
           hair_texture: formData.hair_texture || null,
           hair_weight: formData.hair_weight || null,
-          weight_grams: formData.hair_weight ? parseInt(formData.hair_weight.replace('g', ''), 10) || 100 : 100,
+          weight_grams: formData.hair_weight ? Math.round(parseFloat(formData.hair_weight.replace('g', '')) * 10) / 10 || 100 : 100,
           is_dyed: formData.is_dyed,
           is_treated: formData.is_treated,
           condition: formData.condition,
@@ -430,9 +430,9 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
               <div className="relative">
                 <input
                   type="number"
-                  min="1"
+                  min="0.1"
                   max="5000"
-                  step="1"
+                  step="0.1"
                   value={formData.hair_weight.replace('g', '')}
                   onChange={(e) => {
                     const value = e.target.value;

@@ -321,53 +321,28 @@ export function EditListingForm({ listing, onClose, onSuccess }: EditListingForm
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t('editListing.weightOptional')}
               </label>
-              <select
-                value={formData.hair_weight}
-                onChange={(e) => setFormData({ ...formData, hair_weight: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="">{t('editListing.select')}</option>
-                <option value="25g">25g</option>
-                <option value="50g">50g</option>
-                <option value="75g">75g</option>
-                <option value="100g">100g</option>
-                <option value="125g">125g</option>
-                <option value="150g">150g</option>
-                <option value="175g">175g</option>
-                <option value="200g">200g</option>
-                <option value="225g">225g</option>
-                <option value="250g">250g</option>
-                <option value="275g">275g</option>
-                <option value="300g">300g</option>
-                <option value="325g">325g</option>
-                <option value="350g">350g</option>
-                <option value="375g">375g</option>
-                <option value="400g">400g</option>
-                <option value="425g">425g</option>
-                <option value="450g">450g</option>
-                <option value="475g">475g</option>
-                <option value="500g">500g</option>
-                <option value="525g">525g</option>
-                <option value="550g">550g</option>
-                <option value="575g">575g</option>
-                <option value="600g">600g</option>
-                <option value="625g">625g</option>
-                <option value="650g">650g</option>
-                <option value="675g">675g</option>
-                <option value="700g">700g</option>
-                <option value="725g">725g</option>
-                <option value="750g">750g</option>
-                <option value="775g">775g</option>
-                <option value="800g">800g</option>
-                <option value="825g">825g</option>
-                <option value="850g">850g</option>
-                <option value="875g">875g</option>
-                <option value="900g">900g</option>
-                <option value="925g">925g</option>
-                <option value="950g">950g</option>
-                <option value="975g">975g</option>
-                <option value="1000g">1000g</option>
-              </select>
+              <div className="relative">
+                <input
+                  type="number"
+                  min="0.1"
+                  max="5000"
+                  step="0.1"
+                  value={formData.hair_weight.replace('g', '')}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value) {
+                      setFormData({ ...formData, hair_weight: `${value}g` });
+                    } else {
+                      setFormData({ ...formData, hair_weight: '' });
+                    }
+                  }}
+                  className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder={t('createListing.weightPlaceholder')}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
+                  g
+                </div>
+              </div>
             </div>
           </div>
 
