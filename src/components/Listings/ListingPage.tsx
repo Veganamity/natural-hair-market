@@ -50,6 +50,8 @@ export function ListingPage({ listingId, onBack, onLoginClick }: ListingPageProp
 
   const fetchListing = async () => {
     setLoading(true);
+    setNotFound(false);
+    setSelectedImg(0);
     const { data, error } = await supabase
       .from('listings')
       .select(`

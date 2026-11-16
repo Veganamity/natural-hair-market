@@ -385,6 +385,7 @@ function AppContent() {
             </div>
           </nav>
           <ListingPage
+            key={listingPageId}
             listingId={listingPageId}
             onBack={() => navigateToView('marketplace')}
             onLoginClick={() => { setAuthMode('signup'); navigateToView('profile'); }}
@@ -867,6 +868,7 @@ function AppContent() {
         )}
         {currentView === 'listing-page' && listingPageId && (
           <ListingPage
+            key={listingPageId}
             listingId={listingPageId}
             onBack={() => navigateToView('marketplace')}
             onLoginClick={() => navigateToView('profile')}
