@@ -884,8 +884,10 @@ function AppContent() {
         {currentView === 'admin-offers' && (
           <OfferAdmin
             onViewListing={(listingId) => {
-              setPreselectedListingId(listingId);
-              navigateToView('marketplace');
+              setListingPageId(listingId);
+              setCurrentView('listing-page');
+              window.history.pushState({ view: 'listing-page', listingId }, '', `/listing/${listingId}`);
+              window.scrollTo(0, 0);
             }}
           />
         )}
@@ -893,8 +895,10 @@ function AppContent() {
         {currentView === 'admin-listings' && (
           <ListingAdmin
             onViewListing={(listingId) => {
-              setPreselectedListingId(listingId);
-              navigateToView('marketplace');
+              setListingPageId(listingId);
+              setCurrentView('listing-page');
+              window.history.pushState({ view: 'listing-page', listingId }, '', `/listing/${listingId}`);
+              window.scrollTo(0, 0);
             }}
           />
         )}
