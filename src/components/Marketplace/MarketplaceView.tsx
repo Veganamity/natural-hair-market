@@ -130,10 +130,13 @@ export function MarketplaceView({ onListingClick, isGuest = false, initialListin
 
   const filteredAndSortedListings = (() => {
     let filtered = listings.filter((listing) => {
+      const q = searchQuery.toLowerCase();
+      const sellerName = (listing as any).profiles?.full_name?.toLowerCase() || '';
       const matchesSearch =
-        listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        listing.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        listing.hair_color.toLowerCase().includes(searchQuery.toLowerCase());
+        listing.title.toLowerCase().includes(q) ||
+        listing.description.toLowerCase().includes(q) ||
+        listing.hair_color.toLowerCase().includes(q) ||
+        sellerName.includes(q);
 
       const matchesFilter =
         filterType === 'all' || listing.hair_type === filterType;
