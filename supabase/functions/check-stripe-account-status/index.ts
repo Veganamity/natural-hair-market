@@ -49,15 +49,35 @@ Deno.serve(async (req: Request) => {
       account = await stripe.accounts.retrieve(profile.stripe_account_id, {
         expand: ['requirements.currently_due', 'requirements.eventually_due'],
       });
-    } catch (_err) {
-      await supabase.from("profiles").update({
-        stripe_account_id: null,
-        stripe_account_status: "not_configured",
-        stripe_onboarding_completed: false,
-      }).eq("id", user.id);
+    } catch (retrieveErr) {
+      // Do NOT delete the account ID on temporary errors — only on confirmed "account does not exist"
+      const errMsg = retrieveErr instanceof Error ? retrieveErr.message : "unknown";
+      console.error("Account retrieve failed:", errMsg);
 
+      // Only reset if the account truly doesn't exist (invalid_request_error)
+      if (errMsg.includes("No such account") || errMsg.includes("resource_missing") || errMsg.includes("invalid")) {
+        await supabase.from("profiles").update({
+          stripe_account_id: null,
+          stripe_account_status: "not_configured",
+          stripe_onboarding_completed: false,
+        }).eq("id", user.id);
+
+        return new Response(
+          JSON.stringify({ status: "not_configured", charges_enabled: false, payouts_enabled: false, requirements: [], onboarding_completed: false }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Temporary error (network, rate limit, etc.) — return current DB status without deleting anything
       return new Response(
-        JSON.stringify({ status: "not_configured", charges_enabled: false, payouts_enabled: false, requirements: [], onboarding_completed: false }),
+        JSON.stringify({
+          status: profile.stripe_account_status || "pending",
+          charges_enabled: false,
+          payouts_enabled: false,
+          requirements: [],
+          onboarding_completed: profile.stripe_onboarding_completed || false,
+          onboarding_submitted: profile.stripe_account_status !== 'incomplete',
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -68,10 +88,6 @@ Deno.serve(async (req: Request) => {
     const pendingRequirements = account.requirements?.pending_verification ?? [];
     const eventuallyDue = account.requirements?.eventually_due ?? [];
 
-    // Distinguish between "user must act" (incomplete) vs "Stripe is verifying" (pending)
-    // - incomplete: there are currently_due requirements the user must still provide
-    // - pending: no currently_due items, but Stripe is still verifying documents
-    // - active: both charges and payouts are enabled
     let newStatus: string;
     if (chargesEnabled && payoutsEnabled) {
       newStatus = "active";
@@ -81,10 +97,6 @@ Deno.serve(async (req: Request) => {
       newStatus = "pending";
     }
 
-    // Onboarding is considered "submitted" (user did their part) when:
-    // - there are no currently_due requirements, OR
-    // - only pending_verification items remain (Stripe is checking documents)
-    // This is different from charges+payouts being enabled, which requires Stripe verification.
     const onboardingSubmitted = requirements.length === 0;
     const onboardingCompleted = chargesEnabled && payoutsEnabled;
 

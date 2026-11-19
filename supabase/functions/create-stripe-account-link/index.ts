@@ -48,89 +48,10 @@ Deno.serve(async (req: Request) => {
     const refreshUrl = `${frontendUrl}/profile?stripe_refresh=true`;
 
     let accountId = profile.stripe_account_id;
-
-    // Step 1: If no account exists, create one
-    if (!accountId) {
-      const account = await stripe.accounts.create({
-        type: "express",
-        country: profileCountry,
-        email: user.email,
-        business_type: "individual",
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
-        business_profile: {
-          product_description: productDescription,
-        },
-      });
-
-      accountId = account.id;
-
-      await supabase
-        .from("profiles")
-        .update({
-          stripe_account_id: accountId,
-          stripe_account_status: "pending",
-          stripe_onboarding_completed: false,
-        })
-        .eq("id", user.id);
-    }
-
-    // Step 2: Check the account status to decide link type
     let linkType: "account_onboarding" | "account_update" = "account_onboarding";
 
-    try {
-      const existingAccount = await stripe.accounts.retrieve(accountId);
-
-      // If account is wrong type, reset it
-      if (existingAccount.business_type !== "individual") {
-        await supabase
-          .from("profiles")
-          .update({
-            stripe_account_id: null,
-            stripe_account_status: "pending",
-            stripe_onboarding_completed: false,
-          })
-          .eq("id", user.id);
-
-        // Create fresh account
-        const account = await stripe.accounts.create({
-          type: "express",
-          country: profileCountry,
-          email: user.email,
-          business_type: "individual",
-          capabilities: {
-            card_payments: { requested: true },
-            transfers: { requested: true },
-          },
-          business_profile: {
-            product_description: productDescription,
-          },
-        });
-
-        accountId = account.id;
-
-        await supabase
-          .from("profiles")
-          .update({
-            stripe_account_id: accountId,
-            stripe_account_status: "pending",
-            stripe_onboarding_completed: false,
-          })
-          .eq("id", user.id);
-      } else {
-        // Account exists and is individual type
-        const currentlyDue = existingAccount.requirements?.currently_due ?? [];
-        if (currentlyDue.length === 0) {
-          // Onboarding already submitted, use account_update
-          linkType = "account_update";
-        }
-      }
-    } catch (retrieveErr) {
-      // Account might be deleted on Stripe side — reset and create new
-      console.error("Account retrieve failed:", retrieveErr instanceof Error ? retrieveErr.message : "unknown");
-
+    if (!accountId) {
+      // No account in DB — create a new one
       const account = await stripe.accounts.create({
         type: "express",
         country: profileCountry,
@@ -155,9 +76,82 @@ Deno.serve(async (req: Request) => {
           stripe_onboarding_completed: false,
         })
         .eq("id", user.id);
+    } else {
+      // Account exists in DB — check it on Stripe
+      try {
+        const existingAccount = await stripe.accounts.retrieve(accountId);
+
+        if (existingAccount.business_type !== "individual") {
+          // Wrong account type — create a new one
+          const account = await stripe.accounts.create({
+            type: "express",
+            country: profileCountry,
+            email: user.email,
+            business_type: "individual",
+            capabilities: {
+              card_payments: { requested: true },
+              transfers: { requested: true },
+            },
+            business_profile: {
+              product_description: productDescription,
+            },
+          });
+
+          accountId = account.id;
+
+          await supabase
+            .from("profiles")
+            .update({
+              stripe_account_id: accountId,
+              stripe_account_status: "pending",
+              stripe_onboarding_completed: false,
+            })
+            .eq("id", user.id);
+        } else {
+          // Account exists and is correct type
+          const currentlyDue = existingAccount.requirements?.currently_due ?? [];
+          if (currentlyDue.length === 0) {
+            linkType = "account_update";
+          }
+        }
+      } catch (retrieveErr) {
+        const errMsg = retrieveErr instanceof Error ? retrieveErr.message : "unknown";
+        console.error("Account retrieve failed:", errMsg);
+
+        // Only create new account if the old one truly doesn't exist
+        if (errMsg.includes("No such account") || errMsg.includes("resource_missing") || errMsg.includes("invalid")) {
+          const account = await stripe.accounts.create({
+            type: "express",
+            country: profileCountry,
+            email: user.email,
+            business_type: "individual",
+            capabilities: {
+              card_payments: { requested: true },
+              transfers: { requested: true },
+            },
+            business_profile: {
+              product_description: productDescription,
+            },
+          });
+
+          accountId = account.id;
+
+          await supabase
+            .from("profiles")
+            .update({
+              stripe_account_id: accountId,
+              stripe_account_status: "pending",
+              stripe_onboarding_completed: false,
+            })
+            .eq("id", user.id);
+        } else {
+          // Temporary error — don't create a new account, just proceed with the existing ID
+          console.error("Temporary Stripe error, keeping existing account ID:", accountId);
+        }
+      }
     }
 
-    // Step 3: Create the account link
+    // Create the account link
     try {
       const accountLink = await stripe.accountLinks.create({
         account: accountId,
@@ -174,7 +168,7 @@ Deno.serve(async (req: Request) => {
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } catch (linkErr) {
-      // If account_onboarding fails (e.g. "no pending requirements"), try account_update
+      // If account_onboarding fails, try account_update
       if (linkType === "account_onboarding") {
         const accountLink = await stripe.accountLinks.create({
           account: accountId,

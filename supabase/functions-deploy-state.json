@@ -27,7 +27,7 @@
     },
     "check-stripe-account-status": {
       "hasChanged": false,
-      "hash": "dc7a6e455f722d898fcefeb58b9d8d73b3ba209115da22dd9cfb7c45aad9ca3d"
+      "hash": "17f5db84be56648fb0b8cf84aa377e3b189f3e1026de2e718d4c5b01014c48bf"
     },
     "confirm-payment": {
       "hasChanged": false,
@@ -55,7 +55,7 @@
     },
     "create-stripe-account-link": {
       "hasChanged": false,
-      "hash": "18843d2a6b5291c99581abf6877cf7f657bb79d6978054ec83de402c86b4ddf4"
+      "hash": "450f50b4b2401c2a50c9b7a7700ec4233342b902042cc961693b81734160d14a"
     },
     "create-stripe-connect-account": {
       "hasChanged": false,
