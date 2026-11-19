@@ -334,6 +334,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const handleOpenStripeDashboard = async () => {
     if (!user) return;
     setStripeLoading(true);
+    setError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error(t('profile.sessionExpired'));
@@ -352,6 +353,27 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
       if (!response.ok) {
         const data = await response.json();
+        // Fallback: try account-link (onboarding) which handles accounts without onboarding
+        try {
+          const fallbackResponse = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-account-link`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({}),
+            }
+          );
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            window.location.href = fallbackData.url;
+            return;
+          }
+        } catch (_fallbackErr) {
+          // ignore fallback failure, show original error
+        }
         throw new Error(data.error || t('profile.stripeLinkError'));
       }
 
@@ -954,7 +976,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-semibold">{t('profile.accountVerified')}</span>
               </div>
-            ) : profile.stripe_account_id && profile.stripe_account_status === 'pending' ? (
+            ) : profile.stripe_account_id && (profile.stripe_account_status === 'pending' || profile.stripe_account_status === 'incomplete') ? (
               <div className="flex items-center gap-2 text-blue-600">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span className="font-semibold">{t('profile.stripePendingTitle')}</span>
@@ -985,34 +1007,62 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
                 {t('profile.manageBankInfo')}
               </button>
             </div>
-          ) : profile.stripe_account_id && profile.stripe_account_status === 'pending' ? (
+          ) : profile.stripe_account_id && (profile.stripe_account_status === 'pending' || profile.stripe_account_status === 'incomplete') ? (
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-                <Loader2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 animate-spin" />
-                <div>
-                  <p className="text-sm font-semibold text-blue-900">
-                    {t('profile.stripePendingTitle')}
-                  </p>
-                  <p className="text-sm text-blue-800 mt-1">
-                    {t('profile.stripePendingDesc')}
-                  </p>
+              {profile.stripe_account_status === 'incomplete' ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-900">
+                      {t('profile.stripeIncompleteTitle')}
+                    </p>
+                    <p className="text-sm text-amber-800 mt-1">
+                      {t('profile.stripeIncompleteDesc')}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                  <Loader2 className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 animate-spin" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900">
+                      {t('profile.stripePendingTitle')}
+                    </p>
+                    <p className="text-sm text-blue-800 mt-1">
+                      {t('profile.stripePendingDesc')}
+                    </p>
+                  </div>
+                </div>
+              )}
               <p className="text-gray-600">
                 {t('profile.stripePendingInfo')}
               </p>
-              <button
-                onClick={handleOpenStripeDashboard}
-                disabled={stripeLoading}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-              >
-                {stripeLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <CreditCard className="w-5 h-5" />
-                )}
-                {t('profile.manageBankInfo')}
-              </button>
+              <div className="flex gap-3 flex-wrap">
+                <button
+                  onClick={handleStartOnboarding}
+                  disabled={stripeLoading}
+                  className="px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {stripeLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <CreditCard className="w-5 h-5" />
+                  )}
+                  {profile.stripe_account_status === 'incomplete' ? t('profile.stripeRetryOnboarding') : t('profile.manageBankInfo')}
+                </button>
+                <button
+                  onClick={handleOpenStripeDashboard}
+                  disabled={stripeLoading}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {stripeLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <CreditCard className="w-5 h-5" />
+                  )}
+                  {t('profile.manageBankInfo')}
+                </button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
