@@ -1,4 +1,4 @@
-// Stripe dashboard / onboarding resume - individual account
+// Stripe dashboard access for existing connected accounts
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "npm:stripe@17.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
@@ -38,32 +38,26 @@ Deno.serve(async (req: Request) => {
       .eq("id", user.id)
       .maybeSingle();
 
-    if (!profile?.stripe_account_id) throw new Error("Aucun compte Stripe associé");
-
-    const account = await stripe.accounts.retrieve(profile.stripe_account_id);
-
-    // Reset invalid account types
-    if (account.business_type !== "individual" || account.controller?.requirement_collection === "application") {
-      await supabase
-        .from("profiles")
-        .update({
-          stripe_account_id: null,
-          stripe_account_status: "pending",
-          stripe_onboarding_completed: false,
-        })
-        .eq("id", user.id);
-      throw new Error("Votre compte Stripe doit être reconfiguré. Veuillez cliquer sur Configurer mon compte bancaire.");
+    if (!profile?.stripe_account_id) {
+      throw new Error("Aucun compte Stripe associé. Veuillez cliquer sur \"Configurer mon compte bancaire\" pour commencer.");
     }
 
     const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://www.naturalhairmarket.com";
     const returnUrl = `${frontendUrl}/profile?stripe_onboarding=success`;
     const refreshUrl = `${frontendUrl}/profile?stripe_refresh=true`;
 
-    const currentlyDue = account.requirements?.currently_due ?? [];
-
-    if (currentlyDue.length > 0) {
-      // Seller still needs to complete onboarding — use account_onboarding
-      const accountLink = await stripe.accountLinks.create({
+    // Try account_update first (works for accounts that already submitted onboarding)
+    let accountLink;
+    try {
+      accountLink = await stripe.accountLinks.create({
+        account: profile.stripe_account_id,
+        refresh_url: refreshUrl,
+        return_url: returnUrl,
+        type: "account_update",
+      } as Stripe.AccountLinkCreateParams);
+    } catch (_updateErr) {
+      // If account_update fails, try account_onboarding (for accounts that haven't completed onboarding yet)
+      accountLink = await stripe.accountLinks.create({
         account: profile.stripe_account_id,
         refresh_url: refreshUrl,
         return_url: returnUrl,
@@ -72,23 +66,7 @@ Deno.serve(async (req: Request) => {
           fields: "currently_due",
         },
       } as Stripe.AccountLinkCreateParams);
-
-      return new Response(
-        JSON.stringify({ url: accountLink.url }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
     }
-
-    // Onboarding already submitted — use account_update so Stripe doesn't reject
-    const accountLink = await stripe.accountLinks.create({
-      account: profile.stripe_account_id,
-      refresh_url: refreshUrl,
-      return_url: returnUrl,
-      type: "account_update",
-      collection_options: {
-        fields: "currently_due",
-      },
-    } as Stripe.AccountLinkCreateParams);
 
     return new Response(
       JSON.stringify({ url: accountLink.url }),

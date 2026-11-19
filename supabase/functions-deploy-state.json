@@ -55,7 +55,7 @@
     },
     "create-stripe-account-link": {
       "hasChanged": false,
-      "hash": "db6978e67efa3adf21e9f59852f0c79b83adb0b861cf086f7230cb7e252d7d24"
+      "hash": "18843d2a6b5291c99581abf6877cf7f657bb79d6978054ec83de402c86b4ddf4"
     },
     "create-stripe-connect-account": {
       "hasChanged": false,
@@ -63,7 +63,7 @@
     },
     "create-stripe-login-link": {
       "hasChanged": false,
-      "hash": "f4bd1910edac0c8374bc0e86dca1f9060ea6b4be88deab1c983ff1c91cb78e39"
+      "hash": "8af29c2d0e609fd22988c948a59b653ad6895411a539b228be26b607424a9117"
     },
     "download-shipping-label": {
       "hasChanged": false,

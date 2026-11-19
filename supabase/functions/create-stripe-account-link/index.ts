@@ -1,4 +1,4 @@
-// Stripe onboarding - individual account
+// Stripe onboarding - create account + redirect to onboarding
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "npm:stripe@17.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.4";
@@ -32,7 +32,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("stripe_account_id, first_name, last_name, phone, address_line1, address_line2, postal_code, city, country, siret, is_certified_salon")
+      .select("stripe_account_id, first_name, last_name, phone, address_line1, address_line2, postal_code, city, country, is_certified_salon")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -42,81 +42,26 @@ Deno.serve(async (req: Request) => {
       ? "Vente de cheveux naturels par un salon professionnel certifié"
       : "Vente occasionnelle de cheveux personnels";
 
+    const profileCountry = (profile.country as string) || "FR";
+    const frontendUrl = Deno.env.get("FRONTEND_URL") || "https://www.naturalhairmarket.com";
+    const returnUrl = `${frontendUrl}/profile?stripe_onboarding=success`;
+    const refreshUrl = `${frontendUrl}/profile?stripe_refresh=true`;
+
     let accountId = profile.stripe_account_id;
 
-    // Check current Stripe account state to decide what type of link to create
-    let needsOnboarding = true;
-    if (accountId) {
-      try {
-        const existingAccount = await stripe.accounts.retrieve(accountId);
-        if (existingAccount.business_type !== "individual" || existingAccount.controller?.requirement_collection === "application") {
-          accountId = null;
-          await supabase
-            .from("profiles")
-            .update({
-              stripe_account_id: null,
-              stripe_account_status: "pending",
-              stripe_onboarding_completed: false,
-            })
-            .eq("id", user.id);
-        } else {
-          // Update individual info from profile
-          await stripe.accounts.update(accountId, {
-            individual: {
-              first_name: profile.first_name || undefined,
-              last_name: profile.last_name || undefined,
-              phone: profile.phone || undefined,
-              address: {
-                line1: profile.address_line1 || undefined,
-                line2: profile.address_line2 || undefined,
-                postal_code: profile.postal_code || undefined,
-                city: profile.city || undefined,
-                country: (profile.country as string) || "FR",
-              },
-            },
-            business_profile: {
-              product_description: productDescription,
-            },
-          });
-
-          // If there are no currently_due requirements, onboarding was already submitted.
-          // Use account_update instead of account_onboarding to avoid Stripe's
-          // "no pending onboarding" error.
-          const currentlyDue = existingAccount.requirements?.currently_due ?? [];
-          if (currentlyDue.length === 0) {
-            needsOnboarding = false;
-          }
-        }
-      } catch (_err) {
-        accountId = null;
-      }
-    }
-
+    // Step 1: If no account exists, create one
     if (!accountId) {
-      const profileCountry = (profile.country as string) || "FR";
       const account = await stripe.accounts.create({
         type: "express",
         country: profileCountry,
         email: user.email,
         business_type: "individual",
-        individual: {
-          first_name: profile.first_name || undefined,
-          last_name: profile.last_name || undefined,
-          phone: profile.phone || undefined,
-          address: {
-            line1: profile.address_line1 || undefined,
-            line2: profile.address_line2 || undefined,
-            postal_code: profile.postal_code || undefined,
-            city: profile.city || undefined,
-            country: profileCountry,
-          },
-        },
-        business_profile: {
-          product_description: productDescription,
-        },
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
+        },
+        business_profile: {
+          product_description: productDescription,
         },
       });
 
@@ -132,25 +77,119 @@ Deno.serve(async (req: Request) => {
         .eq("id", user.id);
     }
 
-    const body = await req.json().catch(() => ({}));
-    const { returnUrl, refreshUrl } = body;
+    // Step 2: Check the account status to decide link type
+    let linkType: "account_onboarding" | "account_update" = "account_onboarding";
 
-    const accountLink = await stripe.accountLinks.create({
-      account: accountId,
-      refresh_url: refreshUrl || `${Deno.env.get("FRONTEND_URL") || "https://www.naturalhairmarket.com"}/profile?stripe_refresh=true`,
-      return_url: returnUrl || `${Deno.env.get("FRONTEND_URL") || "https://www.naturalhairmarket.com"}/profile?stripe_onboarding=success`,
-      type: needsOnboarding ? "account_onboarding" : "account_update",
-      collection_options: {
-        fields: "currently_due",
-      },
-    } as Stripe.AccountLinkCreateParams);
+    try {
+      const existingAccount = await stripe.accounts.retrieve(accountId);
 
+      // If account is wrong type, reset it
+      if (existingAccount.business_type !== "individual") {
+        await supabase
+          .from("profiles")
+          .update({
+            stripe_account_id: null,
+            stripe_account_status: "pending",
+            stripe_onboarding_completed: false,
+          })
+          .eq("id", user.id);
 
+        // Create fresh account
+        const account = await stripe.accounts.create({
+          type: "express",
+          country: profileCountry,
+          email: user.email,
+          business_type: "individual",
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true },
+          },
+          business_profile: {
+            product_description: productDescription,
+          },
+        });
 
-    return new Response(
-      JSON.stringify({ url: accountLink.url, accountId }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+        accountId = account.id;
+
+        await supabase
+          .from("profiles")
+          .update({
+            stripe_account_id: accountId,
+            stripe_account_status: "pending",
+            stripe_onboarding_completed: false,
+          })
+          .eq("id", user.id);
+      } else {
+        // Account exists and is individual type
+        const currentlyDue = existingAccount.requirements?.currently_due ?? [];
+        if (currentlyDue.length === 0) {
+          // Onboarding already submitted, use account_update
+          linkType = "account_update";
+        }
+      }
+    } catch (retrieveErr) {
+      // Account might be deleted on Stripe side — reset and create new
+      console.error("Account retrieve failed:", retrieveErr instanceof Error ? retrieveErr.message : "unknown");
+
+      const account = await stripe.accounts.create({
+        type: "express",
+        country: profileCountry,
+        email: user.email,
+        business_type: "individual",
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_profile: {
+          product_description: productDescription,
+        },
+      });
+
+      accountId = account.id;
+
+      await supabase
+        .from("profiles")
+        .update({
+          stripe_account_id: accountId,
+          stripe_account_status: "pending",
+          stripe_onboarding_completed: false,
+        })
+        .eq("id", user.id);
+    }
+
+    // Step 3: Create the account link
+    try {
+      const accountLink = await stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: refreshUrl,
+        return_url: returnUrl,
+        type: linkType,
+        collection_options: {
+          fields: "currently_due",
+        },
+      } as Stripe.AccountLinkCreateParams);
+
+      return new Response(
+        JSON.stringify({ url: accountLink.url, accountId }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    } catch (linkErr) {
+      // If account_onboarding fails (e.g. "no pending requirements"), try account_update
+      if (linkType === "account_onboarding") {
+        const accountLink = await stripe.accountLinks.create({
+          account: accountId,
+          refresh_url: refreshUrl,
+          return_url: returnUrl,
+          type: "account_update",
+        } as Stripe.AccountLinkCreateParams);
+
+        return new Response(
+          JSON.stringify({ url: accountLink.url, accountId }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      throw linkErr;
+    }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("Stripe Account Link error:", message);
