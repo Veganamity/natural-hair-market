@@ -267,6 +267,15 @@ export function CreateListingForm({ onClose, onSuccess }: CreateListingFormProps
             </div>
           </div>
 
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-800">
+                {t('createListing.measurementNotice')}
+              </p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
