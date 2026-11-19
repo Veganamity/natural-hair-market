@@ -279,6 +279,7 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
   const handleStartOnboarding = async () => {
     if (!user) return;
     setStripeLoading(true);
+    setError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error(t('profile.sessionExpired'));
@@ -297,6 +298,27 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
       if (!response.ok) {
         const data = await response.json();
+        // Fallback: try login link (dashboard) which handles already-onboarded accounts
+        try {
+          const fallbackResponse = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-login-link`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({}),
+            }
+          );
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            window.location.href = fallbackData.url;
+            return;
+          }
+        } catch (_fallbackErr) {
+          // ignore fallback failure, show original error
+        }
         throw new Error(data.error || t('profile.stripeLinkError'));
       }
 

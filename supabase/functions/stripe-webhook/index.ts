@@ -261,6 +261,36 @@ Deno.serve(async (req: Request) => {
         break;
       }
 
+      case "account.updated": {
+        const accountEvent = event.data.object as Stripe.Account;
+        const accountId = accountEvent.id;
+
+        const chargesEnabled = accountEvent.charges_enabled ?? false;
+        const payoutsEnabled = accountEvent.payouts_enabled ?? false;
+        const requirements = accountEvent.requirements?.currently_due ?? [];
+
+        let newStatus: string;
+        if (chargesEnabled && payoutsEnabled) {
+          newStatus = "active";
+        } else if (requirements.length > 0) {
+          newStatus = "incomplete";
+        } else {
+          newStatus = "pending";
+        }
+
+        const onboardingCompleted = chargesEnabled && payoutsEnabled;
+
+        await supabase
+          .from("profiles")
+          .update({
+            stripe_account_status: newStatus,
+            stripe_onboarding_completed: onboardingCompleted,
+          })
+          .eq("stripe_account_id", accountId);
+
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }

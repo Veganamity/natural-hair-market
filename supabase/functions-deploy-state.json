@@ -63,7 +63,7 @@
     },
     "create-stripe-login-link": {
       "hasChanged": false,
-      "hash": "f6b0aa2f579c51907c75ecb5ab2851a80fb326aceb6a0596158edc9793a94f76"
+      "hash": "f4bd1910edac0c8374bc0e86dca1f9060ea6b4be88deab1c983ff1c91cb78e39"
     },
     "download-shipping-label": {
       "hasChanged": false,
@@ -135,7 +135,7 @@
     },
     "stripe-webhook": {
       "hasChanged": false,
-      "hash": "dce9a5fa6a3810f0538883f15d2026149c92fe548d1dc45816cf76f6673dcfe0"
+      "hash": "17b2d4d3972f27c2c9cb5619a9fceac4b846a2a81483733c662c1d5c07c94a53"
     },
     "submit-salon-verification": {
       "hasChanged": false,
