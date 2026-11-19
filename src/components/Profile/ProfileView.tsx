@@ -52,13 +52,15 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
   const checkStripeOnboarding = () => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('stripe_onboarding') === 'success') {
+    if (params.has('stripe_onboarding') || params.has('stripe_refresh')) {
       window.history.replaceState({}, '', '/profile');
-      verifyStripeAccountStatus();
-    } else if (params.get('stripe_refresh') === 'true') {
-      window.history.replaceState({}, '', '/profile');
+    }
+
+    if (params.get('stripe_refresh') === 'true') {
       setStripeRefreshNeeded(true);
     }
+
+    verifyStripeAccountStatus();
   };
 
   const [stripeRefreshNeeded, setStripeRefreshNeeded] = useState(false);
@@ -90,13 +92,9 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
 
       const result = await response.json();
 
-      if (result.status === 'incomplete') {
-        setStripeRefreshNeeded(true);
-      } else if (result.status === 'pending' && !result.onboarding_completed) {
-        setStripePendingVerification(true);
-      }
-
-      fetchProfile();
+      setStripeRefreshNeeded(result.status === 'incomplete');
+      setStripePendingVerification(result.status === 'pending' && !result.onboarding_completed);
+      await fetchProfile();
     } catch (err: any) {
       console.error('Stripe status check error:', err);
       setError(err.message || t('profile.stripeConnectionError'));
@@ -485,6 +483,13 @@ export function ProfileView({ onNavigate }: ProfileViewProps = {}) {
             <p className="font-semibold text-blue-800">{t('profile.stripePendingTitle')}</p>
             <p className="text-sm text-blue-700 mt-1">{t('profile.stripePendingDesc')}</p>
           </div>
+          <button
+            onClick={verifyStripeAccountStatus}
+            disabled={stripeOnboardingLoading}
+            className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+          >
+            {t('common.retry')}
+          </button>
         </div>
       )}
       <div className="bg-white rounded-xl shadow-md p-6">
